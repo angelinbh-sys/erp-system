@@ -75,7 +75,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         {modules.map((mod) => (
-          <SidebarGroup key={mod.label} defaultOpen={mod.children.some(c => location.pathname === c.url)}>
+          <SidebarGroup key={mod.label}>
             <SidebarGroupLabel className="text-sidebar-muted uppercase text-xs tracking-wider">
               <mod.icon className="h-4 w-4 mr-2 shrink-0" />
               {!collapsed && mod.label}
