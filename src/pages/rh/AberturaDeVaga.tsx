@@ -84,16 +84,21 @@ const ACCEPTED_DOC_TYPES = [
 
 const AberturaDeVaga = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [docFile, setDocFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
+  const [docError, setDocError] = useState("");
   const [cidadeOpen, setCidadeOpen] = useState(false);
-  const [beneficios, setBeneficios] = useState<BeneficiosState>({
+  const defaultBeneficios: BeneficiosState = {
     va: false, vaValor: "",
     auxilioMoradia: false, auxilioMoradiaValor: "",
     assiduidade: false, assiduidadeValor: "",
+    ajudaCusto: false, ajudaCustoValor: "",
     planoSaude: false,
     planoOdontologico: false,
-  });
+  };
+  const [beneficios, setBeneficios] = useState<BeneficiosState>(defaultBeneficios);
 
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
