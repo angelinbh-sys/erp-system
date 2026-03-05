@@ -19,8 +19,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/rh/cadastros-gerais" replace />} />
-            <Route path="/rh/cadastros-gerais" element={<CadastrosGerais />} />
+            <Route path="/" element={<Navigate to="/rh/gestao-rh" replace />} />
+            <Route path="/rh/gestao-rh" element={<GestaoRH />} />
             <Route path="/rh/abertura-de-vaga" element={<AberturaDeVaga />} />
             <Route path="/departamento-pessoal" element={<ModulePlaceholder title="Departamento Pessoal" />} />
             <Route path="/financeiro" element={<ModulePlaceholder title="Financeiro" />} />

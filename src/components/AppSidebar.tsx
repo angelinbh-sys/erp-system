@@ -28,7 +28,7 @@ const modules = [
     label: "Recursos Humanos",
     icon: Users,
     children: [
-      { title: "Cadastros Gerais", url: "/rh/cadastros-gerais", icon: ClipboardList },
+      { title: "Gestão RH", url: "/rh/gestao-rh", icon: ClipboardList },
       { title: "Abertura de Vaga", url: "/rh/abertura-de-vaga", icon: Briefcase },
     ],
   },
