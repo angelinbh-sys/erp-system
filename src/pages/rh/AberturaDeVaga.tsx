@@ -70,9 +70,17 @@ interface BeneficiosState {
   auxilioMoradiaValor: string;
   assiduidade: boolean;
   assiduidadeValor: string;
+  ajudaCusto: boolean;
+  ajudaCustoValor: string;
   planoSaude: boolean;
   planoOdontologico: boolean;
 }
+
+const ACCEPTED_DOC_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+];
 
 const AberturaDeVaga = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
