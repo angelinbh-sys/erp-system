@@ -2,10 +2,11 @@ import {
   Users,
   FileText,
   DollarSign,
-  Truck,
+  Car,
   Award,
   Briefcase,
   Building2,
+  ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -27,6 +28,7 @@ const modules = [
     label: "Recursos Humanos",
     icon: Users,
     children: [
+      { title: "Cadastros Gerais", url: "/rh/cadastros-gerais", icon: ClipboardList },
       { title: "Abertura de Vaga", url: "/rh/abertura-de-vaga", icon: Briefcase },
     ],
   },
@@ -44,7 +46,7 @@ const modules = [
   },
   {
     label: "Logística",
-    icon: Truck,
+    icon: Car,
     children: [],
     url: "/logistica",
   },
@@ -67,7 +69,7 @@ export function AppSidebar() {
         <div className="flex items-center gap-2">
           <Building2 className="h-6 w-6 text-sidebar-primary shrink-0" />
           {!collapsed && (
-            <span className="font-heading text-lg font-bold text-sidebar-accent-foreground">
+            <span className="font-heading text-lg font-bold text-sidebar-primary-foreground">
               ERP System
             </span>
           )}
@@ -76,7 +78,7 @@ export function AppSidebar() {
       <SidebarContent>
         {modules.map((mod) => (
           <SidebarGroup key={mod.label}>
-            <SidebarGroupLabel className="text-sidebar-muted uppercase text-xs tracking-wider">
+            <SidebarGroupLabel className="text-sidebar-accent-foreground font-semibold uppercase text-xs tracking-wider">
               <mod.icon className="h-4 w-4 mr-2 shrink-0" />
               {!collapsed && mod.label}
             </SidebarGroupLabel>
@@ -89,7 +91,7 @@ export function AppSidebar() {
                         <NavLink
                           to={item.url}
                           end
-                          className="hover:bg-sidebar-accent"
+                          className="hover:bg-sidebar-accent text-sidebar-foreground"
                           activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                         >
                           <item.icon className="mr-2 h-4 w-4" />
@@ -107,7 +109,7 @@ export function AppSidebar() {
                         className="hover:bg-sidebar-accent"
                         activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                       >
-                        {!collapsed && <span className="text-sm text-sidebar-muted italic ml-6">Em breve</span>}
+                        {!collapsed && <span className="text-sm text-sidebar-foreground italic ml-6">Em breve</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
