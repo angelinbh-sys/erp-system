@@ -153,15 +153,12 @@ const AberturaDeVaga = () => {
   const handleCancel = () => {
     form.reset();
     setFile(null);
+    setDocFile(null);
     setFileError("");
-    setBeneficios({
-      va: false, vaValor: "",
-      auxilioMoradia: false, auxilioMoradiaValor: "",
-      assiduidade: false, assiduidadeValor: "",
-      planoSaude: false,
-      planoOdontologico: false,
-    });
+    setDocError("");
+    setBeneficios(defaultBeneficios);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (docInputRef.current) docInputRef.current.value = "";
   };
 
   const emptyMessage = "Nenhum registro encontrado. Cadastre primeiro em Gestão RH.";
