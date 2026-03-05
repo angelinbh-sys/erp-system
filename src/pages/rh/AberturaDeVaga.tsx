@@ -498,7 +498,6 @@ const AberturaDeVaga = () => {
                     </FormItem>
                   )}
                />
-              </div>
 
               {/* CNH ou RG */}
               <div className="md:col-span-2 mt-4">
