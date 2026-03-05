@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import AberturaDeVaga from "@/pages/rh/AberturaDeVaga";
-import CadastrosGerais from "@/pages/rh/CadastrosGerais";
+import GestaoRH from "@/pages/rh/GestaoRH";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import NotFound from "./pages/NotFound";
 
