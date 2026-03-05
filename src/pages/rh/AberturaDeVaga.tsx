@@ -406,6 +406,26 @@ const AberturaDeVaga = () => {
                   )}
                 </div>
 
+                {/* Ajuda de Custo */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="ben-ajuda-custo"
+                      checked={beneficios.ajudaCusto}
+                      onCheckedChange={(v) => setBeneficios((p) => ({ ...p, ajudaCusto: !!v, ajudaCustoValor: v ? p.ajudaCustoValor : "" }))}
+                    />
+                    <Label htmlFor="ben-ajuda-custo">Ajuda de Custo</Label>
+                  </div>
+                  {beneficios.ajudaCusto && (
+                    <Input
+                      placeholder="R$ 0,00"
+                      value={beneficios.ajudaCustoValor}
+                      onChange={(e) => setBeneficios((p) => ({ ...p, ajudaCustoValor: formatCurrencyBRL(e.target.value) }))}
+                      className="max-w-xs ml-6"
+                    />
+                  )}
+                </div>
+
                 {/* Plano de Saúde */}
                 <div className="flex items-center gap-2">
                   <Checkbox
