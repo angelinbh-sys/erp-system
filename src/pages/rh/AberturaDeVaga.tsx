@@ -140,18 +140,14 @@ const AberturaDeVaga = () => {
       setFileError("O currículo é obrigatório.");
       return;
     }
-    console.log("Vaga cadastrada:", { ...data, beneficios, curriculo: file.name });
+    console.log("Vaga cadastrada:", { ...data, beneficios, curriculo: file.name, documento: docFile?.name });
     toast.success("Vaga cadastrada com sucesso.");
     form.reset();
     setFile(null);
-    setBeneficios({
-      va: false, vaValor: "",
-      auxilioMoradia: false, auxilioMoradiaValor: "",
-      assiduidade: false, assiduidadeValor: "",
-      planoSaude: false,
-      planoOdontologico: false,
-    });
+    setDocFile(null);
+    setBeneficios(defaultBeneficios);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (docInputRef.current) docInputRef.current.value = "";
   };
 
   const handleCancel = () => {
