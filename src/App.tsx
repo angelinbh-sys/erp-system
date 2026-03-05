@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import AberturaDeVaga from "@/pages/rh/AberturaDeVaga";
-import CadastrosGerais from "@/pages/rh/CadastrosGerais";
+import GestaoRH from "@/pages/rh/GestaoRH";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import NotFound from "./pages/NotFound";
 
@@ -19,8 +19,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/rh/cadastros-gerais" replace />} />
-            <Route path="/rh/cadastros-gerais" element={<CadastrosGerais />} />
+            <Route path="/" element={<Navigate to="/rh/gestao-rh" replace />} />
+            <Route path="/rh/gestao-rh" element={<GestaoRH />} />
             <Route path="/rh/abertura-de-vaga" element={<AberturaDeVaga />} />
             <Route path="/departamento-pessoal" element={<ModulePlaceholder title="Departamento Pessoal" />} />
             <Route path="/financeiro" element={<ModulePlaceholder title="Financeiro" />} />

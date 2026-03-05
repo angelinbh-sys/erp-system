@@ -4,10 +4,9 @@ export interface CentroCusto {
   id: string;
   nome: string;
   codigo: string;
-  descricao: string;
 }
 
-export interface TipoContrato {
+export interface SiteContrato {
   id: string;
   nome: string;
 }
@@ -51,10 +50,15 @@ export function useCentrosCusto() {
   return useLocalStorage<CentroCusto>("erp_centros_custo");
 }
 
-export function useTiposContrato() {
-  return useLocalStorage<TipoContrato>("erp_tipos_contrato");
+export function useSitesContrato() {
+  return useLocalStorage<SiteContrato>("erp_tipos_contrato");
 }
 
 export function useCargos() {
   return useLocalStorage<Cargo>("erp_cargos");
+}
+
+// Keep backward compatibility alias
+export function useTiposContrato() {
+  return useSitesContrato();
 }

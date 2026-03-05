@@ -8,6 +8,7 @@ import { Upload, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,7 @@ import {
 import { useCentrosCusto, useTiposContrato, useCargos } from "@/hooks/useCadastros";
 import { cidadesBrasil, getCidadeLabel } from "@/data/cidadesBrasil";
 import { formatCurrencyBRL } from "@/utils/currency";
+import { formatPhone } from "@/utils/phone";
 
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
@@ -51,22 +53,39 @@ const ACCEPTED_FILE_TYPES = [
 const vagaSchema = z.object({
   cargo: z.string().min(1, "Cargo / Função é obrigatório"),
   salario: z.string().min(1, "Salário é obrigatório"),
-  beneficios: z.string().min(1, "Benefícios é obrigatório").max(500),
   centroCusto: z.string().min(1, "Centro de Custo é obrigatório"),
   localTrabalho: z.string().min(1, "Local de trabalho é obrigatório"),
-  tipoContrato: z.string().min(1, "Tipo de Contrato é obrigatório"),
+  tipoContrato: z.string().min(1, "Site / Contrato é obrigatório"),
   nomeCandidato: z.string().min(1, "Nome do Candidato é obrigatório").max(200),
   dataNascimento: z.string().min(1, "Data de Nascimento é obrigatória"),
-  telefone: z.string().min(1, "Telefone de Contato é obrigatório").max(20),
+  telefone: z.string().min(14, "Telefone de Contato é obrigatório"),
 });
 
 type VagaForm = z.infer<typeof vagaSchema>;
+
+interface BeneficiosState {
+  va: boolean;
+  vaValor: string;
+  auxilioMoradia: boolean;
+  auxilioMoradiaValor: string;
+  assiduidade: boolean;
+  assiduidadeValor: string;
+  planoSaude: boolean;
+  planoOdontologico: boolean;
+}
 
 const AberturaDeVaga = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
   const [cidadeOpen, setCidadeOpen] = useState(false);
+  const [beneficios, setBeneficios] = useState<BeneficiosState>({
+    va: false, vaValor: "",
+    auxilioMoradia: false, auxilioMoradiaValor: "",
+    assiduidade: false, assiduidadeValor: "",
+    planoSaude: false,
+    planoOdontologico: false,
+  });
 
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
@@ -77,7 +96,6 @@ const AberturaDeVaga = () => {
     defaultValues: {
       cargo: "",
       salario: "",
-      beneficios: "",
       centroCusto: "",
       localTrabalho: "",
       tipoContrato: "",
@@ -109,10 +127,17 @@ const AberturaDeVaga = () => {
       setFileError("O currículo é obrigatório.");
       return;
     }
-    console.log("Vaga cadastrada:", { ...data, curriculo: file.name });
+    console.log("Vaga cadastrada:", { ...data, beneficios, curriculo: file.name });
     toast.success("Vaga cadastrada com sucesso.");
     form.reset();
     setFile(null);
+    setBeneficios({
+      va: false, vaValor: "",
+      auxilioMoradia: false, auxilioMoradiaValor: "",
+      assiduidade: false, assiduidadeValor: "",
+      planoSaude: false,
+      planoOdontologico: false,
+    });
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -120,10 +145,27 @@ const AberturaDeVaga = () => {
     form.reset();
     setFile(null);
     setFileError("");
+    setBeneficios({
+      va: false, vaValor: "",
+      auxilioMoradia: false, auxilioMoradiaValor: "",
+      assiduidade: false, assiduidadeValor: "",
+      planoSaude: false,
+      planoOdontologico: false,
+    });
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const emptyMessage = "Nenhum registro encontrado. Cadastre primeiro em Cadastros Gerais.";
+  const emptyMessage = "Nenhum registro encontrado. Cadastre primeiro em Gestão RH.";
+
+  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>, onChange: (v: string) => void) => {
+    onChange(formatPhone(e.target.value));
+  };
+
+  const handlePhonePaste = (e: React.ClipboardEvent<HTMLInputElement>, onChange: (v: string) => void) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text");
+    onChange(formatPhone(pasted));
+  };
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -138,7 +180,7 @@ const AberturaDeVaga = () => {
             <CardContent className="pt-6">
               <h3 className="section-title">Dados da Vaga</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Cargo - dropdown from cadastros */}
+                {/* Cargo */}
                 <FormField
                   control={form.control}
                   name="cargo"
@@ -153,14 +195,10 @@ const AberturaDeVaga = () => {
                         </FormControl>
                         <SelectContent>
                           {cargos.length === 0 ? (
-                            <div className="p-3 text-sm text-muted-foreground text-center">
-                              {emptyMessage}
-                            </div>
+                            <div className="p-3 text-sm text-muted-foreground text-center">{emptyMessage}</div>
                           ) : (
                             cargos.map((c) => (
-                              <SelectItem key={c.id} value={c.nome}>
-                                {c.nome}
-                              </SelectItem>
+                              <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
                             ))
                           )}
                         </SelectContent>
@@ -170,7 +208,7 @@ const AberturaDeVaga = () => {
                   )}
                 />
 
-                {/* Salário - currency formatting */}
+                {/* Salário */}
                 <FormField
                   control={form.control}
                   name="salario"
@@ -181,10 +219,7 @@ const AberturaDeVaga = () => {
                         <Input
                           placeholder="R$ 0,00"
                           value={field.value}
-                          onChange={(e) => {
-                            const formatted = formatCurrencyBRL(e.target.value);
-                            field.onChange(formatted);
-                          }}
+                          onChange={(e) => field.onChange(formatCurrencyBRL(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
@@ -192,21 +227,7 @@ const AberturaDeVaga = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="beneficios"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>Benefícios *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex: VR, VT, Plano de Saúde" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Centro de Custo - dropdown from cadastros */}
+                {/* Centro de Custo */}
                 <FormField
                   control={form.control}
                   name="centroCusto"
@@ -221,9 +242,7 @@ const AberturaDeVaga = () => {
                         </FormControl>
                         <SelectContent>
                           {centrosCusto.length === 0 ? (
-                            <div className="p-3 text-sm text-muted-foreground text-center">
-                              {emptyMessage}
-                            </div>
+                            <div className="p-3 text-sm text-muted-foreground text-center">{emptyMessage}</div>
                           ) : (
                             centrosCusto.map((c) => (
                               <SelectItem key={c.id} value={c.nome}>
@@ -238,7 +257,7 @@ const AberturaDeVaga = () => {
                   )}
                 />
 
-                {/* Local de Trabalho - city combobox */}
+                {/* Local de Trabalho */}
                 <FormField
                   control={form.control}
                   name="localTrabalho"
@@ -248,11 +267,7 @@ const AberturaDeVaga = () => {
                       <Popover open={cidadeOpen} onOpenChange={setCidadeOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className="w-full justify-between font-normal"
-                            >
+                            <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
                               {field.value || "Selecione a cidade"}
                               <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -289,29 +304,25 @@ const AberturaDeVaga = () => {
                   )}
                 />
 
-                {/* Tipo de Contrato - dropdown from cadastros */}
+                {/* Site / Contrato */}
                 <FormField
                   control={form.control}
                   name="tipoContrato"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo de Contrato *</FormLabel>
+                      <FormLabel>Site / Contrato (Local) *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione o tipo" />
+                            <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {tiposContrato.length === 0 ? (
-                            <div className="p-3 text-sm text-muted-foreground text-center">
-                              {emptyMessage}
-                            </div>
+                            <div className="p-3 text-sm text-muted-foreground text-center">{emptyMessage}</div>
                           ) : (
                             tiposContrato.map((c) => (
-                              <SelectItem key={c.id} value={c.nome}>
-                                {c.nome}
-                              </SelectItem>
+                              <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
                             ))
                           )}
                         </SelectContent>
@@ -320,6 +331,94 @@ const AberturaDeVaga = () => {
                     </FormItem>
                   )}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Benefícios */}
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="section-title">Benefícios</h3>
+              <div className="space-y-4">
+                {/* VA */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="ben-va"
+                      checked={beneficios.va}
+                      onCheckedChange={(v) => setBeneficios((p) => ({ ...p, va: !!v, vaValor: v ? p.vaValor : "" }))}
+                    />
+                    <Label htmlFor="ben-va">VA (Vale Alimentação)</Label>
+                  </div>
+                  {beneficios.va && (
+                    <Input
+                      placeholder="R$ 0,00"
+                      value={beneficios.vaValor}
+                      onChange={(e) => setBeneficios((p) => ({ ...p, vaValor: formatCurrencyBRL(e.target.value) }))}
+                      className="max-w-xs ml-6"
+                    />
+                  )}
+                </div>
+
+                {/* Auxílio Moradia */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="ben-moradia"
+                      checked={beneficios.auxilioMoradia}
+                      onCheckedChange={(v) => setBeneficios((p) => ({ ...p, auxilioMoradia: !!v, auxilioMoradiaValor: v ? p.auxilioMoradiaValor : "" }))}
+                    />
+                    <Label htmlFor="ben-moradia">Auxílio Moradia</Label>
+                  </div>
+                  {beneficios.auxilioMoradia && (
+                    <Input
+                      placeholder="R$ 0,00"
+                      value={beneficios.auxilioMoradiaValor}
+                      onChange={(e) => setBeneficios((p) => ({ ...p, auxilioMoradiaValor: formatCurrencyBRL(e.target.value) }))}
+                      className="max-w-xs ml-6"
+                    />
+                  )}
+                </div>
+
+                {/* Assiduidade */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="ben-assiduidade"
+                      checked={beneficios.assiduidade}
+                      onCheckedChange={(v) => setBeneficios((p) => ({ ...p, assiduidade: !!v, assiduidadeValor: v ? p.assiduidadeValor : "" }))}
+                    />
+                    <Label htmlFor="ben-assiduidade">Assiduidade</Label>
+                  </div>
+                  {beneficios.assiduidade && (
+                    <Input
+                      placeholder="R$ 0,00"
+                      value={beneficios.assiduidadeValor}
+                      onChange={(e) => setBeneficios((p) => ({ ...p, assiduidadeValor: formatCurrencyBRL(e.target.value) }))}
+                      className="max-w-xs ml-6"
+                    />
+                  )}
+                </div>
+
+                {/* Plano de Saúde */}
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="ben-saude"
+                    checked={beneficios.planoSaude}
+                    onCheckedChange={(v) => setBeneficios((p) => ({ ...p, planoSaude: !!v }))}
+                  />
+                  <Label htmlFor="ben-saude">Plano de Saúde</Label>
+                </div>
+
+                {/* Plano Odontológico */}
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="ben-odonto"
+                    checked={beneficios.planoOdontologico}
+                    onCheckedChange={(v) => setBeneficios((p) => ({ ...p, planoOdontologico: !!v }))}
+                  />
+                  <Label htmlFor="ben-odonto">Plano Odontológico</Label>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -362,7 +461,12 @@ const AberturaDeVaga = () => {
                     <FormItem>
                       <FormLabel>Telefone de Contato *</FormLabel>
                       <FormControl>
-                        <Input placeholder="(11) 99999-9999" {...field} />
+                        <Input
+                          placeholder="(11) 99999-9999"
+                          value={field.value}
+                          onChange={(e) => handlePhoneInput(e, field.onChange)}
+                          onPaste={(e) => handlePhonePaste(e, field.onChange)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -394,10 +498,7 @@ const AberturaDeVaga = () => {
                       <span className="text-sm text-foreground font-medium">{file.name}</span>
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFile();
-                        }}
+                        onClick={(e) => { e.stopPropagation(); removeFile(); }}
                         className="text-muted-foreground hover:text-destructive"
                       >
                         <X className="h-4 w-4" />
