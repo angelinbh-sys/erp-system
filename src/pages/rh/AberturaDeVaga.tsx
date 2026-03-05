@@ -497,7 +497,50 @@ const AberturaDeVaga = () => {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+               />
+              </div>
+
+              {/* CNH ou RG */}
+              <div className="md:col-span-2 mt-4">
+                <Label className="mb-2 block">CNH ou RG do Candidato</Label>
+                <div
+                  className="border-2 border-dashed border-input rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => docInputRef.current?.click()}
+                >
+                  <input
+                    ref={docInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={(e) => {
+                      const selected = e.target.files?.[0];
+                      if (!selected) return;
+                      if (!ACCEPTED_DOC_TYPES.includes(selected.type)) {
+                        setDocError("Apenas PDF, JPG ou PNG são permitidos.");
+                        setDocFile(null);
+                        return;
+                      }
+                      setDocError("");
+                      setDocFile(selected);
+                    }}
+                  />
+                  {docFile ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-sm text-foreground font-medium">{docFile.name}</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setDocFile(null); if (docInputRef.current) docInputRef.current.value = ""; }} className="text-muted-foreground hover:text-destructive">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <Upload className="h-6 w-6" />
+                      <span className="text-sm">Clique para anexar CNH ou RG</span>
+                      <span className="text-xs">PDF, JPG ou PNG</span>
+                    </div>
+                  )}
+                </div>
+                {docError && <p className="text-sm text-destructive mt-2">{docError}</p>}
+              </div>
               </div>
             </CardContent>
           </Card>
