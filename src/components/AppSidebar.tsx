@@ -4,9 +4,8 @@ import {
   DollarSign,
   Car,
   Award,
-  Briefcase,
   Building2,
-  ClipboardList,
+  Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -28,15 +27,17 @@ const modules = [
     label: "Recursos Humanos",
     icon: Users,
     children: [
-      { title: "Gestão RH", url: "/rh/gestao-rh", icon: ClipboardList },
-      { title: "Abertura de Vaga", url: "/rh/abertura-de-vaga", icon: Briefcase },
+      { title: "Gestão RH", url: "/rh/gestao-rh" },
+      { title: "Abertura de Vaga", url: "/rh/abertura-de-vaga" },
     ],
   },
   {
     label: "Departamento Pessoal",
     icon: FileText,
-    children: [],
-    url: "/departamento-pessoal",
+    children: [
+      { title: "Alteração de Função / Cargo", url: "/departamento-pessoal/alteracao-funcao" },
+      { title: "Solicitação de Férias", url: "/departamento-pessoal/solicitacao-ferias" },
+    ],
   },
   {
     label: "Financeiro",
@@ -55,6 +56,14 @@ const modules = [
     icon: Award,
     children: [],
     url: "/qualidade",
+  },
+  {
+    label: "Admin",
+    icon: Shield,
+    children: [
+      { title: "Usuários", url: "/admin/usuarios" },
+      { title: "Grupos de Permissão", url: "/admin/permissoes" },
+    ],
   },
 ];
 
@@ -91,11 +100,15 @@ export function AppSidebar() {
                         <NavLink
                           to={item.url}
                           end
-                          className="hover:bg-sidebar-accent text-sidebar-foreground"
+                          className="hover:bg-sidebar-accent text-sidebar-foreground pl-8"
                           activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                         >
-                          <item.icon className="mr-2 h-4 w-4" />
-                          {!collapsed && <span>{item.title}</span>}
+                          {!collapsed && (
+                            <span className="flex items-center gap-2">
+                              <span className="text-sidebar-muted text-xs">–</span>
+                              <span>{item.title}</span>
+                            </span>
+                          )}
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

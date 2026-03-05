@@ -70,22 +70,35 @@ interface BeneficiosState {
   auxilioMoradiaValor: string;
   assiduidade: boolean;
   assiduidadeValor: string;
+  ajudaCusto: boolean;
+  ajudaCustoValor: string;
   planoSaude: boolean;
   planoOdontologico: boolean;
 }
 
+const ACCEPTED_DOC_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+];
+
 const AberturaDeVaga = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [docFile, setDocFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
+  const [docError, setDocError] = useState("");
   const [cidadeOpen, setCidadeOpen] = useState(false);
-  const [beneficios, setBeneficios] = useState<BeneficiosState>({
+  const defaultBeneficios: BeneficiosState = {
     va: false, vaValor: "",
     auxilioMoradia: false, auxilioMoradiaValor: "",
     assiduidade: false, assiduidadeValor: "",
+    ajudaCusto: false, ajudaCustoValor: "",
     planoSaude: false,
     planoOdontologico: false,
-  });
+  };
+  const [beneficios, setBeneficios] = useState<BeneficiosState>(defaultBeneficios);
 
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
@@ -127,32 +140,25 @@ const AberturaDeVaga = () => {
       setFileError("O currículo é obrigatório.");
       return;
     }
-    console.log("Vaga cadastrada:", { ...data, beneficios, curriculo: file.name });
+    console.log("Vaga cadastrada:", { ...data, beneficios, curriculo: file.name, documento: docFile?.name });
     toast.success("Vaga cadastrada com sucesso.");
     form.reset();
     setFile(null);
-    setBeneficios({
-      va: false, vaValor: "",
-      auxilioMoradia: false, auxilioMoradiaValor: "",
-      assiduidade: false, assiduidadeValor: "",
-      planoSaude: false,
-      planoOdontologico: false,
-    });
+    setDocFile(null);
+    setBeneficios(defaultBeneficios);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (docInputRef.current) docInputRef.current.value = "";
   };
 
   const handleCancel = () => {
     form.reset();
     setFile(null);
+    setDocFile(null);
     setFileError("");
-    setBeneficios({
-      va: false, vaValor: "",
-      auxilioMoradia: false, auxilioMoradiaValor: "",
-      assiduidade: false, assiduidadeValor: "",
-      planoSaude: false,
-      planoOdontologico: false,
-    });
+    setDocError("");
+    setBeneficios(defaultBeneficios);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (docInputRef.current) docInputRef.current.value = "";
   };
 
   const emptyMessage = "Nenhum registro encontrado. Cadastre primeiro em Gestão RH.";
@@ -400,6 +406,26 @@ const AberturaDeVaga = () => {
                   )}
                 </div>
 
+                {/* Ajuda de Custo */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="ben-ajuda-custo"
+                      checked={beneficios.ajudaCusto}
+                      onCheckedChange={(v) => setBeneficios((p) => ({ ...p, ajudaCusto: !!v, ajudaCustoValor: v ? p.ajudaCustoValor : "" }))}
+                    />
+                    <Label htmlFor="ben-ajuda-custo">Ajuda de Custo</Label>
+                  </div>
+                  {beneficios.ajudaCusto && (
+                    <Input
+                      placeholder="R$ 0,00"
+                      value={beneficios.ajudaCustoValor}
+                      onChange={(e) => setBeneficios((p) => ({ ...p, ajudaCustoValor: formatCurrencyBRL(e.target.value) }))}
+                      className="max-w-xs ml-6"
+                    />
+                  )}
+                </div>
+
                 {/* Plano de Saúde */}
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -471,7 +497,49 @@ const AberturaDeVaga = () => {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+               />
+
+              {/* CNH ou RG */}
+              <div className="md:col-span-2 mt-4">
+                <Label className="mb-2 block">CNH ou RG do Candidato</Label>
+                <div
+                  className="border-2 border-dashed border-input rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => docInputRef.current?.click()}
+                >
+                  <input
+                    ref={docInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={(e) => {
+                      const selected = e.target.files?.[0];
+                      if (!selected) return;
+                      if (!ACCEPTED_DOC_TYPES.includes(selected.type)) {
+                        setDocError("Apenas PDF, JPG ou PNG são permitidos.");
+                        setDocFile(null);
+                        return;
+                      }
+                      setDocError("");
+                      setDocFile(selected);
+                    }}
+                  />
+                  {docFile ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-sm text-foreground font-medium">{docFile.name}</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setDocFile(null); if (docInputRef.current) docInputRef.current.value = ""; }} className="text-muted-foreground hover:text-destructive">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <Upload className="h-6 w-6" />
+                      <span className="text-sm">Clique para anexar CNH ou RG</span>
+                      <span className="text-xs">PDF, JPG ou PNG</span>
+                    </div>
+                  )}
+                </div>
+                {docError && <p className="text-sm text-destructive mt-2">{docError}</p>}
+              </div>
               </div>
             </CardContent>
           </Card>
