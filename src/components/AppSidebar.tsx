@@ -27,6 +27,7 @@ const modules = [
     children: [
       { title: "Gestão RH", url: "/rh/gestao-rh" },
       { title: "Abertura de Vaga", url: "/rh/abertura-de-vaga" },
+      { title: "Aprovação de Vagas", url: "/rh/aprovacao-vagas" },
     ],
   },
   {
