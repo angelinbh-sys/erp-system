@@ -12,6 +12,7 @@ import GestaoRH from "@/pages/rh/GestaoRH";
 import AprovacaoVagas from "@/pages/rh/AprovacaoVagas";
 import AlteracaoFuncao from "@/pages/dp/AlteracaoFuncao";
 import SolicitacaoFerias from "@/pages/dp/SolicitacaoFerias";
+import Admissao from "@/pages/dp/Admissao";
 import AdminUsuarios from "@/pages/admin/Usuarios";
 import AdminPermissoes from "@/pages/admin/Permissoes";
 import AgendamentoASO from "@/pages/sesmt/AgendamentoASO";
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/rh/aprovacao-vagas" element={<AprovacaoVagas />} />
               <Route path="/departamento-pessoal/alteracao-funcao" element={<AlteracaoFuncao />} />
               <Route path="/departamento-pessoal/solicitacao-ferias" element={<SolicitacaoFerias />} />
+              <Route path="/departamento-pessoal/admissao" element={<Admissao />} />
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
               <Route path="/admin/permissoes" element={<AdminPermissoes />} />
               <Route path="/sesmt/agendamento-aso" element={<AgendamentoASO />} />

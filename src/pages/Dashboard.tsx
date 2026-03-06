@@ -147,7 +147,7 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <h2 className="font-heading text-2xl font-bold text-foreground">Dashboard</h2>
+      <h2 className="font-heading text-2xl font-bold text-foreground">Início</h2>
 
       {/* ── Linha 1: KPIs ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
