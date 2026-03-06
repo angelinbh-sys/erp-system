@@ -161,7 +161,7 @@ const AberturaDeVaga = () => {
         nome_candidato: data.nomeCandidato,
         data_nascimento: data.dataNascimento,
         telefone: data.telefone,
-        beneficios: beneficios as unknown as Record<string, unknown>,
+        beneficios: JSON.parse(JSON.stringify(beneficios)),
         curriculo_nome: file.name,
         documento_nome: docFile?.name ?? null,
         status: "Aguardando Aprovação",
