@@ -29,7 +29,7 @@ const modules = [
     ],
   },
   {
-    label: "Departamento Pessoal",
+    label: "Dep. Pessoal",
     icon: FileText,
     children: [
       { title: "Alteração de Função / Cargo", url: "/departamento-pessoal/alteracao-funcao" },
