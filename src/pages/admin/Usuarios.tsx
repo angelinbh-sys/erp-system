@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Plus, Pencil, UserX, UserCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,13 +27,13 @@ import {
 import type { GrupoPermissao } from "@/pages/admin/Permissoes";
 import { formatCPF, isValidCPF } from "@/utils/cpf";
 
-interface Usuario {
+interface Profile {
   id: string;
+  user_id: string;
   nome: string;
   email: string;
-  cpf: string;
-  senha: string;
-  grupoPermissao: string;
+  cpf: string | null;
+  grupo_permissao: string;
   ativo: boolean;
 }
 
@@ -44,26 +45,26 @@ const AdminUsuarios = () => {
     } catch { return []; }
   });
 
-  const [usuarios, setUsuarios] = useState<Usuario[]>(() => {
-    try {
-      const stored = localStorage.getItem("erp_usuarios");
-      return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
-  });
+  const [usuarios, setUsuarios] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const save = (items: Usuario[]) => {
-    setUsuarios(items);
-    localStorage.setItem("erp_usuarios", JSON.stringify(items));
+  const fetchUsuarios = async () => {
+    const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    if (!error && data) setUsuarios(data as Profile[]);
+    setLoading(false);
   };
+
+  useEffect(() => { fetchUsuarios(); }, []);
 
   const [form, setForm] = useState({ nome: "", email: "", cpf: "", senha: "", grupoPermissao: "" });
   const [cpfError, setCpfError] = useState("");
-  const [editId, setEditId] = useState<string | null>(null);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
     setForm({ nome: "", email: "", cpf: "", senha: "", grupoPermissao: "" });
     setCpfError("");
-    setEditId(null);
+    setEditUserId(null);
   };
 
   const handleCPFChange = (value: string) => {
@@ -79,38 +80,74 @@ const AdminUsuarios = () => {
 
   const handleCPFPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text");
-    handleCPFChange(pasted);
+    handleCPFChange(e.clipboardData.getData("text"));
   };
 
-  const handleSave = () => {
-    if (!form.nome.trim() || !form.email.trim() || (!editId && !form.senha.trim()) || !form.grupoPermissao || !form.cpf.trim()) {
+  const handleSave = async () => {
+    if (!form.nome.trim() || !form.email.trim() || (!editUserId && !form.senha.trim()) || !form.grupoPermissao) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
-    if (!isValidCPF(form.cpf)) {
+    if (form.cpf.trim() && !isValidCPF(form.cpf)) {
       setCpfError("CPF inválido.");
       return;
     }
-    if (editId) {
-      save(usuarios.map((u) => u.id === editId ? { ...u, nome: form.nome.trim(), email: form.email.trim(), cpf: form.cpf, grupoPermissao: form.grupoPermissao, ...(form.senha ? { senha: form.senha } : {}) } : u));
-      toast.success("Usuário atualizado.");
-    } else {
-      save([...usuarios, { id: crypto.randomUUID(), nome: form.nome.trim(), email: form.email.trim(), cpf: form.cpf, senha: form.senha, grupoPermissao: form.grupoPermissao, ativo: true }]);
-      toast.success("Usuário criado.");
+
+    setSaving(true);
+    try {
+      if (editUserId) {
+        const { data, error } = await supabase.functions.invoke("admin-update-user", {
+          body: {
+            user_id: editUserId,
+            nome: form.nome.trim(),
+            email: form.email.trim(),
+            cpf: form.cpf || null,
+            grupo_permissao: form.grupoPermissao,
+            ...(form.senha ? { senha: form.senha } : {}),
+          },
+        });
+        if (error || data?.error) throw new Error(data?.error || "Erro ao atualizar");
+        toast.success("Usuário atualizado.");
+      } else {
+        const { data, error } = await supabase.functions.invoke("admin-create-user", {
+          body: {
+            nome: form.nome.trim(),
+            email: form.email.trim(),
+            cpf: form.cpf || null,
+            senha: form.senha,
+            grupo_permissao: form.grupoPermissao,
+          },
+        });
+        if (error || data?.error) throw new Error(data?.error || "Erro ao criar usuário");
+        toast.success("Usuário criado.");
+      }
+      resetForm();
+      fetchUsuarios();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao salvar usuário.";
+      toast.error(message);
+    } finally {
+      setSaving(false);
     }
-    resetForm();
   };
 
-  const handleEdit = (u: Usuario) => {
-    setEditId(u.id);
-    setForm({ nome: u.nome, email: u.email, cpf: u.cpf || "", senha: "", grupoPermissao: u.grupoPermissao });
+  const handleEdit = (u: Profile) => {
+    setEditUserId(u.user_id);
+    setForm({ nome: u.nome, email: u.email, cpf: u.cpf || "", senha: "", grupoPermissao: u.grupo_permissao });
     setCpfError("");
   };
 
-  const toggleAtivo = (id: string) => {
-    save(usuarios.map((u) => u.id === id ? { ...u, ativo: !u.ativo } : u));
-    toast.success("Status atualizado.");
+  const toggleAtivo = async (u: Profile) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-update-user", {
+        body: { user_id: u.user_id, ativo: !u.ativo },
+      });
+      if (error || data?.error) throw new Error(data?.error || "Erro");
+      toast.success("Status atualizado.");
+      fetchUsuarios();
+    } catch {
+      toast.error("Erro ao atualizar status.");
+    }
   };
 
   return (
@@ -121,7 +158,7 @@ const AdminUsuarios = () => {
 
       <Card className="mb-8">
         <CardContent className="pt-6">
-          <h3 className="section-title">{editId ? "Editar Usuário" : "Novo Usuário"}</h3>
+          <h3 className="section-title">{editUserId ? "Editar Usuário" : "Novo Usuário"}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <Label>Nome *</Label>
@@ -132,7 +169,7 @@ const AdminUsuarios = () => {
               <Input type="email" placeholder="email@empresa.com" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
             </div>
             <div>
-              <Label>CPF *</Label>
+              <Label>CPF</Label>
               <Input
                 placeholder="000.000.000-00"
                 value={form.cpf}
@@ -142,7 +179,7 @@ const AdminUsuarios = () => {
               {cpfError && <p className="text-sm text-destructive mt-1">{cpfError}</p>}
             </div>
             <div>
-              <Label>{editId ? "Nova Senha (deixe vazio para manter)" : "Senha *"}</Label>
+              <Label>{editUserId ? "Nova Senha (deixe vazio para manter)" : "Senha *"}</Label>
               <Input type="password" placeholder="••••••••" value={form.senha} onChange={(e) => setForm((p) => ({ ...p, senha: e.target.value }))} />
             </div>
             <div>
@@ -160,18 +197,20 @@ const AdminUsuarios = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm">
+            <Button onClick={handleSave} size="sm" disabled={saving}>
               <Plus className="h-4 w-4 mr-1" />
-              {editId ? "Atualizar" : "Criar Usuário"}
+              {saving ? "Salvando..." : editUserId ? "Atualizar" : "Criar Usuário"}
             </Button>
-            {editId && (
+            {editUserId && (
               <Button variant="outline" size="sm" onClick={resetForm}>Cancelar</Button>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {usuarios.length > 0 && (
+      {loading ? (
+        <p className="text-muted-foreground">Carregando...</p>
+      ) : usuarios.length > 0 && (
         <Card>
           <CardContent className="pt-6">
             <h3 className="section-title">Usuários Cadastrados</h3>
@@ -192,7 +231,7 @@ const AdminUsuarios = () => {
                     <TableCell>{u.nome}</TableCell>
                     <TableCell>{u.email}</TableCell>
                     <TableCell>{u.cpf || "—"}</TableCell>
-                    <TableCell>{u.grupoPermissao}</TableCell>
+                    <TableCell>{u.grupo_permissao}</TableCell>
                     <TableCell>
                       <Badge variant={u.ativo ? "default" : "secondary"}>
                         {u.ativo ? "Ativo" : "Inativo"}
@@ -203,8 +242,8 @@ const AdminUsuarios = () => {
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(u)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => toggleAtivo(u.id)}>
-                          {u.ativo ? <UserX className="h-4 w-4 text-destructive" /> : <UserCheck className="h-4 w-4 text-success" />}
+                        <Button variant="ghost" size="icon" onClick={() => toggleAtivo(u)}>
+                          {u.ativo ? <UserX className="h-4 w-4 text-destructive" /> : <UserCheck className="h-4 w-4 text-green-600" />}
                         </Button>
                       </div>
                     </TableCell>

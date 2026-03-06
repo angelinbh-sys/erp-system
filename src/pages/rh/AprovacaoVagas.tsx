@@ -7,6 +7,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -24,6 +32,8 @@ import {
 
 import { useVagas, useUpdateVagaStatus, type Vaga } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const statusConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
   "Aguardando Aprovação": {
@@ -43,10 +53,19 @@ const statusConfig: Record<string, { label: string; icon: React.ReactNode; class
   },
 };
 
+const statusCandidatoConfig: Record<string, { label: string; className: string }> = {
+  "Em análise": { label: "Em análise", className: "bg-blue-100 text-blue-800 border-blue-300" },
+  "Aprovado": { label: "Aprovado", className: "bg-green-100 text-green-800 border-green-300" },
+  "Reprovado": { label: "Reprovado", className: "bg-red-100 text-red-800 border-red-300" },
+};
+
 const AprovacaoVagas = () => {
   const { data: vagas = [], isLoading } = useVagas();
   const updateStatus = useUpdateVagaStatus();
   const createNotificacao = useCreateNotificacao();
+  const { profile } = useAuthContext();
+
+  const isDiretoria = profile?.grupo_permissao?.toLowerCase() === "diretoria";
 
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
   const [showReprovar, setShowReprovar] = useState(false);
@@ -92,11 +111,38 @@ const AprovacaoVagas = () => {
     setShowReprovar(true);
   };
 
+  const handleStatusCandidatoChange = async (vaga: Vaga, newStatus: string) => {
+    try {
+      await supabase
+        .from("vagas")
+        .update({
+          status_candidato: newStatus,
+          status_candidato_updated_at: new Date().toISOString(),
+        } as Record<string, unknown>)
+        .eq("id", vaga.id);
+      toast.success(`Status do candidato alterado para "${newStatus}".`);
+      // Refetch
+      updateStatus.reset();
+      window.location.reload();
+    } catch {
+      toast.error("Erro ao alterar status do candidato.");
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const config = statusConfig[status] || statusConfig["Aguardando Aprovação"];
     return (
       <Badge variant="outline" className={`gap-1 ${config.className}`}>
         {config.icon}
+        {config.label}
+      </Badge>
+    );
+  };
+
+  const getCandidatoStatusBadge = (status: string) => {
+    const config = statusCandidatoConfig[status] || statusCandidatoConfig["Em análise"];
+    return (
+      <Badge variant="outline" className={`gap-1 ${config.className}`}>
         {config.label}
       </Badge>
     );
@@ -116,10 +162,16 @@ const AprovacaoVagas = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
         Aprovação de Vagas
       </h2>
+
+      {!isDiretoria && (
+        <div className="mb-4 p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
+          Você pode visualizar as vagas e seus status, mas apenas membros do grupo <strong>Diretoria</strong> podem aprovar ou reprovar.
+        </div>
+      )}
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando...</p>
@@ -138,8 +190,8 @@ const AprovacaoVagas = () => {
                   <TableHead>Cargo</TableHead>
                   <TableHead>Candidato</TableHead>
                   <TableHead>Centro de Custo</TableHead>
-                  <TableHead>Site / Contrato</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Status Vaga</TableHead>
+                  <TableHead>Status Candidato</TableHead>
                   <TableHead className="w-36">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -149,8 +201,8 @@ const AprovacaoVagas = () => {
                     <TableCell className="font-medium">{vaga.cargo}</TableCell>
                     <TableCell>{vaga.nome_candidato}</TableCell>
                     <TableCell>{vaga.centro_custo_nome}</TableCell>
-                    <TableCell>{vaga.site_contrato}</TableCell>
                     <TableCell>{getStatusBadge(vaga.status)}</TableCell>
+                    <TableCell>{getCandidatoStatusBadge((vaga as Record<string, unknown>).status_candidato as string || "Em análise")}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button
@@ -161,7 +213,7 @@ const AprovacaoVagas = () => {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {vaga.status === "Aguardando Aprovação" && (
+                        {isDiretoria && vaga.status === "Aguardando Aprovação" && (
                           <>
                             <Button
                               variant="ghost"
@@ -212,10 +264,29 @@ const AprovacaoVagas = () => {
                 <div><strong>Telefone:</strong> {detailVaga.telefone}</div>
               </div>
               <div><strong>Benefícios:</strong> {beneficiosToString(detailVaga.beneficios)}</div>
-              <div><strong>Status:</strong> {getStatusBadge(detailVaga.status)}</div>
+              <div><strong>Status da Vaga:</strong> {getStatusBadge(detailVaga.status)}</div>
+              <div><strong>Status do Candidato:</strong> {getCandidatoStatusBadge((detailVaga as Record<string, unknown>).status_candidato as string || "Em análise")}</div>
               {detailVaga.observacao_reprovacao && (
                 <div><strong>Motivo da reprovação:</strong> {detailVaga.observacao_reprovacao}</div>
               )}
+
+              {/* Status do Candidato - editable */}
+              <div className="pt-3 border-t border-border">
+                <Label className="text-sm font-semibold">Alterar Status do Candidato</Label>
+                <Select
+                  value={(detailVaga as Record<string, unknown>).status_candidato as string || "Em análise"}
+                  onValueChange={(v) => handleStatusCandidatoChange(detailVaga, v)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Em análise">Em análise</SelectItem>
+                    <SelectItem value="Aprovado">Aprovado</SelectItem>
+                    <SelectItem value="Reprovado">Reprovado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
         </DialogContent>

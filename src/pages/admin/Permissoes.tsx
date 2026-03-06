@@ -24,6 +24,7 @@ const MODULOS = [
   "Qualidade",
 ] as const;
 
+// Ordered from lowest to highest
 const PERMISSOES = ["acesso", "visualizacao", "criacao", "edicao", "exclusao"] as const;
 const PERMISSAO_LABELS: Record<string, string> = {
   acesso: "Acesso",
@@ -53,6 +54,36 @@ function criarPermissoesVazias(): GrupoPermissoes {
   return result;
 }
 
+/**
+ * Apply hierarchy: when a higher permission is set, all lower ones are auto-set.
+ * Hierarchy order (index): acesso(0) < visualizacao(1) < criacao(2) < edicao(3) < exclusao(4)
+ */
+function applyHierarchy(modPerms: ModuloPermissoes): ModuloPermissoes {
+  const result = { ...modPerms };
+  // Find the highest enabled permission
+  let highestIndex = -1;
+  for (let i = PERMISSOES.length - 1; i >= 0; i--) {
+    if (result[PERMISSOES[i]]) {
+      highestIndex = i;
+      break;
+    }
+  }
+  // Enable all below the highest
+  for (let i = 0; i < PERMISSOES.length; i++) {
+    if (i <= highestIndex) {
+      result[PERMISSOES[i]] = true;
+    }
+  }
+  return result;
+}
+
+function getHighestPermIndex(modPerms: ModuloPermissoes): number {
+  for (let i = PERMISSOES.length - 1; i >= 0; i--) {
+    if (modPerms[PERMISSOES[i]]) return i;
+  }
+  return -1;
+}
+
 const AdminPermissoes = () => {
   const [grupos, setGrupos] = useState<GrupoPermissao[]>(() => {
     try {
@@ -71,10 +102,33 @@ const AdminPermissoes = () => {
   const [editId, setEditId] = useState<string | null>(null);
 
   const togglePermissao = (modulo: string, perm: string) => {
-    setPermissoes((prev) => ({
-      ...prev,
-      [modulo]: { ...prev[modulo], [perm]: !prev[modulo][perm] },
-    }));
+    setPermissoes((prev) => {
+      const current = { ...prev[modulo] };
+      const permIndex = PERMISSOES.indexOf(perm as typeof PERMISSOES[number]);
+
+      if (current[perm]) {
+        // Unchecking: uncheck this and all above
+        for (let i = permIndex; i < PERMISSOES.length; i++) {
+          current[PERMISSOES[i]] = false;
+        }
+      } else {
+        // Checking: check this and all below
+        for (let i = 0; i <= permIndex; i++) {
+          current[PERMISSOES[i]] = true;
+        }
+      }
+
+      return { ...prev, [modulo]: current };
+    });
+  };
+
+  const isDisabledByHierarchy = (modulo: string, perm: string): boolean => {
+    const modPerms = permissoes[modulo];
+    if (!modPerms) return false;
+    const permIndex = PERMISSOES.indexOf(perm as typeof PERMISSOES[number]);
+    const highestIndex = getHighestPermIndex(modPerms);
+    // Disabled if it's below the highest and checked (auto-inherited)
+    return permIndex < highestIndex && modPerms[perm];
   };
 
   const resetForm = () => {
@@ -101,7 +155,12 @@ const AdminPermissoes = () => {
   const handleEdit = (g: GrupoPermissao) => {
     setEditId(g.id);
     setNome(g.nome);
-    setPermissoes(g.permissoes);
+    // Re-apply hierarchy to stored permissions
+    const fixed: GrupoPermissoes = {};
+    MODULOS.forEach((mod) => {
+      fixed[mod] = applyHierarchy(g.permissoes[mod] || {});
+    });
+    setPermissoes(fixed);
   };
 
   const handleDelete = (id: string) => {
@@ -144,14 +203,19 @@ const AdminPermissoes = () => {
                   {MODULOS.map((mod) => (
                     <TableRow key={mod}>
                       <TableCell className="font-medium">{mod}</TableCell>
-                      {PERMISSOES.map((p) => (
-                        <TableCell key={p} className="text-center">
-                          <Checkbox
-                            checked={permissoes[mod]?.[p] ?? false}
-                            onCheckedChange={() => togglePermissao(mod, p)}
-                          />
-                        </TableCell>
-                      ))}
+                      {PERMISSOES.map((p) => {
+                        const disabled = isDisabledByHierarchy(mod, p);
+                        return (
+                          <TableCell key={p} className="text-center">
+                            <Checkbox
+                              checked={permissoes[mod]?.[p] ?? false}
+                              onCheckedChange={() => togglePermissao(mod, p)}
+                              disabled={disabled}
+                              className={disabled ? "opacity-60" : ""}
+                            />
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -172,6 +236,9 @@ const AdminPermissoes = () => {
               <li><strong className="text-foreground">Edição</strong> — Permite modificar registros já existentes.</li>
               <li><strong className="text-foreground">Exclusão</strong> — Permite remover/excluir registros. É uma permissão mais sensível.</li>
             </ul>
+            <p className="mt-3 text-xs text-muted-foreground italic">
+              ⚡ Hierarquia automática: ao marcar uma permissão superior, todas as inferiores são habilitadas automaticamente.
+            </p>
           </div>
 
           <div className="flex gap-2">
