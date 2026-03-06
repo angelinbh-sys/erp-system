@@ -98,7 +98,7 @@ const Dashboard = () => {
   const { data: notificacoes = [] } = useNotificacoes();
   const updateStatus = useUpdateVagaStatus();
 
-  const isDiretoria = profile?.grupo_permissao === "Diretoria";
+  const isDiretoria = profile?.super_admin || profile?.grupo_permissao === "Diretoria";
 
   /* KPIs */
   const kpis = useMemo(() => {
