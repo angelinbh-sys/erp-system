@@ -96,12 +96,18 @@ export type Database = {
           centro_custo_nome: string
           created_at: string
           curriculo_nome: string | null
+          data_agendamento_aso: string | null
+          data_entrega_aso: string | null
           data_nascimento: string
           documento_nome: string | null
+          enviado_admissao: boolean
+          enviado_admissao_at: string | null
           id: string
           local_trabalho: string
           nome_candidato: string
           observacao_reprovacao: string | null
+          resultado_aso_nome: string | null
+          resultado_aso_path: string | null
           salario: string
           site_contrato: string
           status: string
@@ -117,12 +123,18 @@ export type Database = {
           centro_custo_nome: string
           created_at?: string
           curriculo_nome?: string | null
+          data_agendamento_aso?: string | null
+          data_entrega_aso?: string | null
           data_nascimento: string
           documento_nome?: string | null
+          enviado_admissao?: boolean
+          enviado_admissao_at?: string | null
           id?: string
           local_trabalho: string
           nome_candidato: string
           observacao_reprovacao?: string | null
+          resultado_aso_nome?: string | null
+          resultado_aso_path?: string | null
           salario: string
           site_contrato: string
           status?: string
@@ -138,12 +150,18 @@ export type Database = {
           centro_custo_nome?: string
           created_at?: string
           curriculo_nome?: string | null
+          data_agendamento_aso?: string | null
+          data_entrega_aso?: string | null
           data_nascimento?: string
           documento_nome?: string | null
+          enviado_admissao?: boolean
+          enviado_admissao_at?: string | null
           id?: string
           local_trabalho?: string
           nome_candidato?: string
           observacao_reprovacao?: string | null
+          resultado_aso_nome?: string | null
+          resultado_aso_path?: string | null
           salario?: string
           site_contrato?: string
           status?: string
