@@ -38,7 +38,7 @@ const modules = [
   },
   {
     label: "Financeiro",
-    icon: Coins,
+    icon: CircleDollarSign,
     children: [],
     url: "/financeiro",
   },
