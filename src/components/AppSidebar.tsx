@@ -57,6 +57,13 @@ const modules = [
     url: "/qualidade",
   },
   {
+    label: "SESMT",
+    icon: HardHat,
+    children: [
+      { title: "Agendamento de ASO", url: "/sesmt/agendamento-aso" },
+    ],
+  },
+  {
     label: "Admin",
     icon: Shield,
     children: [
