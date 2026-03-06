@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Users,
   FileText,
-  Coins,
+  CircleDollarSign,
   Car,
   Award,
   Building2,
@@ -29,7 +29,7 @@ const modules = [
     ],
   },
   {
-    label: "Departamento Pessoal",
+    label: "Dep. Pessoal",
     icon: FileText,
     children: [
       { title: "Alteração de Função / Cargo", url: "/departamento-pessoal/alteracao-funcao" },
@@ -38,7 +38,7 @@ const modules = [
   },
   {
     label: "Financeiro",
-    icon: Coins,
+    icon: CircleDollarSign,
     children: [],
     url: "/financeiro",
   },
@@ -143,8 +143,8 @@ export function AppSidebar() {
               <div className="flex items-center gap-2 px-3 py-2.5 text-sidebar-foreground">
                 <mod.icon className="h-4 w-4 shrink-0" />
                 {!collapsed && (
-                  <span className="text-sm font-semibold uppercase tracking-wider text-sidebar-foreground italic opacity-60">
-                    {mod.label} — Em breve
+                  <span className="text-sm font-semibold uppercase tracking-wider text-sidebar-foreground">
+                    {mod.label}
                   </span>
                 )}
               </div>

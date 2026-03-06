@@ -513,7 +513,7 @@ const AberturaDeVaga = () => {
 
                 {/* CNH ou RG */}
                 <div className="md:col-span-2 mt-4">
-                  <Label className="mb-2 block">CNH ou RG do Candidato</Label>
+                  <Label className="mb-2 block">CNH ou RG com CPF</Label>
                   <div
                     className="border-2 border-dashed border-input rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
                     onClick={() => docInputRef.current?.click()}
@@ -545,7 +545,7 @@ const AberturaDeVaga = () => {
                     ) : (
                       <div className="flex flex-col items-center gap-1 text-muted-foreground">
                         <Upload className="h-6 w-6" />
-                        <span className="text-sm">Clique para anexar CNH ou RG</span>
+                        <span className="text-sm">Clique para anexar CNH ou RG com CPF</span>
                         <span className="text-xs">PDF, JPG ou PNG</span>
                       </div>
                     )}
