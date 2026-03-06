@@ -159,6 +159,21 @@ const AdminPermissoes = () => {
             </div>
           </div>
 
+          {/* Legenda de Permissões */}
+          <div className="mb-4 p-4 rounded-lg bg-muted/50 border border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Info className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold text-foreground">Legenda de Permissões</span>
+            </div>
+            <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <li><strong className="text-foreground">Acesso</strong> — Define se o usuário pode acessar/entrar no módulo. Sem esta permissão, o módulo nem aparece no menu.</li>
+              <li><strong className="text-foreground">Visualização</strong> — Permite ver os dados/registros existentes no módulo, mas sem poder alterar nada.</li>
+              <li><strong className="text-foreground">Criação</strong> — Permite criar novos registros (ex: abrir uma vaga, cadastrar uma carga).</li>
+              <li><strong className="text-foreground">Edição</strong> — Permite modificar registros já existentes.</li>
+              <li><strong className="text-foreground">Exclusão</strong> — Permite remover/excluir registros. É uma permissão mais sensível.</li>
+            </ul>
+          </div>
+
           <div className="flex gap-2">
             <Button onClick={handleSave} size="sm">
               <Plus className="h-4 w-4 mr-1" />
