@@ -3,7 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
+import Login from "@/pages/Login";
 import AberturaDeVaga from "@/pages/rh/AberturaDeVaga";
 import GestaoRH from "@/pages/rh/GestaoRH";
 import AprovacaoVagas from "@/pages/rh/AprovacaoVagas";
@@ -23,23 +25,26 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/rh/gestao-rh" replace />} />
-            <Route path="/rh/gestao-rh" element={<GestaoRH />} />
-            <Route path="/rh/abertura-de-vaga" element={<AberturaDeVaga />} />
-            <Route path="/rh/aprovacao-vagas" element={<AprovacaoVagas />} />
-            <Route path="/departamento-pessoal/alteracao-funcao" element={<AlteracaoFuncao />} />
-            <Route path="/departamento-pessoal/solicitacao-ferias" element={<SolicitacaoFerias />} />
-            <Route path="/admin/usuarios" element={<AdminUsuarios />} />
-            <Route path="/admin/permissoes" element={<AdminPermissoes />} />
-            <Route path="/sesmt/agendamento-aso" element={<AgendamentoASO />} />
-            <Route path="/financeiro" element={<ModulePlaceholder title="Financeiro" />} />
-            <Route path="/logistica" element={<ModulePlaceholder title="Logística" />} />
-            <Route path="/qualidade" element={<ModulePlaceholder title="Qualidade" />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Navigate to="/rh/gestao-rh" replace />} />
+              <Route path="/rh/gestao-rh" element={<GestaoRH />} />
+              <Route path="/rh/abertura-de-vaga" element={<AberturaDeVaga />} />
+              <Route path="/rh/aprovacao-vagas" element={<AprovacaoVagas />} />
+              <Route path="/departamento-pessoal/alteracao-funcao" element={<AlteracaoFuncao />} />
+              <Route path="/departamento-pessoal/solicitacao-ferias" element={<SolicitacaoFerias />} />
+              <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+              <Route path="/admin/permissoes" element={<AdminPermissoes />} />
+              <Route path="/sesmt/agendamento-aso" element={<AgendamentoASO />} />
+              <Route path="/financeiro" element={<ModulePlaceholder title="Financeiro" />} />
+              <Route path="/logistica" element={<ModulePlaceholder title="Logística" />} />
+              <Route path="/qualidade" element={<ModulePlaceholder title="Qualidade" />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
