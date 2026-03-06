@@ -39,7 +39,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 
-import { useCentrosCusto, useTiposContrato, useCargos } from "@/hooks/useCadastros";
+import { useCentrosCusto, useCargos } from "@/hooks/useCadastros";
 import { cidadesBrasil, getCidadeLabel } from "@/data/cidadesBrasil";
 import { formatCurrencyBRL } from "@/utils/currency";
 import { formatPhone } from "@/utils/phone";
@@ -102,7 +102,6 @@ const AberturaDeVaga = () => {
 
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
-  const { items: tiposContrato } = useTiposContrato();
 
   const form = useForm<VagaForm>({
     resolver: zodResolver(vagaSchema),
@@ -117,6 +116,10 @@ const AberturaDeVaga = () => {
       telefone: "",
     },
   });
+
+  const selectedCCId = form.watch("centroCusto");
+  const selectedCC = centrosCusto.find((c) => c.id === selectedCCId);
+  const sitesForCC = selectedCC?.sites ?? [];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -240,7 +243,14 @@ const AberturaDeVaga = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Centro de Custo *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={(v) => {
+                          field.onChange(v);
+                          // Reset site when CC changes
+                          form.setValue("tipoContrato", "");
+                        }}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione o centro de custo" />
@@ -251,7 +261,7 @@ const AberturaDeVaga = () => {
                             <div className="p-3 text-sm text-muted-foreground text-center">{emptyMessage}</div>
                           ) : (
                             centrosCusto.map((c) => (
-                              <SelectItem key={c.id} value={c.nome}>
+                              <SelectItem key={c.id} value={c.id}>
                                 {c.codigo ? `${c.codigo} - ${c.nome}` : c.nome}
                               </SelectItem>
                             ))
@@ -310,7 +320,7 @@ const AberturaDeVaga = () => {
                   )}
                 />
 
-                {/* Site / Contrato */}
+                {/* Site / Contrato - filtered by selected CC */}
                 <FormField
                   control={form.control}
                   name="tipoContrato"
@@ -324,11 +334,13 @@ const AberturaDeVaga = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {tiposContrato.length === 0 ? (
-                            <div className="p-3 text-sm text-muted-foreground text-center">{emptyMessage}</div>
+                          {!selectedCCId ? (
+                            <div className="p-3 text-sm text-muted-foreground text-center">Selecione um Centro de Custo primeiro.</div>
+                          ) : sitesForCC.length === 0 ? (
+                            <div className="p-3 text-sm text-muted-foreground text-center">Nenhum site cadastrado para este Centro de Custo.</div>
                           ) : (
-                            tiposContrato.map((c) => (
-                              <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
+                            sitesForCC.map((s) => (
+                              <SelectItem key={s.id} value={s.nome}>{s.nome}</SelectItem>
                             ))
                           )}
                         </SelectContent>
@@ -497,49 +509,49 @@ const AberturaDeVaga = () => {
                       <FormMessage />
                     </FormItem>
                   )}
-               />
+                />
 
-              {/* CNH ou RG */}
-              <div className="md:col-span-2 mt-4">
-                <Label className="mb-2 block">CNH ou RG do Candidato</Label>
-                <div
-                  className="border-2 border-dashed border-input rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
-                  onClick={() => docInputRef.current?.click()}
-                >
-                  <input
-                    ref={docInputRef}
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    className="hidden"
-                    onChange={(e) => {
-                      const selected = e.target.files?.[0];
-                      if (!selected) return;
-                      if (!ACCEPTED_DOC_TYPES.includes(selected.type)) {
-                        setDocError("Apenas PDF, JPG ou PNG são permitidos.");
-                        setDocFile(null);
-                        return;
-                      }
-                      setDocError("");
-                      setDocFile(selected);
-                    }}
-                  />
-                  {docFile ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-sm text-foreground font-medium">{docFile.name}</span>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); setDocFile(null); if (docInputRef.current) docInputRef.current.value = ""; }} className="text-muted-foreground hover:text-destructive">
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                      <Upload className="h-6 w-6" />
-                      <span className="text-sm">Clique para anexar CNH ou RG</span>
-                      <span className="text-xs">PDF, JPG ou PNG</span>
-                    </div>
-                  )}
+                {/* CNH ou RG */}
+                <div className="md:col-span-2 mt-4">
+                  <Label className="mb-2 block">CNH ou RG do Candidato</Label>
+                  <div
+                    className="border-2 border-dashed border-input rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
+                    onClick={() => docInputRef.current?.click()}
+                  >
+                    <input
+                      ref={docInputRef}
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const selected = e.target.files?.[0];
+                        if (!selected) return;
+                        if (!ACCEPTED_DOC_TYPES.includes(selected.type)) {
+                          setDocError("Apenas PDF, JPG ou PNG são permitidos.");
+                          setDocFile(null);
+                          return;
+                        }
+                        setDocError("");
+                        setDocFile(selected);
+                      }}
+                    />
+                    {docFile ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-sm text-foreground font-medium">{docFile.name}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setDocFile(null); if (docInputRef.current) docInputRef.current.value = ""; }} className="text-muted-foreground hover:text-destructive">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <Upload className="h-6 w-6" />
+                        <span className="text-sm">Clique para anexar CNH ou RG</span>
+                        <span className="text-xs">PDF, JPG ou PNG</span>
+                      </div>
+                    )}
+                  </div>
+                  {docError && <p className="text-sm text-destructive mt-2">{docError}</p>}
                 </div>
-                {docError && <p className="text-sm text-destructive mt-2">{docError}</p>}
-              </div>
               </div>
             </CardContent>
           </Card>
