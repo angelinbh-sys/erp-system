@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Upload, X, Search } from "lucide-react";
 import { useCreateVaga } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
