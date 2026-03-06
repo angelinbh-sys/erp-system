@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { NotificacoesBell } from "@/components/NotificacoesBell";
 import { Outlet } from "react-router-dom";
 
 export function AppLayout() {
@@ -10,7 +11,8 @@ export function AppLayout() {
         <div className="flex-1 flex flex-col">
           <header className="h-14 flex items-center border-b border-border bg-card px-4">
             <SidebarTrigger className="mr-4" />
-            <h1 className="font-heading font-semibold text-foreground">Sistema Empresarial</h1>
+            <h1 className="font-heading font-semibold text-foreground flex-1">Sistema Empresarial</h1>
+            <NotificacoesBell />
           </header>
           <main className="flex-1 p-6 overflow-auto">
             <Outlet />

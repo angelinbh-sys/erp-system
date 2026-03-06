@@ -8,6 +8,7 @@ import {
   Building2,
   Shield,
   ChevronDown,
+  HardHat,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -26,6 +27,7 @@ const modules = [
     children: [
       { title: "Gestão RH", url: "/rh/gestao-rh" },
       { title: "Abertura de Vaga", url: "/rh/abertura-de-vaga" },
+      { title: "Aprovação de Vagas", url: "/rh/aprovacao-vagas" },
     ],
   },
   {
@@ -53,6 +55,13 @@ const modules = [
     icon: Award,
     children: [],
     url: "/qualidade",
+  },
+  {
+    label: "SESMT",
+    icon: HardHat,
+    children: [
+      { title: "Agendamento de ASO", url: "/sesmt/agendamento-aso" },
+    ],
   },
   {
     label: "Admin",

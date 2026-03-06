@@ -4,6 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Upload, X, Search } from "lucide-react";
+import { useCreateVaga } from "@/hooks/useVagas";
+import { useCreateNotificacao } from "@/hooks/useNotificacoes";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,6 +105,8 @@ const AberturaDeVaga = () => {
 
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
+  const createVaga = useCreateVaga();
+  const createNotificacao = useCreateNotificacao();
 
   const form = useForm<VagaForm>({
     resolver: zodResolver(vagaSchema),
@@ -138,19 +143,53 @@ const AberturaDeVaga = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const onSubmit = (data: VagaForm) => {
+  const onSubmit = async (data: VagaForm) => {
     if (!file) {
       setFileError("O currículo é obrigatório.");
       return;
     }
-    console.log("Vaga cadastrada:", { ...data, beneficios, curriculo: file.name, documento: docFile?.name });
-    toast.success("Vaga cadastrada com sucesso.");
-    form.reset();
-    setFile(null);
-    setDocFile(null);
-    setBeneficios(defaultBeneficios);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    if (docInputRef.current) docInputRef.current.value = "";
+
+    const ccObj = centrosCusto.find((c) => c.id === data.centroCusto);
+
+    try {
+      const vaga = await createVaga.mutateAsync({
+        cargo: data.cargo,
+        salario: data.salario,
+        centro_custo_nome: ccObj?.nome ?? "",
+        centro_custo_codigo: ccObj?.codigo ?? "",
+        site_contrato: data.tipoContrato,
+        local_trabalho: data.localTrabalho,
+        nome_candidato: data.nomeCandidato,
+        data_nascimento: data.dataNascimento,
+        telefone: data.telefone,
+        beneficios: JSON.parse(JSON.stringify(beneficios)),
+        curriculo_nome: file.name,
+        documento_nome: docFile?.name ?? null,
+        status: "Aguardando Aprovação",
+      });
+
+      // Create notification for Diretoria
+      await createNotificacao.mutateAsync({
+        titulo: "Nova vaga aguardando aprovação",
+        mensagem: `Vaga: ${data.cargo} | Candidato: ${data.nomeCandidato} | CC: ${ccObj?.nome ?? ""} | Site: ${data.tipoContrato}`,
+        tipo: "warning",
+        link: "/rh/aprovacao-vagas",
+        vaga_id: vaga.id,
+      });
+
+      // Call edge function for email notification (async, don't block)
+      supabase.functions.invoke("notify-vaga", { body: { vaga } }).catch(console.error);
+
+      toast.success("Vaga cadastrada com sucesso! Aguardando aprovação da Diretoria.");
+      form.reset();
+      setFile(null);
+      setDocFile(null);
+      setBeneficios(defaultBeneficios);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (docInputRef.current) docInputRef.current.value = "";
+    } catch {
+      toast.error("Erro ao cadastrar vaga.");
+    }
   };
 
   const handleCancel = () => {
