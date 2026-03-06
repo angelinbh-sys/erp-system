@@ -18,7 +18,7 @@ import {
 
 const MODULOS = [
   "Recursos Humanos",
-  "Departamento Pessoal",
+  "Dep. Pessoal",
   "Financeiro",
   "Logística",
   "Qualidade",

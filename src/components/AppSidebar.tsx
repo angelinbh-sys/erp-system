@@ -143,8 +143,8 @@ export function AppSidebar() {
               <div className="flex items-center gap-2 px-3 py-2.5 text-sidebar-foreground">
                 <mod.icon className="h-4 w-4 shrink-0" />
                 {!collapsed && (
-                  <span className="text-sm font-semibold uppercase tracking-wider text-sidebar-foreground italic opacity-60">
-                    {mod.label} — Em breve
+                  <span className="text-sm font-semibold uppercase tracking-wider text-sidebar-foreground">
+                    {mod.label}
                   </span>
                 )}
               </div>

@@ -545,7 +545,7 @@ const AberturaDeVaga = () => {
                     ) : (
                       <div className="flex flex-col items-center gap-1 text-muted-foreground">
                         <Upload className="h-6 w-6" />
-                        <span className="text-sm">Clique para anexar CNH ou RG</span>
+                        <span className="text-sm">Clique para anexar CNH ou RG com CPF</span>
                         <span className="text-xs">PDF, JPG ou PNG</span>
                       </div>
                     )}
