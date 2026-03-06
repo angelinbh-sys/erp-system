@@ -4,6 +4,7 @@ export interface CentroCusto {
   id: string;
   nome: string;
   codigo: string;
+  sites: SiteContrato[];
 }
 
 export interface SiteContrato {
@@ -43,22 +44,17 @@ function useLocalStorage<T extends { id: string }>(key: string) {
     setItemsState((prev) => prev.filter((i) => i.id !== id));
   }, []);
 
-  return { items, add, update, remove };
+  const setItems = useCallback((updater: (prev: T[]) => T[]) => {
+    setItemsState(updater);
+  }, []);
+
+  return { items, add, update, remove, setItems };
 }
 
 export function useCentrosCusto() {
   return useLocalStorage<CentroCusto>("erp_centros_custo");
 }
 
-export function useSitesContrato() {
-  return useLocalStorage<SiteContrato>("erp_tipos_contrato");
-}
-
 export function useCargos() {
   return useLocalStorage<Cargo>("erp_cargos");
-}
-
-// Keep backward compatibility alias
-export function useTiposContrato() {
-  return useSitesContrato();
 }

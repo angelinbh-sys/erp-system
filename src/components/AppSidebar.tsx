@@ -1,26 +1,23 @@
+import { useState } from "react";
 import {
   Users,
   FileText,
-  DollarSign,
+  Coins,
   Car,
   Award,
   Building2,
   Shield,
+  ChevronDown,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const modules = [
   {
@@ -41,7 +38,7 @@ const modules = [
   },
   {
     label: "Financeiro",
-    icon: DollarSign,
+    icon: Coins,
     children: [],
     url: "/financeiro",
   },
@@ -72,6 +69,21 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
 
+  const [openModules, setOpenModules] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    modules.forEach((mod) => {
+      if (mod.children.length > 0) {
+        const isActive = mod.children.some((c) => location.pathname.startsWith(c.url));
+        initial[mod.label] = isActive;
+      }
+    });
+    return initial;
+  });
+
+  const toggleModule = (label: string) => {
+    setOpenModules((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4 border-b border-sidebar-border">
@@ -84,52 +96,60 @@ export function AppSidebar() {
           )}
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="py-2">
         {modules.map((mod) => (
-          <SidebarGroup key={mod.label}>
-            <SidebarGroupLabel className="text-sidebar-accent-foreground font-semibold uppercase text-xs tracking-wider">
-              <mod.icon className="h-4 w-4 mr-2 shrink-0" />
-              {!collapsed && mod.label}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {mod.children.length > 0 ? (
-                  mod.children.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
+          <div key={mod.label} className="px-2 mb-1">
+            {mod.children.length > 0 ? (
+              <Collapsible open={openModules[mod.label] ?? false} onOpenChange={() => toggleModule(mod.label)}>
+                <CollapsibleTrigger className="flex items-center gap-2 w-full px-3 py-2.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground transition-colors">
+                  <mod.icon className="h-4 w-4 shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1 text-left text-sm font-semibold uppercase tracking-wider">
+                        {mod.label}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                          openModules[mod.label] ? "rotate-180" : ""
+                        }`}
+                      />
+                    </>
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="ml-4 mt-1 space-y-0.5">
+                    {mod.children.map((item) => {
+                      const isActive = location.pathname === item.url;
+                      return (
                         <NavLink
+                          key={item.title}
                           to={item.url}
                           end
-                          className="hover:bg-sidebar-accent text-sidebar-foreground pl-8"
-                          activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                          className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+                            isActive
+                              ? "font-medium"
+                              : "text-sidebar-muted hover:bg-sidebar-accent"
+                          }`}
+                          style={isActive ? { color: "hsl(var(--sidebar-active))" } : undefined}
                         >
-                          {!collapsed && (
-                            <span className="flex items-center gap-2">
-                              <span className="text-sidebar-muted text-xs">–</span>
-                              <span>{item.title}</span>
-                            </span>
-                          )}
+                          {!collapsed && <span>{item.title}</span>}
                         </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))
-                ) : (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={mod.url || "#"}
-                        end
-                        className="hover:bg-sidebar-accent"
-                        activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                      >
-                        {!collapsed && <span className="text-sm text-sidebar-foreground italic ml-6">Em breve</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                      );
+                    })}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-2.5 text-sidebar-foreground">
+                <mod.icon className="h-4 w-4 shrink-0" />
+                {!collapsed && (
+                  <span className="text-sm font-semibold uppercase tracking-wider text-sidebar-foreground italic opacity-60">
+                    {mod.label} — Em breve
+                  </span>
                 )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+              </div>
+            )}
+          </div>
         ))}
       </SidebarContent>
     </Sidebar>
