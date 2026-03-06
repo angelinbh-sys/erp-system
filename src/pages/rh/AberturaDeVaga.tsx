@@ -177,6 +177,9 @@ const AberturaDeVaga = () => {
         vaga_id: vaga.id,
       });
 
+      // Call edge function for email notification (async, don't block)
+      supabase.functions.invoke("notify-vaga", { body: { vaga } }).catch(console.error);
+
       toast.success("Vaga cadastrada com sucesso! Aguardando aprovação da Diretoria.");
       form.reset();
       setFile(null);
