@@ -33,9 +33,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update password if provided
-    if (senha) {
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, { password: senha });
+    // Update auth user (password and/or email)
+    const authUpdate: Record<string, unknown> = {};
+    if (senha) authUpdate.password = senha;
+    if (email) authUpdate.email = email;
+
+    if (Object.keys(authUpdate).length > 0) {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, authUpdate);
       if (error) {
         return new Response(JSON.stringify({ error: error.message }), {
           status: 400,
