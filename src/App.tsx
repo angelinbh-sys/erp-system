@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
 import AberturaDeVaga from "@/pages/rh/AberturaDeVaga";
 import GestaoRH from "@/pages/rh/GestaoRH";
 import AprovacaoVagas from "@/pages/rh/AprovacaoVagas";
