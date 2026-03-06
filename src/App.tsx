@@ -29,7 +29,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route element={<AppLayout />}>
-              <Route path="/" element={<Navigate to="/rh/gestao-rh" replace />} />
+              <Route path="/" element={<Dashboard />} />
               <Route path="/rh/gestao-rh" element={<GestaoRH />} />
               <Route path="/rh/abertura-de-vaga" element={<AberturaDeVaga />} />
               <Route path="/rh/aprovacao-vagas" element={<AprovacaoVagas />} />
