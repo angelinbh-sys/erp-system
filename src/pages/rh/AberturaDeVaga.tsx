@@ -104,6 +104,8 @@ const AberturaDeVaga = () => {
 
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
+  const createVaga = useCreateVaga();
+  const createNotificacao = useCreateNotificacao();
 
   const form = useForm<VagaForm>({
     resolver: zodResolver(vagaSchema),
