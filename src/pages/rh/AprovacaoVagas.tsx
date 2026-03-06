@@ -65,7 +65,7 @@ const AprovacaoVagas = () => {
   const createNotificacao = useCreateNotificacao();
   const { profile } = useAuthContext();
 
-  const isDiretoria = profile?.grupo_permissao?.toLowerCase() === "diretoria";
+  const isDiretoria = profile?.super_admin || profile?.grupo_permissao?.toLowerCase() === "diretoria";
 
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
   const [showReprovar, setShowReprovar] = useState(false);
