@@ -55,6 +55,39 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          ativo: boolean
+          cpf: string | null
+          created_at: string
+          email: string
+          grupo_permissao: string
+          id: string
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          cpf?: string | null
+          created_at?: string
+          email: string
+          grupo_permissao?: string
+          id?: string
+          nome: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          cpf?: string | null
+          created_at?: string
+          email?: string
+          grupo_permissao?: string
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vagas: {
         Row: {
           beneficios: Json | null
@@ -72,6 +105,8 @@ export type Database = {
           salario: string
           site_contrato: string
           status: string
+          status_candidato: string
+          status_candidato_updated_at: string | null
           telefone: string
           updated_at: string
         }
@@ -91,6 +126,8 @@ export type Database = {
           salario: string
           site_contrato: string
           status?: string
+          status_candidato?: string
+          status_candidato_updated_at?: string | null
           telefone: string
           updated_at?: string
         }
@@ -110,6 +147,8 @@ export type Database = {
           salario?: string
           site_contrato?: string
           status?: string
+          status_candidato?: string
+          status_candidato_updated_at?: string | null
           telefone?: string
           updated_at?: string
         }
