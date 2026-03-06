@@ -45,6 +45,7 @@
     --sidebar-border: 215 25% 22%;
     --sidebar-ring: 215 80% 55%;
     --sidebar-muted: 215 20% 55%;
+    --sidebar-active: 45 90% 51%;
 
     --success: 145 65% 42%;
     --success-foreground: 0 0% 100%;
@@ -81,6 +82,7 @@
     --sidebar-accent-foreground: 210 20% 95%;
     --sidebar-border: 215 25% 16%;
     --sidebar-ring: 215 80% 55%;
+    --sidebar-active: 45 90% 51%;
   }
 }
 

@@ -24,11 +24,13 @@ import {
 } from "@/components/ui/table";
 
 import type { GrupoPermissao } from "@/pages/admin/Permissoes";
+import { formatCPF, isValidCPF } from "@/utils/cpf";
 
 interface Usuario {
   id: string;
   nome: string;
   email: string;
+  cpf: string;
   senha: string;
   grupoPermissao: string;
   ativo: boolean;
@@ -54,24 +56,47 @@ const AdminUsuarios = () => {
     localStorage.setItem("erp_usuarios", JSON.stringify(items));
   };
 
-  const [form, setForm] = useState({ nome: "", email: "", senha: "", grupoPermissao: "" });
+  const [form, setForm] = useState({ nome: "", email: "", cpf: "", senha: "", grupoPermissao: "" });
+  const [cpfError, setCpfError] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
 
   const resetForm = () => {
-    setForm({ nome: "", email: "", senha: "", grupoPermissao: "" });
+    setForm({ nome: "", email: "", cpf: "", senha: "", grupoPermissao: "" });
+    setCpfError("");
     setEditId(null);
   };
 
+  const handleCPFChange = (value: string) => {
+    const formatted = formatCPF(value);
+    setForm((p) => ({ ...p, cpf: formatted }));
+    const digits = formatted.replace(/\D/g, "");
+    if (digits.length === 11) {
+      setCpfError(isValidCPF(formatted) ? "" : "CPF inválido.");
+    } else {
+      setCpfError("");
+    }
+  };
+
+  const handleCPFPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text");
+    handleCPFChange(pasted);
+  };
+
   const handleSave = () => {
-    if (!form.nome.trim() || !form.email.trim() || (!editId && !form.senha.trim()) || !form.grupoPermissao) {
+    if (!form.nome.trim() || !form.email.trim() || (!editId && !form.senha.trim()) || !form.grupoPermissao || !form.cpf.trim()) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
+    if (!isValidCPF(form.cpf)) {
+      setCpfError("CPF inválido.");
+      return;
+    }
     if (editId) {
-      save(usuarios.map((u) => u.id === editId ? { ...u, nome: form.nome.trim(), email: form.email.trim(), grupoPermissao: form.grupoPermissao, ...(form.senha ? { senha: form.senha } : {}) } : u));
+      save(usuarios.map((u) => u.id === editId ? { ...u, nome: form.nome.trim(), email: form.email.trim(), cpf: form.cpf, grupoPermissao: form.grupoPermissao, ...(form.senha ? { senha: form.senha } : {}) } : u));
       toast.success("Usuário atualizado.");
     } else {
-      save([...usuarios, { id: crypto.randomUUID(), nome: form.nome.trim(), email: form.email.trim(), senha: form.senha, grupoPermissao: form.grupoPermissao, ativo: true }]);
+      save([...usuarios, { id: crypto.randomUUID(), nome: form.nome.trim(), email: form.email.trim(), cpf: form.cpf, senha: form.senha, grupoPermissao: form.grupoPermissao, ativo: true }]);
       toast.success("Usuário criado.");
     }
     resetForm();
@@ -79,7 +104,8 @@ const AdminUsuarios = () => {
 
   const handleEdit = (u: Usuario) => {
     setEditId(u.id);
-    setForm({ nome: u.nome, email: u.email, senha: "", grupoPermissao: u.grupoPermissao });
+    setForm({ nome: u.nome, email: u.email, cpf: u.cpf || "", senha: "", grupoPermissao: u.grupoPermissao });
+    setCpfError("");
   };
 
   const toggleAtivo = (id: string) => {
@@ -104,6 +130,16 @@ const AdminUsuarios = () => {
             <div>
               <Label>Email *</Label>
               <Input type="email" placeholder="email@empresa.com" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
+            </div>
+            <div>
+              <Label>CPF *</Label>
+              <Input
+                placeholder="000.000.000-00"
+                value={form.cpf}
+                onChange={(e) => handleCPFChange(e.target.value)}
+                onPaste={handleCPFPaste}
+              />
+              {cpfError && <p className="text-sm text-destructive mt-1">{cpfError}</p>}
             </div>
             <div>
               <Label>{editId ? "Nova Senha (deixe vazio para manter)" : "Senha *"}</Label>
@@ -144,6 +180,7 @@ const AdminUsuarios = () => {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>CPF</TableHead>
                   <TableHead>Grupo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-24">Ações</TableHead>
@@ -154,6 +191,7 @@ const AdminUsuarios = () => {
                   <TableRow key={u.id}>
                     <TableCell>{u.nome}</TableCell>
                     <TableCell>{u.email}</TableCell>
+                    <TableCell>{u.cpf || "—"}</TableCell>
                     <TableCell>{u.grupoPermissao}</TableCell>
                     <TableCell>
                       <Badge variant={u.ativo ? "default" : "secondary"}>
