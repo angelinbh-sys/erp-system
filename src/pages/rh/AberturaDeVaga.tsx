@@ -513,7 +513,7 @@ const AberturaDeVaga = () => {
 
                 {/* CNH ou RG */}
                 <div className="md:col-span-2 mt-4">
-                  <Label className="mb-2 block">CNH ou RG do Candidato</Label>
+                  <Label className="mb-2 block">CNH ou RG com CPF</Label>
                   <div
                     className="border-2 border-dashed border-input rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
                     onClick={() => docInputRef.current?.click()}
