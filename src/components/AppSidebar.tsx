@@ -9,6 +9,7 @@ import {
   Shield,
   ChevronDown,
   HardHat,
+  LayoutDashboard,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -106,6 +107,21 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent className="py-2">
+        <div className="px-2 mb-1">
+          <NavLink
+            to="/"
+            end
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-semibold uppercase tracking-wider transition-colors ${
+              location.pathname === "/"
+                ? "text-sidebar-primary-foreground"
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            }`}
+            style={location.pathname === "/" ? { color: "hsl(var(--sidebar-active))" } : undefined}
+          >
+            <LayoutDashboard className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Dashboard</span>}
+          </NavLink>
+        </div>
         {modules.map((mod) => (
           <div key={mod.label} className="px-2 mb-1">
             {mod.children.length > 0 ? (

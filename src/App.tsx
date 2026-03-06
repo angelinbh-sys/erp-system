@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
 import AberturaDeVaga from "@/pages/rh/AberturaDeVaga";
 import GestaoRH from "@/pages/rh/GestaoRH";
 import AprovacaoVagas from "@/pages/rh/AprovacaoVagas";
@@ -29,7 +30,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route element={<AppLayout />}>
-              <Route path="/" element={<Navigate to="/rh/gestao-rh" replace />} />
+              <Route path="/" element={<Dashboard />} />
               <Route path="/rh/gestao-rh" element={<GestaoRH />} />
               <Route path="/rh/abertura-de-vaga" element={<AberturaDeVaga />} />
               <Route path="/rh/aprovacao-vagas" element={<AprovacaoVagas />} />
