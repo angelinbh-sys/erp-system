@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Upload, X, Search } from "lucide-react";
+import { useCreateVaga } from "@/hooks/useVagas";
+import { useCreateNotificacao } from "@/hooks/useNotificacoes";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
