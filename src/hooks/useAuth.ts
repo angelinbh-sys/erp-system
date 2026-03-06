@@ -10,6 +10,7 @@ export interface Profile {
   cpf: string | null;
   grupo_permissao: string;
   ativo: boolean;
+  super_admin: boolean;
 }
 
 export function useAuth() {

@@ -64,6 +64,7 @@ export type Database = {
           grupo_permissao: string
           id: string
           nome: string
+          super_admin: boolean
           user_id: string
         }
         Insert: {
@@ -74,6 +75,7 @@ export type Database = {
           grupo_permissao?: string
           id?: string
           nome: string
+          super_admin?: boolean
           user_id: string
         }
         Update: {
@@ -84,6 +86,7 @@ export type Database = {
           grupo_permissao?: string
           id?: string
           nome?: string
+          super_admin?: boolean
           user_id?: string
         }
         Relationships: []
