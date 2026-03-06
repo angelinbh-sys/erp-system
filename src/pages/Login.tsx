@@ -39,7 +39,7 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center space-y-2">
           <CardTitle className="font-heading text-2xl font-bold text-foreground">
-            Sistema Empresarial
+            ERP System
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Faça login para acessar o sistema

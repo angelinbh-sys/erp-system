@@ -84,8 +84,8 @@ const AdminUsuarios = () => {
   };
 
   const handleSave = async () => {
-    if (!form.nome.trim() || !form.email.trim() || (!editUserId && !form.senha.trim()) || !form.grupoPermissao) {
-      toast.error("Preencha todos os campos obrigatórios.");
+    if (!form.nome.trim() || !form.email.trim() || !form.senha.trim() || !form.grupoPermissao) {
+      toast.error("Preencha todos os campos obrigatórios para criar o usuário.");
       return;
     }
     if (form.cpf.trim() && !isValidCPF(form.cpf)) {

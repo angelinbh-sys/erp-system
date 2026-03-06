@@ -185,23 +185,25 @@ const AprovacaoVagas = () => {
         <Card>
           <CardContent className="pt-6">
             <Table>
-              <TableHeader>
+               <TableHeader>
                 <TableRow>
-                  <TableHead>Cargo</TableHead>
                   <TableHead>Candidato</TableHead>
+                  <TableHead>Cargo / Função</TableHead>
                   <TableHead>Centro de Custo</TableHead>
-                  <TableHead>Status Vaga</TableHead>
-                  <TableHead>Status Candidato</TableHead>
+                  <TableHead>Site / Contrato</TableHead>
+                  <TableHead>Data de Criação</TableHead>
+                  <TableHead>Status do Candidato</TableHead>
                   <TableHead className="w-36">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {vagas.map((vaga) => (
                   <TableRow key={vaga.id}>
-                    <TableCell className="font-medium">{vaga.cargo}</TableCell>
-                    <TableCell>{vaga.nome_candidato}</TableCell>
+                    <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
+                    <TableCell>{vaga.cargo}</TableCell>
                     <TableCell>{vaga.centro_custo_nome}</TableCell>
-                    <TableCell>{getStatusBadge(vaga.status)}</TableCell>
+                    <TableCell>{vaga.site_contrato}</TableCell>
+                    <TableCell>{new Date(vaga.created_at).toLocaleDateString("pt-BR")}</TableCell>
                     <TableCell>{getCandidatoStatusBadge((vaga as Record<string, unknown>).status_candidato as string || "Em análise")}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
