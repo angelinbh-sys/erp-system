@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      notificacoes: {
+        Row: {
+          created_at: string
+          id: string
+          lida: boolean
+          link: string | null
+          mensagem: string
+          tipo: string
+          titulo: string
+          vaga_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          link?: string | null
+          mensagem: string
+          tipo?: string
+          titulo: string
+          vaga_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          link?: string | null
+          mensagem?: string
+          tipo?: string
+          titulo?: string
+          vaga_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vagas: {
+        Row: {
+          beneficios: Json | null
+          cargo: string
+          centro_custo_codigo: string | null
+          centro_custo_nome: string
+          created_at: string
+          curriculo_nome: string | null
+          data_nascimento: string
+          documento_nome: string | null
+          id: string
+          local_trabalho: string
+          nome_candidato: string
+          observacao_reprovacao: string | null
+          salario: string
+          site_contrato: string
+          status: string
+          telefone: string
+          updated_at: string
+        }
+        Insert: {
+          beneficios?: Json | null
+          cargo: string
+          centro_custo_codigo?: string | null
+          centro_custo_nome: string
+          created_at?: string
+          curriculo_nome?: string | null
+          data_nascimento: string
+          documento_nome?: string | null
+          id?: string
+          local_trabalho: string
+          nome_candidato: string
+          observacao_reprovacao?: string | null
+          salario: string
+          site_contrato: string
+          status?: string
+          telefone: string
+          updated_at?: string
+        }
+        Update: {
+          beneficios?: Json | null
+          cargo?: string
+          centro_custo_codigo?: string | null
+          centro_custo_nome?: string
+          created_at?: string
+          curriculo_nome?: string | null
+          data_nascimento?: string
+          documento_nome?: string | null
+          id?: string
+          local_trabalho?: string
+          nome_candidato?: string
+          observacao_reprovacao?: string | null
+          salario?: string
+          site_contrato?: string
+          status?: string
+          telefone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
