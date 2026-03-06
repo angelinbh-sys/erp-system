@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Users,
   FileText,
-  Coins,
+  CircleDollarSign,
   Car,
   Award,
   Building2,
