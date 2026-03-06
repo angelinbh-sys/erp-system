@@ -12,10 +12,10 @@ import GestaoRH from "@/pages/rh/GestaoRH";
 import AprovacaoVagas from "@/pages/rh/AprovacaoVagas";
 import AlteracaoFuncao from "@/pages/dp/AlteracaoFuncao";
 import SolicitacaoFerias from "@/pages/dp/SolicitacaoFerias";
+import Admissao from "@/pages/dp/Admissao";
 import AdminUsuarios from "@/pages/admin/Usuarios";
 import AdminPermissoes from "@/pages/admin/Permissoes";
 import AgendamentoASO from "@/pages/sesmt/AgendamentoASO";
-import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
