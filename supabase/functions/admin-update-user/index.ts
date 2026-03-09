@@ -56,7 +56,38 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update auth user (password and/or email)
+    // Check duplicate email
+    if (email) {
+      const { data: emailExists } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .neq("user_id", user_id)
+        .maybeSingle();
+      if (emailExists) {
+        return new Response(JSON.stringify({ error: "Já existe um usuário cadastrado com este e-mail." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Check duplicate CPF
+    if (cpf) {
+      const { data: cpfExists } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("cpf", cpf)
+        .neq("user_id", user_id)
+        .maybeSingle();
+      if (cpfExists) {
+        return new Response(JSON.stringify({ error: "Já existe um usuário cadastrado com este CPF." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const authUpdate: Record<string, unknown> = {};
     if (senha) authUpdate.password = senha;
     if (email) authUpdate.email = email;
