@@ -38,6 +38,7 @@ const modules = [
       { title: "Alteração de Função / Cargo", url: "/departamento-pessoal/alteracao-funcao" },
       { title: "Solicitação de Férias", url: "/departamento-pessoal/solicitacao-ferias" },
       { title: "Admissão", url: "/departamento-pessoal/admissao" },
+      { title: "Efetivo", url: "/departamento-pessoal/efetivo" },
     ],
   },
   {

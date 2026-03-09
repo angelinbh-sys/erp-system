@@ -1,13 +1,14 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { NotificacoesBell } from "@/components/NotificacoesBell";
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
 export function AppLayout() {
   const { user, profile, loading, signOut } = useAuthContext();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -19,6 +20,11 @@ export function AppLayout() {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Force password change on first login
+  if (profile?.must_change_password && location.pathname !== "/alterar-senha") {
+    return <Navigate to="/alterar-senha" replace />;
   }
 
   return (
