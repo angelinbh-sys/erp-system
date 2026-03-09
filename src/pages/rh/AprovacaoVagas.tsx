@@ -77,8 +77,8 @@ const AprovacaoVagas = () => {
   const [deleteMotivo, setDeleteMotivo] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  // Filter out deleted vagas
-  const activeVagas = vagas.filter((v) => !(v as Record<string, unknown>).excluida);
+  // Filter: only pending approvals, exclude deleted
+  const activeVagas = vagas.filter((v) => !(v as Record<string, unknown>).excluida && v.status === "Aguardando Aprovação");
 
   const handleAprovar = async (vaga: Vaga) => {
     try {

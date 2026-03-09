@@ -186,7 +186,11 @@ const Dashboard = () => {
       {/* Welcome */}
       <div>
         <h2 className="font-heading text-2xl font-bold text-foreground">
-          Bem-vindo, {profile?.nome || "Usuário"}
+          Bem-vindo, {(() => {
+            const parts = (profile?.nome || "Usuário").trim().split(/\s+/);
+            if (parts.length >= 2) return `${parts[0]} ${parts[parts.length - 1]}`;
+            return parts[0];
+          })()}
         </h2>
         <p className="text-sm text-muted-foreground mt-1">Painel de controle do sistema</p>
       </div>
