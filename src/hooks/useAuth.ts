@@ -11,6 +11,7 @@ export interface Profile {
   grupo_permissao: string;
   ativo: boolean;
   super_admin: boolean;
+  must_change_password: boolean;
 }
 
 export function useAuth() {
