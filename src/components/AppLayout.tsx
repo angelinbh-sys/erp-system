@@ -1,10 +1,8 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { NotificacoesBell } from "@/components/NotificacoesBell";
+import { UserAreaHeader } from "@/components/UserAreaHeader";
 import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
 
 export function AppLayout() {
   const { user, profile, loading, signOut } = useAuthContext();
