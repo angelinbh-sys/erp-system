@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 
 const Admissao = () => {
   const { data: allVagas = [], isLoading } = useVagas("Aprovada");
+  const queryClient = useQueryClient();
   const [detailVaga, setDetailVaga] = useState<any>(null);
 
   // DP sees all approved vagas
