@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Upload, X, Search } from "lucide-react";
-import { useCreateVaga } from "@/hooks/useVagas";
+import { useCreateVaga, type VagaInsert } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
 import { supabase } from "@/integrations/supabase/client";
 
