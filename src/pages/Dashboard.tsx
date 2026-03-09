@@ -9,6 +9,7 @@ import {
   CheckCircle,
   XCircle,
   Bell,
+  Cake,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ import {
 import { useVagas, useUpdateVagaStatus } from "@/hooks/useVagas";
 import { useNotificacoes } from "@/hooks/useNotificacoes";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
 
 /* ─── Status badge helpers ──────────────────────────────────────── */
@@ -90,46 +92,80 @@ function KpiCard({
   );
 }
 
+/* ─── Birthday helpers ──────────────────────────────────────────── */
+function isBirthdayToday(dateStr: string | null) {
+  if (!dateStr) return false;
+  const today = new Date();
+  const d = new Date(dateStr + "T00:00:00");
+  return d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+}
+
+function isBirthdayThisMonth(dateStr: string | null) {
+  if (!dateStr) return false;
+  const today = new Date();
+  const d = new Date(dateStr + "T00:00:00");
+  return d.getMonth() === today.getMonth() && d.getDate() !== today.getDate();
+}
+
+function formatBirthdayDate(dateStr: string) {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
 /* ─── Dashboard ─────────────────────────────────────────────────── */
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useAuthContext();
   const { data: vagas = [] } = useVagas();
   const { data: notificacoes = [] } = useNotificacoes();
+  const { data: colaboradores = [] } = useColaboradores();
   const updateStatus = useUpdateVagaStatus();
 
   const isDiretoria = profile?.super_admin || profile?.grupo_permissao === "Diretoria";
 
   /* KPIs */
+  const activeVagas = useMemo(() => vagas.filter((v) => !(v as Record<string, unknown>).excluida), [vagas]);
+  
   const kpis = useMemo(() => {
-    const vagasAbertas = vagas.filter((v) => v.status === "Aprovada").length;
-    const aguardando = vagas.filter((v) => v.status === "Aguardando Aprovação").length;
-    const emAnalise = vagas.filter((v) => v.status_candidato === "Em análise").length;
-    const aprovados = vagas.filter((v) => v.status_candidato === "Aprovado").length;
-    const reprovados = vagas.filter((v) => v.status_candidato === "Reprovado").length;
+    const vagasAbertas = activeVagas.filter((v) => v.status === "Aprovada").length;
+    const aguardando = activeVagas.filter((v) => v.status === "Aguardando Aprovação").length;
+    const emAnalise = activeVagas.filter((v) => v.status_candidato === "Em análise").length;
+    const aprovados = activeVagas.filter((v) => v.status_candidato === "Aprovado").length;
+    const reprovados = activeVagas.filter((v) => v.status_candidato === "Reprovado").length;
     return { vagasAbertas, aguardando, emAnalise, aprovados, reprovados };
-  }, [vagas]);
+  }, [activeVagas]);
 
   /* Últimas vagas */
-  const vagasRecentes = useMemo(() => vagas.slice(0, 5), [vagas]);
+  const vagasRecentes = useMemo(() => activeVagas.slice(0, 5), [activeVagas]);
 
   /* Vagas aguardando aprovação */
   const vagasAguardando = useMemo(
-    () => vagas.filter((v) => v.status === "Aguardando Aprovação").slice(0, 10),
-    [vagas]
+    () => activeVagas.filter((v) => v.status === "Aguardando Aprovação").slice(0, 10),
+    [activeVagas]
   );
 
   /* Candidatos recentes */
   const candidatosRecentes = useMemo(
     () =>
-      [...vagas]
+      [...activeVagas]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5),
-    [vagas]
+    [activeVagas]
   );
 
   /* Atividades recentes (notificações) */
   const atividadesRecentes = useMemo(() => notificacoes.slice(0, 8), [notificacoes]);
+
+  /* Aniversariantes */
+  const aniversariantesDoDia = useMemo(
+    () => colaboradores.filter((c) => isBirthdayToday(c.data_nascimento)),
+    [colaboradores]
+  );
+
+  const aniversariantesDoMes = useMemo(
+    () => colaboradores.filter((c) => isBirthdayThisMonth(c.data_nascimento)),
+    [colaboradores]
+  );
 
   const handleAprovar = (id: string) => {
     updateStatus.mutate(
@@ -147,7 +183,13 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <h2 className="font-heading text-2xl font-bold text-foreground">Início</h2>
+      {/* Welcome */}
+      <div>
+        <h2 className="font-heading text-2xl font-bold text-foreground">
+          Bem-vindo, {profile?.nome || "Usuário"}
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">Painel de controle do sistema</p>
+      </div>
 
       {/* ── Linha 1: KPIs ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -157,6 +199,55 @@ const Dashboard = () => {
         <KpiCard icon={UserCheck} title="Candidatos Aprovados" value={kpis.aprovados} color="bg-emerald-100 text-emerald-600" />
         <KpiCard icon={UserX} title="Candidatos Reprovados" value={kpis.reprovados} color="bg-red-100 text-red-600" />
       </div>
+
+      {/* ── Aniversariantes ───────────────────────────────────────── */}
+      {(aniversariantesDoDia.length > 0 || aniversariantesDoMes.length > 0) && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Cake className="h-5 w-5 text-muted-foreground" />
+              Aniversariantes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Aniversariantes do dia */}
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-2">🎂 Aniversariante(s) do Dia</h4>
+                {aniversariantesDoDia.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nenhum aniversariante hoje.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {aniversariantesDoDia.map((c) => (
+                      <div key={c.id} className="p-3 rounded-md bg-primary/5 border border-primary/10">
+                        <p className="text-sm font-medium text-foreground">{c.nome}</p>
+                        <p className="text-xs text-muted-foreground">{c.cargo}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Aniversariantes do mês */}
+              <div>
+                <h4 className="text-sm font-semibold text-muted-foreground mb-2">Aniversariantes do Mês</h4>
+                {aniversariantesDoMes.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nenhum outro aniversariante este mês.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {aniversariantesDoMes.map((c) => (
+                      <div key={c.id} className="flex items-center justify-between text-sm py-1">
+                        <span className="text-muted-foreground">{c.nome}</span>
+                        <span className="text-xs text-muted-foreground">{c.data_nascimento ? formatBirthdayDate(c.data_nascimento) : ""}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Linha 2: Vagas recentes + Aprovação ───────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

@@ -9,7 +9,7 @@ import {
   Shield,
   ChevronDown,
   HardHat,
-  LayoutDashboard,
+  Home,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -38,6 +38,7 @@ const modules = [
       { title: "Alteração de Função / Cargo", url: "/departamento-pessoal/alteracao-funcao" },
       { title: "Solicitação de Férias", url: "/departamento-pessoal/solicitacao-ferias" },
       { title: "Admissão", url: "/departamento-pessoal/admissao" },
+      { title: "Efetivo", url: "/departamento-pessoal/efetivo" },
     ],
   },
   {
@@ -119,7 +120,7 @@ export function AppSidebar() {
             }`}
             style={location.pathname === "/" ? { color: "hsl(var(--sidebar-active))" } : undefined}
           >
-            <LayoutDashboard className="h-4 w-4 shrink-0" />
+            <Home className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Início</span>}
           </NavLink>
         </div>

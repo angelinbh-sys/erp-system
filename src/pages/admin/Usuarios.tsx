@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, UserX, UserCheck } from "lucide-react";
+import { Plus, Pencil, UserX, UserCheck, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 import type { GrupoPermissao } from "@/pages/admin/Permissoes";
 import { formatCPF, isValidCPF } from "@/utils/cpf";
@@ -60,6 +67,12 @@ const AdminUsuarios = () => {
   const [cpfError, setCpfError] = useState("");
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Reset password dialog
+  const [resetDialog, setResetDialog] = useState<{ open: boolean; user: Profile | null; tempPassword: string | null }>({
+    open: false, user: null, tempPassword: null,
+  });
+  const [resetting, setResetting] = useState(false);
 
   const resetForm = () => {
     setForm({ nome: "", email: "", cpf: "", senha: "", grupoPermissao: "" });
@@ -150,6 +163,24 @@ const AdminUsuarios = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!resetDialog.user) return;
+    setResetting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-update-user", {
+        body: { user_id: resetDialog.user.user_id, reset_password: true },
+      });
+      if (error || data?.error) throw new Error(data?.error || "Erro ao resetar senha");
+      setResetDialog({ open: true, user: resetDialog.user, tempPassword: data.temp_password });
+      toast.success("Senha resetada. O usuário deverá alterar no próximo login.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao resetar senha.";
+      toast.error(message);
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
@@ -222,7 +253,7 @@ const AdminUsuarios = () => {
                   <TableHead>CPF</TableHead>
                   <TableHead>Grupo</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-24">Ações</TableHead>
+                  <TableHead className="w-32">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -239,11 +270,19 @@ const AdminUsuarios = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(u)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(u)} title="Editar">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => toggleAtivo(u)}>
-                          {u.ativo ? <UserX className="h-4 w-4 text-destructive" /> : <UserCheck className="h-4 w-4 text-green-600" />}
+                        <Button variant="ghost" size="icon" onClick={() => toggleAtivo(u)} title={u.ativo ? "Desativar" : "Ativar"}>
+                          {u.ativo ? <UserX className="h-4 w-4 text-destructive" /> : <UserCheck className="h-4 w-4 text-[hsl(var(--success))]" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Resetar Senha"
+                          onClick={() => setResetDialog({ open: true, user: u, tempPassword: null })}
+                        >
+                          <KeyRound className="h-4 w-4 text-amber-500" />
                         </Button>
                       </div>
                     </TableCell>
@@ -254,6 +293,50 @@ const AdminUsuarios = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetDialog.open} onOpenChange={(open) => !open && setResetDialog({ open: false, user: null, tempPassword: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Resetar Senha</DialogTitle>
+          </DialogHeader>
+          {resetDialog.tempPassword ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Senha temporária gerada para <strong>{resetDialog.user?.nome}</strong>:
+              </p>
+              <div className="bg-muted p-3 rounded-md text-center">
+                <code className="text-lg font-mono font-bold text-foreground">{resetDialog.tempPassword}</code>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O usuário será obrigado a alterar a senha no próximo login. Anote e comunique esta senha ao usuário.
+              </p>
+              <DialogFooter>
+                <Button onClick={() => setResetDialog({ open: false, user: null, tempPassword: null })}>
+                  Fechar
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Deseja resetar a senha de <strong>{resetDialog.user?.nome}</strong> ({resetDialog.user?.email})?
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Uma senha temporária será gerada e o usuário deverá alterar no próximo login.
+              </p>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setResetDialog({ open: false, user: null, tempPassword: null })}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleResetPassword} disabled={resetting}>
+                  {resetting ? "Resetando..." : "Resetar Senha"}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

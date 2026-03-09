@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Upload, X, Search } from "lucide-react";
-import { useCreateVaga } from "@/hooks/useVagas";
+import { useCreateVaga, type VagaInsert } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -148,11 +148,19 @@ const AberturaDeVaga = () => {
       setFileError("O currículo é obrigatório.");
       return;
     }
+    if (!docFile) {
+      setDocError("O documento CNH ou RG com CPF é obrigatório.");
+      return;
+    }
 
     const ccObj = centrosCusto.find((c) => c.id === data.centroCusto);
 
     try {
-      const vaga = await createVaga.mutateAsync({
+      // Get current user for criado_por
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentUserId = sessionData?.session?.user?.id || null;
+
+      const vagaData: Record<string, unknown> = {
         cargo: data.cargo,
         salario: data.salario,
         centro_custo_nome: ccObj?.nome ?? "",
@@ -164,9 +172,12 @@ const AberturaDeVaga = () => {
         telefone: data.telefone,
         beneficios: JSON.parse(JSON.stringify(beneficios)),
         curriculo_nome: file.name,
-        documento_nome: docFile?.name ?? null,
+        documento_nome: docFile.name,
         status: "Aguardando Aprovação",
-      });
+        criado_por: currentUserId,
+      };
+
+      const vaga = await createVaga.mutateAsync(vagaData as VagaInsert);
 
       // Create notification for Diretoria
       await createNotificacao.mutateAsync({
@@ -552,7 +563,7 @@ const AberturaDeVaga = () => {
 
                 {/* CNH ou RG */}
                 <div className="md:col-span-2 mt-4">
-                  <Label className="mb-2 block">CNH ou RG com CPF</Label>
+                  <Label className="mb-2 block">CNH ou RG com CPF *</Label>
                   <div
                     className="border-2 border-dashed border-input rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
                     onClick={() => docInputRef.current?.click()}
