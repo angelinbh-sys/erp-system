@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { useCargos, useCentrosCusto } from "@/hooks/useCadastros";
+import { useColaboradores } from "@/hooks/useColaboradores";
 
 interface AlteracaoRegistro {
   id: string;
