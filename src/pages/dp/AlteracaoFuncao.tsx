@@ -46,7 +46,7 @@ interface AlteracaoRegistro {
 const AlteracaoFuncao = () => {
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
-  const { colaboradores } = useColaboradores();
+  const { data: colaboradores = [] } = useColaboradores();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [registros, setRegistros] = useState<AlteracaoRegistro[]>(() => {
