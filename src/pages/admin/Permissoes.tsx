@@ -17,11 +17,14 @@ import {
 } from "@/components/ui/table";
 
 const MODULOS = [
+  "Início",
   "Recursos Humanos",
   "Dep. Pessoal",
+  "SESMT",
   "Financeiro",
   "Logística",
   "Qualidade",
+  "Admin",
 ] as const;
 
 // Ordered from lowest to highest
