@@ -9,7 +9,7 @@ import {
   Shield,
   ChevronDown,
   HardHat,
-  LayoutDashboard,
+  Home,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
