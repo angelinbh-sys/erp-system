@@ -130,17 +130,6 @@ export function UserAreaHeader() {
         </PopoverContent>
       </Popover>
 
-      {/* Settings Gear */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="rounded-full"
-        onClick={() => navigate("/admin/permissoes")}
-        title="Configurações"
-      >
-        <Settings className="h-5 w-5" />
-      </Button>
-
       {/* User Avatar */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
