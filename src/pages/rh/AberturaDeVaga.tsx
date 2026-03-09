@@ -148,10 +148,18 @@ const AberturaDeVaga = () => {
       setFileError("O currículo é obrigatório.");
       return;
     }
+    if (!docFile) {
+      setDocError("O documento CNH ou RG com CPF é obrigatório.");
+      return;
+    }
 
     const ccObj = centrosCusto.find((c) => c.id === data.centroCusto);
 
     try {
+      // Get current user for criado_por
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentUserId = sessionData?.session?.user?.id || null;
+
       const vaga = await createVaga.mutateAsync({
         cargo: data.cargo,
         salario: data.salario,
@@ -164,9 +172,10 @@ const AberturaDeVaga = () => {
         telefone: data.telefone,
         beneficios: JSON.parse(JSON.stringify(beneficios)),
         curriculo_nome: file.name,
-        documento_nome: docFile?.name ?? null,
+        documento_nome: docFile.name,
         status: "Aguardando Aprovação",
-      });
+        criado_por: currentUserId,
+      } as Record<string, unknown>);
 
       // Create notification for Diretoria
       await createNotificacao.mutateAsync({
