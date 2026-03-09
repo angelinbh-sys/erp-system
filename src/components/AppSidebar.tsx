@@ -119,7 +119,7 @@ export function AppSidebar() {
             }`}
             style={location.pathname === "/" ? { color: "hsl(var(--sidebar-active))" } : undefined}
           >
-            <LayoutDashboard className="h-4 w-4 shrink-0" />
+            <Home className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Início</span>}
           </NavLink>
         </div>
