@@ -16,7 +16,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify the caller is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
@@ -34,7 +33,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create auth user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: senha,
@@ -48,7 +46,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create profile
     const { error: profileError } = await supabaseAdmin.from("profiles").insert({
       user_id: authData.user.id,
       nome,
@@ -56,10 +53,10 @@ Deno.serve(async (req) => {
       cpf: cpf || null,
       grupo_permissao,
       ativo: true,
+      must_change_password: true,
     });
 
     if (profileError) {
-      // Rollback: delete the auth user
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       return new Response(JSON.stringify({ error: profileError.message }), {
         status: 400,
