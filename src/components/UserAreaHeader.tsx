@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Bell, Settings, Camera } from "lucide-react";
+import { Bell, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useNotificacoesNaoLidas, useNotificacoes, useMarcarLida } from "@/hooks/useNotificacoes";
@@ -129,17 +129,6 @@ export function UserAreaHeader() {
           </ScrollArea>
         </PopoverContent>
       </Popover>
-
-      {/* Settings Gear */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="rounded-full"
-        onClick={() => navigate("/admin/permissoes")}
-        title="Configurações"
-      >
-        <Settings className="h-5 w-5" />
-      </Button>
 
       {/* User Avatar */}
       <DropdownMenu>

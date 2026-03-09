@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/table";
 
 const MODULOS = [
-  "Início",
   "Recursos Humanos",
   "Dep. Pessoal",
   "SESMT",

@@ -11,7 +11,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Stethoscope, Upload, X, Send, Eye, FileText } from "lucide-react";
+import { Stethoscope, Upload, X, Send, Eye, FileText, Undo2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -230,6 +230,24 @@ const AgendamentoASO = () => {
                   <p className="text-xs text-blue-600 mt-1">
                     Enviado em {new Date(selectedVaga.enviado_admissao_at).toLocaleDateString("pt-BR")}
                   </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={async () => {
+                      const { error } = await supabase
+                        .from("vagas")
+                        .update({ enviado_admissao: false, enviado_admissao_at: null } as any)
+                        .eq("id", selectedVaga.id);
+                      if (error) { toast.error("Erro ao devolver."); return; }
+                      toast.success("Devolvido para o SESMT.");
+                      queryClient.invalidateQueries({ queryKey: ["vagas"] });
+                      closeDialog();
+                    }}
+                  >
+                    <Undo2 className="h-4 w-4 mr-1" />
+                    Devolver para SESMT
+                  </Button>
                 </div>
               ) : (
                 <>
@@ -308,7 +326,7 @@ const AgendamentoASO = () => {
                   </div>
 
                   {/* Botão Enviar para Admissão */}
-                  <div className="pt-3 border-t border-border">
+                  <div className="pt-3 border-t border-border space-y-2">
                     <Button
                       className="w-full"
                       disabled={!canSendAdmissao(selectedVaga)}
@@ -322,6 +340,23 @@ const AgendamentoASO = () => {
                         Preencha a data de agendamento, data de entrega e anexe o resultado do ASO para liberar.
                       </p>
                     )}
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={async () => {
+                        const { error } = await supabase
+                          .from("vagas")
+                          .update({ status: "Aguardando Aprovação" } as any)
+                          .eq("id", selectedVaga.id);
+                        if (error) { toast.error("Erro ao devolver."); return; }
+                        toast.success("Devolvido para a Diretoria.");
+                        queryClient.invalidateQueries({ queryKey: ["vagas"] });
+                        closeDialog();
+                      }}
+                    >
+                      <Undo2 className="h-4 w-4 mr-2" />
+                      Devolver para Diretoria
+                    </Button>
                   </div>
                 </>
               )}

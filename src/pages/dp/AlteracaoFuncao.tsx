@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { useCargos, useCentrosCusto } from "@/hooks/useCadastros";
+import { useColaboradores } from "@/hooks/useColaboradores";
 
 interface AlteracaoRegistro {
   id: string;
@@ -45,6 +46,7 @@ interface AlteracaoRegistro {
 const AlteracaoFuncao = () => {
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
+  const { data: colaboradores = [] } = useColaboradores();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [registros, setRegistros] = useState<AlteracaoRegistro[]>(() => {
@@ -133,11 +135,19 @@ const AlteracaoFuncao = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <Label>Nome do Colaborador *</Label>
-              <Input
-                placeholder="Nome completo"
-                value={form.nomeColaborador}
-                onChange={(e) => setForm((p) => ({ ...p, nomeColaborador: e.target.value }))}
-              />
+              <Select value={form.nomeColaborador} onValueChange={(v) => {
+                const col = colaboradores.find(c => c.nome === v);
+                setForm((p) => ({ ...p, nomeColaborador: v, cargoAtual: col?.cargo || p.cargoAtual }));
+              }}>
+                <SelectTrigger><SelectValue placeholder="Selecione o colaborador" /></SelectTrigger>
+                <SelectContent>
+                  {colaboradores.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">Nenhum colaborador cadastrado.</div>
+                  ) : colaboradores.map((c) => (
+                    <SelectItem key={c.id} value={c.nome}>{c.nome} — {c.cargo}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
