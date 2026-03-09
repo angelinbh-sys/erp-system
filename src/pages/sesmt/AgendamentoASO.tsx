@@ -230,6 +230,24 @@ const AgendamentoASO = () => {
                   <p className="text-xs text-blue-600 mt-1">
                     Enviado em {new Date(selectedVaga.enviado_admissao_at).toLocaleDateString("pt-BR")}
                   </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={async () => {
+                      const { error } = await supabase
+                        .from("vagas")
+                        .update({ enviado_admissao: false, enviado_admissao_at: null } as any)
+                        .eq("id", selectedVaga.id);
+                      if (error) { toast.error("Erro ao devolver."); return; }
+                      toast.success("Devolvido para o SESMT.");
+                      queryClient.invalidateQueries({ queryKey: ["vagas"] });
+                      closeDialog();
+                    }}
+                  >
+                    <Undo2 className="h-4 w-4 mr-1" />
+                    Devolver para SESMT
+                  </Button>
                 </div>
               ) : (
                 <>
