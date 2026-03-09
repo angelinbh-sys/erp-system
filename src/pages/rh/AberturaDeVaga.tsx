@@ -160,7 +160,7 @@ const AberturaDeVaga = () => {
       const { data: sessionData } = await supabase.auth.getSession();
       const currentUserId = sessionData?.session?.user?.id || null;
 
-      const vaga = await createVaga.mutateAsync({
+      const vagaData: Record<string, unknown> = {
         cargo: data.cargo,
         salario: data.salario,
         centro_custo_nome: ccObj?.nome ?? "",
@@ -175,7 +175,9 @@ const AberturaDeVaga = () => {
         documento_nome: docFile.name,
         status: "Aguardando Aprovação",
         criado_por: currentUserId,
-      } as Record<string, unknown>);
+      };
+
+      const vaga = await createVaga.mutateAsync(vagaData as VagaInsert);
 
       // Create notification for Diretoria
       await createNotificacao.mutateAsync({
