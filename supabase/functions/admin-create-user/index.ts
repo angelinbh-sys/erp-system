@@ -33,6 +33,34 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check duplicate email in profiles
+    const { data: emailExists } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+    if (emailExists) {
+      return new Response(JSON.stringify({ error: "Já existe um usuário cadastrado com este e-mail." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check duplicate CPF in profiles
+    if (cpf) {
+      const { data: cpfExists } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("cpf", cpf)
+        .maybeSingle();
+      if (cpfExists) {
+        return new Response(JSON.stringify({ error: "Já existe um usuário cadastrado com este CPF." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: senha,

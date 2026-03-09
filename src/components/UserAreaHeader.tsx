@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Bell, Settings, Camera } from "lucide-react";
+import { Bell, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useNotificacoesNaoLidas, useNotificacoes, useMarcarLida } from "@/hooks/useNotificacoes";
