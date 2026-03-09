@@ -123,10 +123,29 @@ const Admissao = () => {
                       ASO agendado: {detailVaga.data_agendamento_aso} | Entrega: {detailVaga.data_entrega_aso || "—"}
                     </p>
                   )}
-                  <div className="mt-4 p-3 bg-muted/50 rounded-md">
-                    <p className="text-sm text-muted-foreground italic">
-                      Campos de admissão serão definidos posteriormente.
-                    </p>
+                  <div className="mt-4 flex gap-2">
+                    <div className="flex-1 p-3 bg-muted/50 rounded-md">
+                      <p className="text-sm text-muted-foreground italic">
+                        Campos de admissão serão definidos posteriormente.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        const { error } = await supabase
+                          .from("vagas")
+                          .update({ enviado_admissao: false, enviado_admissao_at: null } as any)
+                          .eq("id", detailVaga.id);
+                        if (error) { toast.error("Erro ao devolver."); return; }
+                        toast.success("Devolvido para o SESMT.");
+                        queryClient.invalidateQueries({ queryKey: ["vagas"] });
+                        setDetailVaga(null);
+                      }}
+                    >
+                      <Undo2 className="h-4 w-4 mr-1" />
+                      Devolver para SESMT
+                    </Button>
                   </div>
                 </div>
               ) : (
