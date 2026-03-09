@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, X, Eye, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Check, X, Eye, Clock, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,7 +63,7 @@ const AprovacaoVagas = () => {
   const { data: vagas = [], isLoading } = useVagas();
   const updateStatus = useUpdateVagaStatus();
   const createNotificacao = useCreateNotificacao();
-  const { profile } = useAuthContext();
+  const { profile, user } = useAuthContext();
 
   const isDiretoria = profile?.super_admin || profile?.grupo_permissao?.toLowerCase() === "diretoria";
 
@@ -71,6 +71,14 @@ const AprovacaoVagas = () => {
   const [showReprovar, setShowReprovar] = useState(false);
   const [observacao, setObservacao] = useState("");
   const [detailVaga, setDetailVaga] = useState<Vaga | null>(null);
+
+  // Delete state
+  const [deleteVaga, setDeleteVaga] = useState<Vaga | null>(null);
+  const [deleteMotivo, setDeleteMotivo] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  // Filter out deleted vagas
+  const activeVagas = vagas.filter((v) => !(v as Record<string, unknown>).excluida);
 
   const handleAprovar = async (vaga: Vaga) => {
     try {
@@ -111,6 +119,39 @@ const AprovacaoVagas = () => {
     setShowReprovar(true);
   };
 
+  const handleDelete = async () => {
+    if (!deleteVaga || !deleteMotivo.trim()) {
+      toast.error("O motivo da exclusão é obrigatório.");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("vagas")
+        .update({
+          excluida: true,
+          motivo_exclusao: deleteMotivo.trim(),
+          excluida_at: new Date().toISOString(),
+        } as Record<string, unknown>)
+        .eq("id", deleteVaga.id);
+      if (error) throw error;
+      toast.success("Vaga excluída com sucesso.");
+      setDeleteVaga(null);
+      setDeleteMotivo("");
+      // Refetch
+      window.location.reload();
+    } catch {
+      toast.error("Erro ao excluir vaga.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const canDeleteVaga = (vaga: Vaga) => {
+    const criadoPor = (vaga as Record<string, unknown>).criado_por;
+    return criadoPor && user && criadoPor === user.id;
+  };
+
   const handleStatusCandidatoChange = async (vaga: Vaga, newStatus: string) => {
     try {
       await supabase
@@ -121,7 +162,6 @@ const AprovacaoVagas = () => {
         } as Record<string, unknown>)
         .eq("id", vaga.id);
       toast.success(`Status do candidato alterado para "${newStatus}".`);
-      // Refetch
       updateStatus.reset();
       window.location.reload();
     } catch {
@@ -175,7 +215,7 @@ const AprovacaoVagas = () => {
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando...</p>
-      ) : vagas.length === 0 ? (
+      ) : activeVagas.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
             Nenhuma vaga cadastrada.
@@ -197,7 +237,7 @@ const AprovacaoVagas = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {vagas.map((vaga) => (
+                {activeVagas.map((vaga) => (
                   <TableRow key={vaga.id}>
                     <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
                     <TableCell>{vaga.cargo}</TableCell>
@@ -222,7 +262,7 @@ const AprovacaoVagas = () => {
                               size="icon"
                               title="Aprovar"
                               onClick={() => handleAprovar(vaga)}
-                              className="text-green-600 hover:text-green-700"
+                              className="text-[hsl(var(--success))] hover:text-[hsl(var(--success))]"
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -236,6 +276,17 @@ const AprovacaoVagas = () => {
                               <X className="h-4 w-4" />
                             </Button>
                           </>
+                        )}
+                        {canDeleteVaga(vaga) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Excluir vaga"
+                            onClick={() => { setDeleteVaga(vaga); setDeleteMotivo(""); }}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
                     </TableCell>
@@ -315,6 +366,35 @@ const AprovacaoVagas = () => {
             </Button>
             <Button variant="destructive" onClick={handleReprovar}>
               Confirmar Reprovação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Exclusão */}
+      <Dialog open={!!deleteVaga} onOpenChange={() => setDeleteVaga(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Vaga</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Deseja excluir a vaga <strong>{deleteVaga?.cargo}</strong> para{" "}
+            <strong>{deleteVaga?.nome_candidato}</strong>?
+          </p>
+          <div className="space-y-2">
+            <Label>Motivo da Exclusão *</Label>
+            <Textarea
+              placeholder="Informe o motivo da exclusão"
+              value={deleteMotivo}
+              onChange={(e) => setDeleteMotivo(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteVaga(null)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting || !deleteMotivo.trim()}>
+              {deleting ? "Excluindo..." : "Confirmar Exclusão"}
             </Button>
           </DialogFooter>
         </DialogContent>
