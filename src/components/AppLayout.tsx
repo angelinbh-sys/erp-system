@@ -33,17 +33,7 @@ export function AppLayout() {
           <header className="h-14 flex items-center border-b border-border bg-card px-4">
             <SidebarTrigger className="mr-4" />
             <h1 className="font-heading font-semibold text-foreground flex-1">Sistema Empresarial</h1>
-            <div className="flex items-center gap-3">
-              <NotificacoesBell />
-              {profile && (
-                <span className="text-sm text-muted-foreground hidden md:inline">
-                  {profile.nome}
-                </span>
-              )}
-              <Button variant="ghost" size="icon" onClick={signOut} title="Sair">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
+            <UserAreaHeader />
           </header>
           <main className="flex-1 p-6 overflow-auto">
             <Outlet />
