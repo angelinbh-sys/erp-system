@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Check, X, Eye, Clock, CheckCircle2, XCircle, Trash2, Undo2 } from "lucide-react";
+import VagaTimeline from "@/components/VagaTimeline";
+import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,6 +65,60 @@ const statusCandidatoConfig: Record<string, { label: string; className: string }
   "Aprovado": { label: "Aprovado", className: "bg-green-100 text-green-800 border-green-300" },
   "Reprovado": { label: "Reprovado", className: "bg-red-100 text-red-800 border-red-300" },
 };
+
+function DetailDialogContent({ vaga, getStatusBadge, getCandidatoStatusBadge, beneficiosToString, handleStatusCandidatoChange }: {
+  vaga: any;
+  getStatusBadge: (s: string) => React.ReactNode;
+  getCandidatoStatusBadge: (s: string) => React.ReactNode;
+  beneficiosToString: (b: unknown) => string;
+  handleStatusCandidatoChange: (v: any, s: string) => void;
+}) {
+  const { data: historico = [] } = useVagaHistorico(vaga.id);
+
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="grid grid-cols-2 gap-2">
+        <div><strong>Cargo:</strong> {vaga.cargo}</div>
+        <div><strong>Salário:</strong> {vaga.salario}</div>
+        <div><strong>Centro de Custo:</strong> {vaga.centro_custo_nome}</div>
+        <div><strong>Site / Contrato:</strong> {vaga.site_contrato}</div>
+        <div><strong>Local:</strong> {vaga.local_trabalho}</div>
+        <div><strong>Candidato:</strong> {vaga.nome_candidato}</div>
+        <div><strong>Nascimento:</strong> {vaga.data_nascimento}</div>
+        <div><strong>Telefone:</strong> {vaga.telefone}</div>
+      </div>
+      <div><strong>Benefícios:</strong> {beneficiosToString(vaga.beneficios)}</div>
+      <div><strong>Status da Vaga:</strong> {getStatusBadge(vaga.status)}</div>
+      <div><strong>Status do Candidato:</strong> {getCandidatoStatusBadge(vaga.status_candidato || "Em análise")}</div>
+      {vaga.observacao_reprovacao && (
+        <div><strong>Motivo da reprovação:</strong> {vaga.observacao_reprovacao}</div>
+      )}
+
+      {/* Timeline */}
+      <div className="pt-3 border-t border-border">
+        <VagaTimeline vaga={vaga} historico={historico} />
+      </div>
+
+      {/* Status do Candidato - editable */}
+      <div className="pt-3 border-t border-border">
+        <Label className="text-sm font-semibold">Alterar Status do Candidato</Label>
+        <Select
+          value={vaga.status_candidato || "Em análise"}
+          onValueChange={(v) => handleStatusCandidatoChange(vaga, v)}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Em análise">Em análise</SelectItem>
+            <SelectItem value="Aprovado">Aprovado</SelectItem>
+            <SelectItem value="Reprovado">Reprovado</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
 
 const AprovacaoVagas = () => {
   const { data: vagas = [], isLoading } = useVagas();
@@ -387,48 +443,20 @@ const AprovacaoVagas = () => {
         </>
       )}
 
+      {/* Dialog de Detalhes */}
       <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalhes da Vaga</DialogTitle>
           </DialogHeader>
           {detailVaga && (
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-2">
-                <div><strong>Cargo:</strong> {detailVaga.cargo}</div>
-                <div><strong>Salário:</strong> {detailVaga.salario}</div>
-                <div><strong>Centro de Custo:</strong> {detailVaga.centro_custo_nome}</div>
-                <div><strong>Site / Contrato:</strong> {detailVaga.site_contrato}</div>
-                <div><strong>Local:</strong> {detailVaga.local_trabalho}</div>
-                <div><strong>Candidato:</strong> {detailVaga.nome_candidato}</div>
-                <div><strong>Nascimento:</strong> {detailVaga.data_nascimento}</div>
-                <div><strong>Telefone:</strong> {detailVaga.telefone}</div>
-              </div>
-              <div><strong>Benefícios:</strong> {beneficiosToString(detailVaga.beneficios)}</div>
-              <div><strong>Status da Vaga:</strong> {getStatusBadge(detailVaga.status)}</div>
-              <div><strong>Status do Candidato:</strong> {getCandidatoStatusBadge((detailVaga as Record<string, unknown>).status_candidato as string || "Em análise")}</div>
-              {detailVaga.observacao_reprovacao && (
-                <div><strong>Motivo da reprovação:</strong> {detailVaga.observacao_reprovacao}</div>
-              )}
-
-              {/* Status do Candidato - editable */}
-              <div className="pt-3 border-t border-border">
-                <Label className="text-sm font-semibold">Alterar Status do Candidato</Label>
-                <Select
-                  value={(detailVaga as Record<string, unknown>).status_candidato as string || "Em análise"}
-                  onValueChange={(v) => handleStatusCandidatoChange(detailVaga, v)}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Em análise">Em análise</SelectItem>
-                    <SelectItem value="Aprovado">Aprovado</SelectItem>
-                    <SelectItem value="Reprovado">Reprovado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <DetailDialogContent
+              vaga={detailVaga}
+              getStatusBadge={getStatusBadge}
+              getCandidatoStatusBadge={getCandidatoStatusBadge}
+              beneficiosToString={beneficiosToString}
+              handleStatusCandidatoChange={handleStatusCandidatoChange}
+            />
           )}
         </DialogContent>
       </Dialog>
