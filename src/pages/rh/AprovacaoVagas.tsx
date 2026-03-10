@@ -51,6 +51,11 @@ const statusConfig: Record<string, { label: string; icon: React.ReactNode; class
     icon: <XCircle className="h-3 w-3" />,
     className: "bg-red-100 text-red-800 border-red-300",
   },
+  "Devolvida SESMT": {
+    label: "Devolvida pelo SESMT",
+    icon: <Undo2 className="h-3 w-3" />,
+    className: "bg-orange-100 text-orange-800 border-orange-300",
+  },
 };
 
 const statusCandidatoConfig: Record<string, { label: string; className: string }> = {
