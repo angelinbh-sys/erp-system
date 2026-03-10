@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,24 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const AlterarSenha = () => {
-  const { profile, refetchProfile } = useAuthContext();
+  const { user, profile, loading, refetchProfile } = useAuthContext();
   const navigate = useNavigate();
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const isFirstLogin = profile?.must_change_password;
 
@@ -24,7 +36,7 @@ const AlterarSenha = () => {
     setError("");
 
     if (novaSenha.length < 6) {
-      setError("A senha deve ter no mínimo 6 dígitos.");
+      setError("A senha deve ter no mínimo 6 caracteres.");
       return;
     }
     if (novaSenha !== confirmarSenha) {
@@ -32,14 +44,13 @@ const AlterarSenha = () => {
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
     try {
       const { error: updateError } = await supabase.auth.updateUser({
         password: novaSenha,
       });
       if (updateError) throw updateError;
 
-      // Mark password as changed
       if (profile) {
         await supabase
           .from("profiles")
@@ -47,7 +58,7 @@ const AlterarSenha = () => {
           .eq("user_id", profile.user_id);
       }
 
-      toast.success("Senha alterada com sucesso!");
+      toast.success("Senha alterada com sucesso.");
       refetchProfile();
       navigate("/", { replace: true });
     } catch (err: unknown) {
@@ -60,7 +71,7 @@ const AlterarSenha = () => {
       }
       setError(message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -89,7 +100,7 @@ const AlterarSenha = () => {
               <Input
                 id="novaSenha"
                 type="password"
-                placeholder="Mínimo 6 dígitos"
+                placeholder="Mínimo 6 caracteres"
                 value={novaSenha}
                 onChange={(e) => setNovaSenha(e.target.value)}
                 autoFocus
@@ -107,12 +118,12 @@ const AlterarSenha = () => {
             </div>
 
             {error && (
-              <p className="text-sm text-destructive font-medium text-center">{error}</p>
+              <p className="text-sm text-destructive font-medium text-center whitespace-pre-line">{error}</p>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={submitting}>
               <Lock className="h-4 w-4 mr-2" />
-              {loading ? "Alterando..." : "Alterar Senha"}
+              {submitting ? "Alterando..." : "Alterar Senha"}
             </Button>
           </form>
         </CardContent>

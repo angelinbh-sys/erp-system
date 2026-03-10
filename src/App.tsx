@@ -32,9 +32,9 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/alterar-senha" element={<AlterarSenha />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/alterar-senha" element={<AlterarSenha />} />
               <Route path="/rh/gestao-rh" element={<GestaoRH />} />
               <Route path="/rh/abertura-de-vaga" element={<AberturaDeVaga />} />
               <Route path="/rh/aprovacao-vagas" element={<AprovacaoVagas />} />
