@@ -274,6 +274,9 @@ const AgendamentoASO = () => {
                     </Badge>
                   </div>
 
+                  {/* Timeline collapsible */}
+                  <VagaTimelineSection vagaId={vaga.id} vaga={vaga} />
+
                   {vaga.enviado_admissao ? (
                     <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 text-center">
                       <p className="text-sm font-medium text-blue-800">
