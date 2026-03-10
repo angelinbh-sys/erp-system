@@ -389,7 +389,23 @@ const AprovacaoVagas = () => {
         </>
       )}
 
-      <DetailDialog detailVaga={detailVaga} setDetailVaga={setDetailVaga} getStatusBadge={getStatusBadge} getCandidatoStatusBadge={getCandidatoStatusBadge} beneficiosToString={beneficiosToString} handleStatusCandidatoChange={handleStatusCandidatoChange} />
+      {/* Dialog de Detalhes */}
+      <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Vaga</DialogTitle>
+          </DialogHeader>
+          {detailVaga && (
+            <DetailDialogContent
+              vaga={detailVaga}
+              getStatusBadge={getStatusBadge}
+              getCandidatoStatusBadge={getCandidatoStatusBadge}
+              beneficiosToString={beneficiosToString}
+              handleStatusCandidatoChange={handleStatusCandidatoChange}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de Reprovação */}
       <Dialog open={showReprovar} onOpenChange={setShowReprovar}>
