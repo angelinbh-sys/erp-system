@@ -93,78 +93,7 @@ const Admissao = () => {
       )}
 
       {/* Dialog de Detalhes */}
-      <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Candidato</DialogTitle>
-          </DialogHeader>
-          {detailVaga && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><strong>Nome:</strong> {detailVaga.nome_candidato}</div>
-                <div><strong>Cargo:</strong> {detailVaga.cargo}</div>
-                <div><strong>Salário:</strong> {detailVaga.salario}</div>
-                <div><strong>Centro de Custo:</strong> {detailVaga.centro_custo_nome}</div>
-                <div><strong>Site / Contrato:</strong> {detailVaga.site_contrato}</div>
-                <div><strong>Local de Trabalho:</strong> {detailVaga.local_trabalho}</div>
-                <div><strong>Data de Nascimento:</strong> {detailVaga.data_nascimento}</div>
-                <div><strong>Telefone:</strong> {detailVaga.telefone}</div>
-              </div>
-
-              {detailVaga.enviado_admissao ? (
-                <div className="rounded-lg bg-green-50 border border-green-200 p-4">
-                  <p className="text-sm font-medium text-green-800 flex items-center gap-2">
-                    <Unlock className="h-4 w-4" />
-                    Liberado pelo SESMT para Admissão
-                  </p>
-                  <p className="text-xs text-green-600 mt-1">
-                    Liberado em {detailVaga.enviado_admissao_at ? new Date(detailVaga.enviado_admissao_at).toLocaleDateString("pt-BR") : "—"}
-                  </p>
-                  {detailVaga.data_agendamento_aso && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      ASO agendado: {detailVaga.data_agendamento_aso} | Entrega: {detailVaga.data_entrega_aso || "—"}
-                    </p>
-                  )}
-                  <div className="mt-4 flex gap-2">
-                    <div className="flex-1 p-3 bg-muted/50 rounded-md">
-                      <p className="text-sm text-muted-foreground italic">
-                        Campos de admissão serão definidos posteriormente.
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        const { error } = await supabase
-                          .from("vagas")
-                          .update({ enviado_admissao: false, enviado_admissao_at: null } as any)
-                          .eq("id", detailVaga.id);
-                        if (error) { toast.error("Erro ao devolver."); return; }
-                        toast.success("Devolvido para o SESMT.");
-                        queryClient.invalidateQueries({ queryKey: ["vagas"] });
-                        setDetailVaga(null);
-                      }}
-                    >
-                      <Undo2 className="h-4 w-4 mr-1" />
-                      Devolver para SESMT
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
-                  <p className="text-sm font-medium text-amber-800 flex items-center gap-2">
-                    <Lock className="h-4 w-4" />
-                    Aguardando liberação do SESMT
-                  </p>
-                  <p className="text-xs text-amber-600 mt-1">
-                    O processo de admissão será liberado após o SESMT concluir o agendamento e envio do ASO.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <AdmissaoDetailDialog detailVaga={detailVaga} setDetailVaga={setDetailVaga} queryClient={queryClient} />
     </div>
   );
 };
