@@ -287,6 +287,41 @@ export type Database = {
         }
         Relationships: []
       }
+      vagas_historico: {
+        Row: {
+          acao: string
+          created_at: string
+          id: string
+          motivo: string | null
+          usuario_nome: string
+          vaga_id: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          usuario_nome: string
+          vaga_id: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          usuario_nome?: string
+          vaga_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vagas_historico_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
