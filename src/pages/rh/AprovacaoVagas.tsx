@@ -333,7 +333,60 @@ const AprovacaoVagas = () => {
         </Card>
       )}
 
-      {/* Dialog de Detalhes */}
+      {/* Vagas Devolvidas pelo SESMT */}
+      {devolvidasVagas.length > 0 && (
+        <>
+          <h3 className="font-heading text-xl font-bold text-foreground mt-8 mb-4">
+            Vagas Devolvidas pelo SESMT
+          </h3>
+          <Card>
+            <CardContent className="pt-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Candidato</TableHead>
+                    <TableHead>Cargo / Função</TableHead>
+                    <TableHead>Centro de Custo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-36">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {devolvidasVagas.map((vaga) => (
+                    <TableRow key={vaga.id}>
+                      <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
+                      <TableCell>{vaga.cargo}</TableCell>
+                      <TableCell>{vaga.centro_custo_nome}</TableCell>
+                      <TableCell>{getStatusBadge("Devolvida SESMT")}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Ver detalhes"
+                            onClick={() => setDetailVaga(vaga)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {canDeleteVaga(vaga) && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleReenviar(vaga)}
+                            >
+                              Reenviar para Aprovação
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
       <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
