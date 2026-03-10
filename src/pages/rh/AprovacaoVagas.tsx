@@ -82,8 +82,38 @@ const AprovacaoVagas = () => {
   const [deleteMotivo, setDeleteMotivo] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  // Filter: only pending approvals, exclude deleted
+  // Filter: pending approvals + devolved from SESMT, exclude deleted
   const activeVagas = vagas.filter((v) => !(v as Record<string, unknown>).excluida && v.status === "Aguardando Aprovação");
+  const devolvidasVagas = vagas.filter((v) => !(v as Record<string, unknown>).excluida && v.status === "Devolvida SESMT");
+
+  const handleReenviar = async (vaga: Vaga) => {
+    try {
+      const { error } = await supabase
+        .from("vagas")
+        .update({ status: "Aguardando Aprovação" } as any)
+        .eq("id", vaga.id);
+      if (error) throw error;
+
+      await supabase.from("vagas_historico" as any).insert({
+        vaga_id: vaga.id,
+        acao: "Reenviada pelo RH para aprovação",
+        usuario_nome: profile?.nome || "Sistema",
+      } as any);
+
+      await createNotificacao.mutateAsync({
+        titulo: "Vaga reenviada para aprovação",
+        mensagem: `A vaga ${vaga.cargo} (${vaga.nome_candidato}) foi corrigida e reenviada para aprovação.`,
+        tipo: "warning",
+        link: "/rh/aprovacao-vagas",
+        vaga_id: vaga.id,
+      });
+
+      toast.success("Vaga reenviada para aprovação da Diretoria.");
+      window.location.reload();
+    } catch {
+      toast.error("Erro ao reenviar vaga.");
+    }
+  };
 
   const handleAprovar = async (vaga: Vaga) => {
     try {
