@@ -9,11 +9,36 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Stethoscope, Upload, X, Send, FileText, Undo2 } from "lucide-react";
+import { Stethoscope, Upload, X, Send, FileText, Undo2, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "@/contexts/AuthContext";
+import VagaTimeline from "@/components/VagaTimeline";
+import { useVagaHistorico } from "@/hooks/useVagaHistorico";
+
+function VagaTimelineSection({ vagaId, vaga }: { vagaId: string; vaga: any }) {
+  const { data: historico = [] } = useVagaHistorico(vagaId);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="border-t border-border pt-3">
+      <button
+        type="button"
+        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
+        onClick={() => setOpen(!open)}
+      >
+        {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        Fluxo da Vaga
+      </button>
+      {open && (
+        <div className="mt-3">
+          <VagaTimeline vaga={vaga} historico={historico} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 const AgendamentoASO = () => {
   const { data: vagas = [], isLoading } = useVagas("Aprovada");
