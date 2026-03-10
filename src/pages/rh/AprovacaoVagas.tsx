@@ -51,6 +51,11 @@ const statusConfig: Record<string, { label: string; icon: React.ReactNode; class
     icon: <XCircle className="h-3 w-3" />,
     className: "bg-red-100 text-red-800 border-red-300",
   },
+  "Devolvida SESMT": {
+    label: "Devolvida pelo SESMT",
+    icon: <Undo2 className="h-3 w-3" />,
+    className: "bg-orange-100 text-orange-800 border-orange-300",
+  },
 };
 
 const statusCandidatoConfig: Record<string, { label: string; className: string }> = {
@@ -77,8 +82,38 @@ const AprovacaoVagas = () => {
   const [deleteMotivo, setDeleteMotivo] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  // Filter: only pending approvals, exclude deleted
+  // Filter: pending approvals + devolved from SESMT, exclude deleted
   const activeVagas = vagas.filter((v) => !(v as Record<string, unknown>).excluida && v.status === "Aguardando Aprovação");
+  const devolvidasVagas = vagas.filter((v) => !(v as Record<string, unknown>).excluida && v.status === "Devolvida SESMT");
+
+  const handleReenviar = async (vaga: Vaga) => {
+    try {
+      const { error } = await supabase
+        .from("vagas")
+        .update({ status: "Aguardando Aprovação" } as any)
+        .eq("id", vaga.id);
+      if (error) throw error;
+
+      await supabase.from("vagas_historico" as any).insert({
+        vaga_id: vaga.id,
+        acao: "Reenviada pelo RH para aprovação",
+        usuario_nome: profile?.nome || "Sistema",
+      } as any);
+
+      await createNotificacao.mutateAsync({
+        titulo: "Vaga reenviada para aprovação",
+        mensagem: `A vaga ${vaga.cargo} (${vaga.nome_candidato}) foi corrigida e reenviada para aprovação.`,
+        tipo: "warning",
+        link: "/rh/aprovacao-vagas",
+        vaga_id: vaga.id,
+      });
+
+      toast.success("Vaga reenviada para aprovação da Diretoria.");
+      window.location.reload();
+    } catch {
+      toast.error("Erro ao reenviar vaga.");
+    }
+  };
 
   const handleAprovar = async (vaga: Vaga) => {
     try {
@@ -298,7 +333,60 @@ const AprovacaoVagas = () => {
         </Card>
       )}
 
-      {/* Dialog de Detalhes */}
+      {/* Vagas Devolvidas pelo SESMT */}
+      {devolvidasVagas.length > 0 && (
+        <>
+          <h3 className="font-heading text-xl font-bold text-foreground mt-8 mb-4">
+            Vagas Devolvidas pelo SESMT
+          </h3>
+          <Card>
+            <CardContent className="pt-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Candidato</TableHead>
+                    <TableHead>Cargo / Função</TableHead>
+                    <TableHead>Centro de Custo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-36">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {devolvidasVagas.map((vaga) => (
+                    <TableRow key={vaga.id}>
+                      <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
+                      <TableCell>{vaga.cargo}</TableCell>
+                      <TableCell>{vaga.centro_custo_nome}</TableCell>
+                      <TableCell>{getStatusBadge("Devolvida SESMT")}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Ver detalhes"
+                            onClick={() => setDetailVaga(vaga)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {canDeleteVaga(vaga) && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleReenviar(vaga)}
+                            >
+                              Reenviar para Aprovação
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
       <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
