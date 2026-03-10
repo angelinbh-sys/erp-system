@@ -51,7 +51,13 @@ const AlterarSenha = () => {
       refetchProfile();
       navigate("/", { replace: true });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro ao alterar senha.";
+      const raw = err instanceof Error ? err.message : "";
+      let message = "Erro ao alterar senha.";
+      if (raw.toLowerCase().includes("same password") || raw.toLowerCase().includes("different from the old password")) {
+        message = "A nova senha não pode ser igual à senha anterior.\nPor favor, escolha uma senha diferente.";
+      } else if (raw.toLowerCase().includes("password")) {
+        message = "Senha inválida. Verifique os requisitos e tente novamente.";
+      }
       setError(message);
     } finally {
       setLoading(false);
