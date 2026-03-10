@@ -66,7 +66,60 @@ const statusCandidatoConfig: Record<string, { label: string; className: string }
   "Reprovado": { label: "Reprovado", className: "bg-red-100 text-red-800 border-red-300" },
 };
 
-const AprovacaoVagas = () => {
+function DetailDialogContent({ vaga, getStatusBadge, getCandidatoStatusBadge, beneficiosToString, handleStatusCandidatoChange }: {
+  vaga: any;
+  getStatusBadge: (s: string) => React.ReactNode;
+  getCandidatoStatusBadge: (s: string) => React.ReactNode;
+  beneficiosToString: (b: unknown) => string;
+  handleStatusCandidatoChange: (v: any, s: string) => void;
+}) {
+  const { data: historico = [] } = useVagaHistorico(vaga.id);
+
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="grid grid-cols-2 gap-2">
+        <div><strong>Cargo:</strong> {vaga.cargo}</div>
+        <div><strong>Salário:</strong> {vaga.salario}</div>
+        <div><strong>Centro de Custo:</strong> {vaga.centro_custo_nome}</div>
+        <div><strong>Site / Contrato:</strong> {vaga.site_contrato}</div>
+        <div><strong>Local:</strong> {vaga.local_trabalho}</div>
+        <div><strong>Candidato:</strong> {vaga.nome_candidato}</div>
+        <div><strong>Nascimento:</strong> {vaga.data_nascimento}</div>
+        <div><strong>Telefone:</strong> {vaga.telefone}</div>
+      </div>
+      <div><strong>Benefícios:</strong> {beneficiosToString(vaga.beneficios)}</div>
+      <div><strong>Status da Vaga:</strong> {getStatusBadge(vaga.status)}</div>
+      <div><strong>Status do Candidato:</strong> {getCandidatoStatusBadge(vaga.status_candidato || "Em análise")}</div>
+      {vaga.observacao_reprovacao && (
+        <div><strong>Motivo da reprovação:</strong> {vaga.observacao_reprovacao}</div>
+      )}
+
+      {/* Timeline */}
+      <div className="pt-3 border-t border-border">
+        <VagaTimeline vaga={vaga} historico={historico} />
+      </div>
+
+      {/* Status do Candidato - editable */}
+      <div className="pt-3 border-t border-border">
+        <Label className="text-sm font-semibold">Alterar Status do Candidato</Label>
+        <Select
+          value={vaga.status_candidato || "Em análise"}
+          onValueChange={(v) => handleStatusCandidatoChange(vaga, v)}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Em análise">Em análise</SelectItem>
+            <SelectItem value="Aprovado">Aprovado</SelectItem>
+            <SelectItem value="Reprovado">Reprovado</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
   const { data: vagas = [], isLoading } = useVagas();
   const updateStatus = useUpdateVagaStatus();
   const createNotificacao = useCreateNotificacao();
