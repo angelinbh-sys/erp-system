@@ -13,6 +13,8 @@ import { ClipboardList, Eye, Lock, Unlock, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import VagaTimeline from "@/components/VagaTimeline";
+import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 
 const Admissao = () => {
   const { data: allVagas = [], isLoading } = useVagas("Aprovada");
