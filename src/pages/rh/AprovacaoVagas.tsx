@@ -389,51 +389,7 @@ const AprovacaoVagas = () => {
         </>
       )}
 
-      <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Detalhes da Vaga</DialogTitle>
-          </DialogHeader>
-          {detailVaga && (
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-2">
-                <div><strong>Cargo:</strong> {detailVaga.cargo}</div>
-                <div><strong>Salário:</strong> {detailVaga.salario}</div>
-                <div><strong>Centro de Custo:</strong> {detailVaga.centro_custo_nome}</div>
-                <div><strong>Site / Contrato:</strong> {detailVaga.site_contrato}</div>
-                <div><strong>Local:</strong> {detailVaga.local_trabalho}</div>
-                <div><strong>Candidato:</strong> {detailVaga.nome_candidato}</div>
-                <div><strong>Nascimento:</strong> {detailVaga.data_nascimento}</div>
-                <div><strong>Telefone:</strong> {detailVaga.telefone}</div>
-              </div>
-              <div><strong>Benefícios:</strong> {beneficiosToString(detailVaga.beneficios)}</div>
-              <div><strong>Status da Vaga:</strong> {getStatusBadge(detailVaga.status)}</div>
-              <div><strong>Status do Candidato:</strong> {getCandidatoStatusBadge((detailVaga as Record<string, unknown>).status_candidato as string || "Em análise")}</div>
-              {detailVaga.observacao_reprovacao && (
-                <div><strong>Motivo da reprovação:</strong> {detailVaga.observacao_reprovacao}</div>
-              )}
-
-              {/* Status do Candidato - editable */}
-              <div className="pt-3 border-t border-border">
-                <Label className="text-sm font-semibold">Alterar Status do Candidato</Label>
-                <Select
-                  value={(detailVaga as Record<string, unknown>).status_candidato as string || "Em análise"}
-                  onValueChange={(v) => handleStatusCandidatoChange(detailVaga, v)}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Em análise">Em análise</SelectItem>
-                    <SelectItem value="Aprovado">Aprovado</SelectItem>
-                    <SelectItem value="Reprovado">Reprovado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <DetailDialog detailVaga={detailVaga} setDetailVaga={setDetailVaga} getStatusBadge={getStatusBadge} getCandidatoStatusBadge={getCandidatoStatusBadge} beneficiosToString={beneficiosToString} handleStatusCandidatoChange={handleStatusCandidatoChange} />
 
       {/* Dialog de Reprovação */}
       <Dialog open={showReprovar} onOpenChange={setShowReprovar}>
