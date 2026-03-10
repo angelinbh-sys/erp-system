@@ -120,6 +120,7 @@ function DetailDialogContent({ vaga, getStatusBadge, getCandidatoStatusBadge, be
   );
 }
 
+const AprovacaoVagas = () => {
   const { data: vagas = [], isLoading } = useVagas();
   const updateStatus = useUpdateVagaStatus();
   const createNotificacao = useCreateNotificacao();
