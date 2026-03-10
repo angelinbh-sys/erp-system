@@ -35,6 +35,8 @@ interface SolicitacaoFeriasRegistro {
   dataRetorno: string;
   qtdDias: number;
   observacoes: string;
+  criadoPor?: string;
+  criadoEm?: string;
 }
 
 const SolicitacaoFerias = () => {
