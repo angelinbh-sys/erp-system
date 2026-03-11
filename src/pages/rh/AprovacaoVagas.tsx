@@ -37,6 +37,8 @@ import { useVagas, useUpdateVagaStatus, type Vaga } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuditLog } from "@/hooks/useAuditLog";
+import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 
 const statusConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
   "Aguardando Aprovação": {
