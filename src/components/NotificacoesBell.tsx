@@ -1,6 +1,7 @@
 import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useNotificacoesNaoLidas, useMarcarLida } from "@/hooks/useNotificacoes";
+import { useAuthContext } from "@/contexts/AuthContext";
 import {
   Popover,
   PopoverContent,
@@ -10,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function NotificacoesBell() {
-  const { data: notificacoes = [] } = useNotificacoesNaoLidas();
+  const { profile } = useAuthContext();
+  const grupoPermissao = profile?.super_admin ? "super_admin" : profile?.grupo_permissao || "";
+  const { data: notificacoes = [] } = useNotificacoesNaoLidas(grupoPermissao);
   const marcarLida = useMarcarLida();
   const navigate = useNavigate();
 
