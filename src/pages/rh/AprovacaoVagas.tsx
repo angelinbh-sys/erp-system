@@ -120,10 +120,11 @@ const AprovacaoVagas = () => {
   const [cancelling, setCancelling] = useState(false);
 
   // Filter vagas
-  const notExcluded = vagas.filter((v) => !(v as any).excluida);
+  const notExcluded = vagas.filter((v) => !(v as any).excluida && (v as any).status_processo !== STATUS_PROCESSO.VAGA_CANCELADA);
   const activeVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA || v.status === "Aguardando Aprovação");
   const devolvidasVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.DEVOLVIDO_RH || v.status === "Devolvida SESMT");
   const reprovadasVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.REPROVADO_DIRETORIA || v.status === "Reprovada");
+  const canceladasVagas = vagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.VAGA_CANCELADA);
 
   const isCreator = (vaga: Vaga) => {
     const criadoPor = (vaga as any).criado_por;
