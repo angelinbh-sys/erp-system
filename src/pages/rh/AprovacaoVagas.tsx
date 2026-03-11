@@ -83,7 +83,9 @@ const AprovacaoVagas = () => {
 
   const canDeleteVaga = (vaga: Vaga) => {
     const sp = (vaga as any).status_processo;
-    return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.RASCUNHO || sp === STATUS_PROCESSO.AGUARDANDO_DIRETORIA);
+    // Super admin pode excluir em qualquer status
+    if (isSuperAdmin) return true;
+    return isCreator(vaga) && (sp === STATUS_PROCESSO.RASCUNHO || sp === STATUS_PROCESSO.AGUARDANDO_DIRETORIA);
   };
 
   // Cancelar vaga: apenas o criador
