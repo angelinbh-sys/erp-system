@@ -47,6 +47,7 @@ const App = () => (
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
               <Route path="/admin/permissoes" element={<AdminPermissoes />} />
               <Route path="/admin/audit-log" element={<AuditLog />} />
+              <Route path="/admin/limpar-dados" element={<LimparDadosTeste />} />
               <Route path="/sesmt/agendamento-aso" element={<AgendamentoASO />} />
               <Route path="/financeiro" element={<ModulePlaceholder title="Financeiro" />} />
               <Route path="/logistica" element={<ModulePlaceholder title="Logística" />} />
