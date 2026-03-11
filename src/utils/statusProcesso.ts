@@ -10,6 +10,7 @@ export const STATUS_PROCESSO = {
   ADMISSAO_EM_ANDAMENTO: "Admissão em andamento",
   ADMITIDO: "Admitido",
   EFETIVADO: "Efetivado",
+  VAGA_CANCELADA: "Vaga Cancelada",
 } as const;
 
 export type StatusProcesso = (typeof STATUS_PROCESSO)[keyof typeof STATUS_PROCESSO];
