@@ -193,6 +193,14 @@ const AprovacaoVagas = () => {
   const handleAprovar = async (vaga: Vaga) => {
     try {
       await updateStatus.mutateAsync({ id: vaga.id, status: "Aprovada" });
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "aprovacao",
+        descricao: `Aprovou vaga: ${vaga.cargo} — ${vaga.nome_candidato}`,
+        registro_id: vaga.id,
+        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+      });
       await createNotificacao.mutateAsync({
         titulo: "Vaga aprovada",
         mensagem: `A vaga ${vaga.cargo} para ${vaga.nome_candidato} foi aprovada. Encaminhar para agendamento de ASO.`,
