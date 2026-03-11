@@ -192,6 +192,7 @@ const AprovacaoVagas = () => {
         status: "Aprovada",
         status_processo: STATUS_PROCESSO.EM_ANDAMENTO_SESMT,
         responsavel_etapa: "SESMT",
+        atualizado_por: profile?.nome || "Sistema",
       } as any).eq("id", vaga.id);
       if (error) throw error;
 
