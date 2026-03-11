@@ -447,7 +447,7 @@ const AprovacaoVagas = () => {
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando...</p>
-      ) : activeVagas.length === 0 && devolvidasVagas.length === 0 && reprovadasVagas.length === 0 ? (
+      ) : activeVagas.length === 0 && devolvidasVagas.length === 0 && reprovadasVagas.length === 0 && canceladasVagas.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
             Nenhuma vaga cadastrada.
@@ -458,6 +458,7 @@ const AprovacaoVagas = () => {
           {renderVagaTable(activeVagas, activeVagas.length > 0 ? "" : "", true)}
           {renderVagaTable(devolvidasVagas, "Vagas Devolvidas", true)}
           {renderVagaTable(reprovadasVagas, "Vagas Reprovadas", true)}
+          {renderVagaTable(canceladasVagas, "Vagas Canceladas", false)}
         </>
       )}
 
