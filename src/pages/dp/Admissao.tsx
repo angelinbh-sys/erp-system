@@ -20,7 +20,7 @@ import { useAuditLog } from "@/hooks/useAuditLog";
 import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 import { useAuthContext } from "@/contexts/AuthContext";
 
-function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any }) {
+function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logAction }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any; logAction: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
 
   return (
