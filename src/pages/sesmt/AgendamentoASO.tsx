@@ -142,6 +142,14 @@ const AgendamentoASO = () => {
     if (updateError) {
       toast.error("Erro ao salvar referência do arquivo.");
     } else {
+      await logAction({
+        modulo: "SESMT",
+        pagina: "Agendamento de ASO",
+        acao: "edicao",
+        descricao: `Anexou resultado do ASO: ${vaga.nome_candidato} (${vaga.cargo}) — ${arquivo.name}`,
+        registro_id: vaga.id,
+        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+      });
       toast.success("Resultado do ASO anexado com sucesso.");
       queryClient.invalidateQueries({ queryKey: ["vagas"] });
     }
