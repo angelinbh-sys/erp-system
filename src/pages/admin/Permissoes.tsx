@@ -96,6 +96,7 @@ function getHighestPermIndex(modPerms: PaginaPermissoes): number {
 }
 
 const AdminPermissoes = () => {
+  const { logAction } = useAuditLog();
   const [grupos, setGrupos] = useState<GrupoPermissao[]>(() => {
     try {
       const stored = localStorage.getItem("erp_grupos_permissao");
