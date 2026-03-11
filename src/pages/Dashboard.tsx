@@ -28,6 +28,7 @@ import { useNotificacoes } from "@/hooks/useNotificacoes";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
+import { STATUS_PROCESSO } from "@/utils/statusProcesso";
 
 /* ─── Status badge helpers ──────────────────────────────────────── */
 function vagaStatusBadge(status: string) {
