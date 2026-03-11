@@ -301,7 +301,7 @@ const AprovacaoVagas = () => {
       } as any);
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "cancelamento",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "cancelamento",
         descricao: `Cancelou vaga ${(cancelVaga as any).numero_vaga || ""}: ${cancelVaga.cargo} — ${cancelVaga.nome_candidato}`,
         registro_id: cancelVaga.id, registro_ref: `${cancelVaga.cargo} - ${cancelVaga.nome_candidato}`,
         motivo: cancelMotivo.trim(),
