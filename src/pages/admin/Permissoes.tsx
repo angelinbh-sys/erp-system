@@ -120,8 +120,8 @@ const AdminPermissoes = () => {
       const permIndex = PERMISSOES.indexOf(perm as typeof PERMISSOES[number]);
 
       if (current[perm]) {
-        // Unchecking: uncheck this and all ABOVE (higher permissions)
-        for (let i = permIndex; i < PERMISSOES.length; i++) {
+        // Unchecking: uncheck ALL permissions
+        for (let i = 0; i < PERMISSOES.length; i++) {
           current[PERMISSOES[i]] = false;
         }
       } else {
