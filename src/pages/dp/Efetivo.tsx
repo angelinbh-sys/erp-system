@@ -38,6 +38,7 @@ import {
   type Colaborador,
 } from "@/hooks/useColaboradores";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 const Efetivo = () => {
   const { profile } = useAuthContext();
