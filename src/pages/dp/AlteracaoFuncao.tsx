@@ -43,6 +43,8 @@ interface AlteracaoRegistro {
   dataAlteracao: string;
   observacoes: string;
   anexo?: string;
+  criadoPor?: string;
+  criadoEm?: string;
 }
 
 const AlteracaoFuncao = () => {
