@@ -115,6 +115,10 @@ const AprovacaoVagas = () => {
   const [deleteMotivo, setDeleteMotivo] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  const [cancelVaga, setCancelVaga] = useState<Vaga | null>(null);
+  const [cancelMotivo, setCancelMotivo] = useState("");
+  const [cancelling, setCancelling] = useState(false);
+
   // Filter vagas
   const notExcluded = vagas.filter((v) => !(v as any).excluida);
   const activeVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA || v.status === "Aguardando Aprovação");
