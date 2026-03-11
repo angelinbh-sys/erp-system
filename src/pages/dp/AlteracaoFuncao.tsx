@@ -100,6 +100,11 @@ const AlteracaoFuncao = () => {
         r.id === editId ? { ...r, ...form, anexo: anexo?.name || r.anexo } : r
       );
       save(updated);
+      logAction({
+        modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "edicao",
+        descricao: `Editou alteração de função: ${form.nomeColaborador} (${form.cargoAtual} → ${form.novoCargo})`,
+        registro_id: editId, registro_ref: form.nomeColaborador,
+      });
       toast.success("Registro atualizado.");
     } else {
       const novo: AlteracaoRegistro = {
