@@ -46,4 +46,5 @@ export const STATUS_PROCESSO_CONFIG: Record<string, { label: string; className: 
   [STATUS_PROCESSO.ADMISSAO_EM_ANDAMENTO]: { label: "Admissão em andamento", className: "bg-indigo-100 text-indigo-800 border-indigo-300" },
   [STATUS_PROCESSO.ADMITIDO]: { label: "Admitido", className: "bg-teal-100 text-teal-800 border-teal-300" },
   [STATUS_PROCESSO.EFETIVADO]: { label: "Efetivado", className: "bg-green-100 text-green-800 border-green-300" },
+  [STATUS_PROCESSO.VAGA_CANCELADA]: { label: "Vaga Cancelada", className: "bg-gray-200 text-gray-700 border-gray-400" },
 };
