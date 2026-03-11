@@ -16,6 +16,23 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Log login after successful auth (can't use useAuditLog since profile may not be ready)
+async function logLoginAudit(email: string) {
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    const userId = session?.session?.user?.id;
+    const { data: profile } = await supabase.from("profiles").select("nome").eq("user_id", userId!).single();
+    await (supabase.from("audit_logs" as any) as any).insert({
+      user_id: userId,
+      user_name: profile?.nome || email,
+      modulo: "Autenticação",
+      pagina: "Login",
+      acao: "login",
+      descricao: `Login realizado: ${email}`,
+    });
+  } catch { /* silent */ }
+}
+
 const Login = () => {
   const { signIn } = useAuthContext();
   const navigate = useNavigate();
