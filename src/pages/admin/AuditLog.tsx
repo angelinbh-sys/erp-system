@@ -1,0 +1,167 @@
+import { useState } from "react";
+import { Search, Filter, FileText } from "lucide-react";
+import { useAuditLogs, type AuditLogFilters } from "@/hooks/useAuditLog";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+
+const MODULOS = [
+  "Recursos Humanos", "Dep. Pessoal", "SESMT", "Admin", "Financeiro", "Logística", "Qualidade", "Autenticação",
+];
+
+const AuditLog = () => {
+  const [filters, setFilters] = useState<AuditLogFilters>({});
+  const [appliedFilters, setAppliedFilters] = useState<AuditLogFilters>({});
+  const { data: logs = [], isLoading } = useAuditLogs(appliedFilters);
+
+  const handleSearch = () => setAppliedFilters({ ...filters });
+  const handleClear = () => {
+    setFilters({});
+    setAppliedFilters({});
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
+        Log de Auditoria
+      </h2>
+
+      {/* Filtros */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Filtros</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div>
+              <Label className="text-xs">Data Início</Label>
+              <Input
+                type="date"
+                value={filters.startDate || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, startDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Data Fim</Label>
+              <Input
+                type="date"
+                value={filters.endDate || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, endDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Usuário</Label>
+              <Input
+                placeholder="Nome do usuário"
+                value={filters.usuario || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, usuario: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Módulo</Label>
+              <Select value={filters.modulo || ""} onValueChange={(v) => setFilters((p) => ({ ...p, modulo: v || undefined }))}>
+                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos</SelectItem>
+                  {MODULOS.map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Página</Label>
+              <Input
+                placeholder="Nome da página"
+                value={filters.pagina || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, pagina: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Ação</Label>
+              <Input
+                placeholder="Tipo de ação"
+                value={filters.acao || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, acao: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <Button size="sm" onClick={handleSearch}>
+              <Search className="h-4 w-4 mr-1" />
+              Buscar
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleClear}>
+              Limpar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resultados */}
+      {isLoading ? (
+        <p className="text-muted-foreground">Carregando...</p>
+      ) : logs.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <FileText className="h-12 w-12 mb-3 opacity-40" />
+              <p>Nenhum registro de auditoria encontrado.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-xs text-muted-foreground mb-3">{logs.length} registro(s) encontrado(s)</p>
+            <div className="overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Hora</TableHead>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Módulo</TableHead>
+                    <TableHead>Página</TableHead>
+                    <TableHead>Ação</TableHead>
+                    <TableHead>Registro</TableHead>
+                    <TableHead>Motivo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {logs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="whitespace-nowrap text-xs">
+                        {new Date(log.created_at).toLocaleDateString("pt-BR")}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-xs">
+                        {new Date(log.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </TableCell>
+                      <TableCell className="text-xs font-medium">{log.user_name}</TableCell>
+                      <TableCell className="text-xs">{log.modulo}</TableCell>
+                      <TableCell className="text-xs">{log.pagina}</TableCell>
+                      <TableCell className="text-xs">{log.descricao}</TableCell>
+                      <TableCell className="text-xs">{log.registro_ref || "—"}</TableCell>
+                      <TableCell className="text-xs max-w-[200px] truncate">{log.motivo || "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default AuditLog;
