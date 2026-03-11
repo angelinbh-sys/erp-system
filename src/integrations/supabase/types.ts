@@ -258,6 +258,7 @@ export type Database = {
           motivo_exclusao: string | null
           nome_candidato: string
           observacao_reprovacao: string | null
+          responsavel_etapa: string
           resultado_aso_nome: string | null
           resultado_aso_path: string | null
           salario: string
@@ -265,6 +266,7 @@ export type Database = {
           status: string
           status_candidato: string
           status_candidato_updated_at: string | null
+          status_processo: string
           telefone: string
           updated_at: string
         }
@@ -289,6 +291,7 @@ export type Database = {
           motivo_exclusao?: string | null
           nome_candidato: string
           observacao_reprovacao?: string | null
+          responsavel_etapa?: string
           resultado_aso_nome?: string | null
           resultado_aso_path?: string | null
           salario: string
@@ -296,6 +299,7 @@ export type Database = {
           status?: string
           status_candidato?: string
           status_candidato_updated_at?: string | null
+          status_processo?: string
           telefone: string
           updated_at?: string
         }
@@ -320,6 +324,7 @@ export type Database = {
           motivo_exclusao?: string | null
           nome_candidato?: string
           observacao_reprovacao?: string | null
+          responsavel_etapa?: string
           resultado_aso_nome?: string | null
           resultado_aso_path?: string | null
           salario?: string
@@ -327,6 +332,7 @@ export type Database = {
           status?: string
           status_candidato?: string
           status_candidato_updated_at?: string | null
+          status_processo?: string
           telefone?: string
           updated_at?: string
         }
