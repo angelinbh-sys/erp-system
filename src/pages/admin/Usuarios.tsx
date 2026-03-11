@@ -122,6 +122,7 @@ const AdminUsuarios = () => {
           },
         });
         if (error || data?.error) throw new Error(data?.error || "Erro ao atualizar");
+        await logAction({ modulo: "Admin", pagina: "Usuários", acao: "edicao", descricao: `Editou usuário: ${form.nome.trim()}`, registro_id: editUserId, registro_ref: form.nome.trim() });
         toast.success("Usuário atualizado.");
       } else {
         const { data, error } = await supabase.functions.invoke("admin-create-user", {
