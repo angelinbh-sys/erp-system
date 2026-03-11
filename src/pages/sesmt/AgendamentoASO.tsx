@@ -102,6 +102,14 @@ const AgendamentoASO = () => {
       toast.error("Erro ao salvar datas.");
       return;
     }
+    await logAction({
+      modulo: "SESMT",
+      pagina: "Agendamento de ASO",
+      acao: "edicao",
+      descricao: `Salvou datas do ASO: ${vaga.nome_candidato} (${vaga.cargo})`,
+      registro_id: vaga.id,
+      registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+    });
     toast.success("Datas salvas com sucesso.");
     queryClient.invalidateQueries({ queryKey: ["vagas"] });
   };
