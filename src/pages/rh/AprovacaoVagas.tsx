@@ -262,6 +262,15 @@ const AprovacaoVagas = () => {
         } as Record<string, unknown>)
         .eq("id", deleteVaga.id);
       if (error) throw error;
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "exclusao",
+        descricao: `Excluiu vaga: ${deleteVaga.cargo} — ${deleteVaga.nome_candidato}`,
+        registro_id: deleteVaga.id,
+        registro_ref: `${deleteVaga.cargo} - ${deleteVaga.nome_candidato}`,
+        motivo: deleteMotivo.trim(),
+      });
       toast.success("Vaga excluída com sucesso.");
       setDeleteVaga(null);
       setDeleteMotivo("");
