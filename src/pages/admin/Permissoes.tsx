@@ -47,7 +47,7 @@ const MODULOS_PAGINAS = [
   },
   {
     modulo: "Admin",
-    paginas: ["Usuários", "Grupos de Permissão"],
+    paginas: ["Usuários", "Grupos de Permissão", "Log de Auditoria"],
   },
 ] as const;
 
