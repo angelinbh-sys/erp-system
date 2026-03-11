@@ -203,6 +203,7 @@ const AberturaDeVaga = () => {
         tipo: "warning",
         link: "/rh/aprovacao-vaga",
         vaga_id: vaga.id,
+        destinatario_grupo: "Diretoria",
       });
 
       // Call edge function for email notification (async, don't block)
