@@ -103,6 +103,11 @@ function DetailDialogContent({ vaga, getStatusBadge, getCandidatoStatusBadge, be
         <VagaTimeline vaga={vaga} historico={historico} />
       </div>
 
+      {/* Histórico de Auditoria */}
+      <div className="pt-3 border-t border-border">
+        <HistoricoRegistro registroId={vaga.id} />
+      </div>
+
       {/* Status do Candidato - editable */}
       <div className="pt-3 border-t border-border">
         <Label className="text-sm font-semibold">Alterar Status do Candidato</Label>
