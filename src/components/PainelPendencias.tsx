@@ -110,17 +110,15 @@ export default function PainelPendencias({ profile, vagas }: Props) {
     // Diretoria — Aprovações Pendentes
     if (isSuper || grupo === "diretoria") {
       const items = activeVagas.filter((v) => v.status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA);
-      if (items.length > 0) {
-        result.push({
-          id: "aprovacoes",
-          title: "Aprovações Pendentes",
-          icon: Gavel,
-          color: "blue",
-          count: items.length,
-          link: "/rh/aprovacao-vaga",
-          vagas: items,
-        });
-      }
+      result.push({
+        id: "aprovacoes",
+        title: "Aprovações Pendentes",
+        icon: Gavel,
+        color: items.length > 0 ? "blue" : "green",
+        count: items.length,
+        link: "/rh/aprovacao-vaga",
+        vagas: items,
+      });
     }
 
     // SESMT — Pendências do SESMT
@@ -130,21 +128,18 @@ export default function PainelPendencias({ profile, vagas }: Props) {
           v.status_processo === STATUS_PROCESSO.APROVADO_DIRETORIA ||
           v.status_processo === STATUS_PROCESSO.EM_ANDAMENTO_SESMT
       );
-      if (items.length > 0) {
-        // Sub-classify: missing data = yellow, in progress = blue
-        const missingData = items.filter(
-          (v) => !v.data_agendamento_aso || !v.data_entrega_aso || !v.resultado_aso_path
-        );
-        result.push({
-          id: "sesmt",
-          title: "Pendências do SESMT",
-          icon: Stethoscope,
-          color: missingData.length > 0 ? "yellow" : "blue",
-          count: items.length,
-          link: "/sesmt/agendamento-aso",
-          vagas: items,
-        });
-      }
+      const missingData = items.filter(
+        (v) => !v.data_agendamento_aso || !v.data_entrega_aso || !v.resultado_aso_path
+      );
+      result.push({
+        id: "sesmt",
+        title: "Pendências do SESMT",
+        icon: Stethoscope,
+        color: items.length === 0 ? "green" : missingData.length > 0 ? "yellow" : "blue",
+        count: items.length,
+        link: "/sesmt/agendamento-aso",
+        vagas: items,
+      });
     }
 
     // DP — Admissões Pendentes
@@ -154,44 +149,38 @@ export default function PainelPendencias({ profile, vagas }: Props) {
           v.status_processo === STATUS_PROCESSO.AGUARDANDO_ADMISSAO ||
           v.status_processo === STATUS_PROCESSO.ADMISSAO_EM_ANDAMENTO
       );
-      if (items.length > 0) {
-        result.push({
-          id: "admissoes",
-          title: "Admissões Pendentes",
-          icon: UserPlus,
-          color: "blue",
-          count: items.length,
-          link: "/departamento-pessoal/admissao",
-          vagas: items,
-        });
-      }
+      result.push({
+        id: "admissoes",
+        title: "Admissões Pendentes",
+        icon: UserPlus,
+        color: items.length > 0 ? "blue" : "green",
+        count: items.length,
+        link: "/departamento-pessoal/admissao",
+        vagas: items,
+      });
     }
 
     // RH / Criador — Solicitações devolvidas
-    {
+    if (isSuper || grupo === "rh" || grupo === "recursos humanos") {
       const items = activeVagas.filter(
         (v) =>
           (v.status_processo === STATUS_PROCESSO.DEVOLVIDO_RH ||
             v.status_processo === STATUS_PROCESSO.REPROVADO_DIRETORIA) &&
           (isSuper || grupo === "rh" || grupo === "recursos humanos" || v.criado_por === userId)
       );
-      if (items.length > 0) {
-        result.push({
-          id: "devolvidas",
-          title: "Solicitações Devolvidas",
-          icon: RotateCcw,
-          color: "red",
-          count: items.length,
-          link: "/rh/solicitacao-de-vaga",
-          vagas: items,
-        });
-      }
+      result.push({
+        id: "devolvidas",
+        title: "Solicitações Devolvidas",
+        icon: RotateCcw,
+        color: items.length > 0 ? "red" : "green",
+        count: items.length,
+        link: "/rh/solicitacao-de-vaga",
+        vagas: items,
+      });
     }
 
     return result;
   }, [activeVagas, isSuper, grupo, userId]);
-
-  if (cards.length === 0) return null;
 
   return (
     <>
@@ -206,17 +195,21 @@ export default function PainelPendencias({ profile, vagas }: Props) {
             return (
               <Card
                 key={card.id}
-                className={`cursor-pointer border-2 transition-all ${colors.bg} ${colors.border} ${colors.hoverBorder} hover:shadow-md`}
-                onClick={() => setSelectedCard(card)}
+                className={`${card.count > 0 ? "cursor-pointer" : ""} border-2 transition-all ${colors.bg} ${colors.border} ${colors.hoverBorder} hover:shadow-md`}
+                onClick={() => card.count > 0 && setSelectedCard(card)}
               >
                 <CardContent className="p-5 flex flex-col items-center text-center gap-3">
                   <div className={`flex h-12 w-12 items-center justify-center rounded-full ${colors.bg}`}>
                     <Icon className={`h-6 w-6 ${colors.icon}`} />
                   </div>
                   <p className="text-sm font-medium text-foreground">{card.title}</p>
-                  <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold ${colors.badge}`}>
-                    {card.count}
-                  </span>
+                  {card.count > 0 ? (
+                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold ${colors.badge}`}>
+                      {card.count}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground font-medium">Sem pendências</span>
+                  )}
                 </CardContent>
               </Card>
             );
