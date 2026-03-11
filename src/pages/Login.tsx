@@ -57,6 +57,7 @@ const Login = () => {
     setLoading(true);
     try {
       await signIn(email.trim(), senha);
+      await logLoginAudit(email.trim());
       navigate("/", { replace: true });
     } catch {
       setError("Email ou senha inválidos.");

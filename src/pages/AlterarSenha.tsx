@@ -61,6 +61,7 @@ const AlterarSenha = () => {
       }
 
       toast.success("Senha alterada com sucesso.");
+      await logAction({ modulo: "Autenticação", pagina: "Alterar Senha", acao: "troca_senha", descricao: "Alterou a senha" });
       refetchProfile();
       navigate("/", { replace: true });
     } catch (err: unknown) {
