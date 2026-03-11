@@ -18,10 +18,6 @@ import {
 // ─── Structure: modules with pages ───────────────────────────────────
 const MODULOS_PAGINAS = [
   {
-    modulo: "Início",
-    paginas: ["Página Início"],
-  },
-  {
     modulo: "Recursos Humanos",
     paginas: ["Gestão RH", "Abertura de Vaga", "Aprovação de Vagas"],
   },

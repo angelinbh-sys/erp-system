@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, X, Eye, Clock, CheckCircle2, XCircle, Trash2, Undo2 } from "lucide-react";
+import { Check, X, Eye, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil } from "lucide-react";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
@@ -9,28 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 
 import { useVagas, useUpdateVagaStatus, type Vaga } from "@/hooks/useVagas";
@@ -39,29 +27,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { HistoricoRegistro } from "@/components/HistoricoRegistro";
-
-const statusConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
-  "Aguardando Aprovação": {
-    label: "Aguardando Aprovação",
-    icon: <Clock className="h-3 w-3" />,
-    className: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  },
-  "Aprovada": {
-    label: "Aprovada",
-    icon: <CheckCircle2 className="h-3 w-3" />,
-    className: "bg-green-100 text-green-800 border-green-300",
-  },
-  "Reprovada": {
-    label: "Reprovada",
-    icon: <XCircle className="h-3 w-3" />,
-    className: "bg-red-100 text-red-800 border-red-300",
-  },
-  "Devolvida SESMT": {
-    label: "Devolvida pelo SESMT",
-    icon: <Undo2 className="h-3 w-3" />,
-    className: "bg-orange-100 text-orange-800 border-orange-300",
-  },
-};
+import { STATUS_PROCESSO, STATUS_PROCESSO_CONFIG, getResponsavelEtapa } from "@/utils/statusProcesso";
 
 const statusCandidatoConfig: Record<string, { label: string; className: string }> = {
   "Em análise": { label: "Em análise", className: "bg-blue-100 text-blue-800 border-blue-300" },
@@ -69,9 +35,9 @@ const statusCandidatoConfig: Record<string, { label: string; className: string }
   "Reprovado": { label: "Reprovado", className: "bg-red-100 text-red-800 border-red-300" },
 };
 
-function DetailDialogContent({ vaga, getStatusBadge, getCandidatoStatusBadge, beneficiosToString, handleStatusCandidatoChange }: {
+function DetailDialogContent({ vaga, getStatusProcessoBadge, getCandidatoStatusBadge, beneficiosToString, handleStatusCandidatoChange }: {
   vaga: any;
-  getStatusBadge: (s: string) => React.ReactNode;
+  getStatusProcessoBadge: (s: string) => React.ReactNode;
   getCandidatoStatusBadge: (s: string) => React.ReactNode;
   beneficiosToString: (b: unknown) => string;
   handleStatusCandidatoChange: (v: any, s: string) => void;
@@ -91,33 +57,30 @@ function DetailDialogContent({ vaga, getStatusBadge, getCandidatoStatusBadge, be
         <div><strong>Telefone:</strong> {vaga.telefone}</div>
       </div>
       <div><strong>Benefícios:</strong> {beneficiosToString(vaga.beneficios)}</div>
-      <CriadoPorInfo criadoPorId={(vaga as any).criado_por} criadoEm={vaga.created_at} className="mt-2" />
-      <div><strong>Status da Vaga:</strong> {getStatusBadge(vaga.status)}</div>
+      <CriadoPorInfo criadoPorId={vaga.criado_por} criadoEm={vaga.created_at} className="mt-2" />
+      <div className="flex items-center gap-2">
+        <strong>Status do Processo:</strong> {getStatusProcessoBadge(vaga.status_processo || "Aguardando Diretoria")}
+      </div>
+      <div><strong>Responsável:</strong> {vaga.responsavel_etapa || getResponsavelEtapa(vaga.status_processo || "")}</div>
       <div><strong>Status do Candidato:</strong> {getCandidatoStatusBadge(vaga.status_candidato || "Em análise")}</div>
       {vaga.observacao_reprovacao && (
         <div><strong>Motivo da reprovação:</strong> {vaga.observacao_reprovacao}</div>
       )}
 
-      {/* Timeline */}
       <div className="pt-3 border-t border-border">
         <VagaTimeline vaga={vaga} historico={historico} />
       </div>
-
-      {/* Histórico de Auditoria */}
       <div className="pt-3 border-t border-border">
         <HistoricoRegistro registroId={vaga.id} />
       </div>
 
-      {/* Status do Candidato - editable */}
       <div className="pt-3 border-t border-border">
         <Label className="text-sm font-semibold">Alterar Status do Candidato</Label>
         <Select
           value={vaga.status_candidato || "Em análise"}
           onValueChange={(v) => handleStatusCandidatoChange(vaga, v)}
         >
-          <SelectTrigger className="mt-1">
-            <SelectValue />
-          </SelectTrigger>
+          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="Em análise">Em análise</SelectItem>
             <SelectItem value="Aprovado">Aprovado</SelectItem>
@@ -136,27 +99,44 @@ const AprovacaoVagas = () => {
   const { profile, user } = useAuthContext();
   const { logAction } = useAuditLog();
 
-  const isDiretoria = profile?.super_admin || profile?.grupo_permissao?.toLowerCase() === "diretoria";
+  const isSuperAdmin = profile?.super_admin;
+  const grupoLower = profile?.grupo_permissao?.toLowerCase() || "";
+  const isDiretoria = isSuperAdmin || grupoLower === "diretoria";
 
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
   const [showReprovar, setShowReprovar] = useState(false);
   const [observacao, setObservacao] = useState("");
   const [detailVaga, setDetailVaga] = useState<Vaga | null>(null);
 
-  // Delete state
   const [deleteVaga, setDeleteVaga] = useState<Vaga | null>(null);
   const [deleteMotivo, setDeleteMotivo] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  // Filter: pending approvals + devolved from SESMT, exclude deleted
-  const activeVagas = vagas.filter((v) => !(v as Record<string, unknown>).excluida && v.status === "Aguardando Aprovação");
-  const devolvidasVagas = vagas.filter((v) => !(v as Record<string, unknown>).excluida && v.status === "Devolvida SESMT");
+  // Filter vagas
+  const notExcluded = vagas.filter((v) => !(v as any).excluida);
+  const activeVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA || v.status === "Aguardando Aprovação");
+  const devolvidasVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.DEVOLVIDO_RH || v.status === "Devolvida SESMT");
+  const reprovadasVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.REPROVADO_DIRETORIA || v.status === "Reprovada");
+
+  const isCreator = (vaga: Vaga) => {
+    const criadoPor = (vaga as any).criado_por;
+    return criadoPor && user && criadoPor === user.id;
+  };
+
+  const canEditVaga = (vaga: Vaga) => {
+    const sp = (vaga as any).status_processo;
+    return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.DEVOLVIDO_RH || sp === STATUS_PROCESSO.REPROVADO_DIRETORIA);
+  };
 
   const handleReenviar = async (vaga: Vaga) => {
     try {
       const { error } = await supabase
         .from("vagas")
-        .update({ status: "Aguardando Aprovação" } as any)
+        .update({
+          status: "Aguardando Aprovação",
+          status_processo: STATUS_PROCESSO.AGUARDANDO_DIRETORIA,
+          responsavel_etapa: "Diretoria",
+        } as any)
         .eq("id", vaga.id);
       if (error) throw error;
 
@@ -175,12 +155,9 @@ const AprovacaoVagas = () => {
       });
 
       await logAction({
-        modulo: "Recursos Humanos",
-        pagina: "Aprovação de Vagas",
-        acao: "reenvio",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "reenvio",
         descricao: `Reenviou vaga para aprovação: ${vaga.cargo} — ${vaga.nome_candidato}`,
-        registro_id: vaga.id,
-        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+        registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
 
       toast.success("Vaga reenviada para aprovação da Diretoria.");
@@ -192,23 +169,31 @@ const AprovacaoVagas = () => {
 
   const handleAprovar = async (vaga: Vaga) => {
     try {
-      await updateStatus.mutateAsync({ id: vaga.id, status: "Aprovada" });
+      const { error } = await supabase.from("vagas").update({
+        status: "Aprovada",
+        status_processo: STATUS_PROCESSO.EM_ANDAMENTO_SESMT,
+        responsavel_etapa: "SESMT",
+      } as any).eq("id", vaga.id);
+      if (error) throw error;
+
+      await supabase.from("vagas_historico" as any).insert({
+        vaga_id: vaga.id, acao: "Aprovada pela Diretoria", usuario_nome: profile?.nome || "Sistema",
+      } as any);
+
       await logAction({
-        modulo: "Recursos Humanos",
-        pagina: "Aprovação de Vagas",
-        acao: "aprovacao",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "aprovacao",
         descricao: `Aprovou vaga: ${vaga.cargo} — ${vaga.nome_candidato}`,
-        registro_id: vaga.id,
-        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+        registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
+
       await createNotificacao.mutateAsync({
         titulo: "Vaga aprovada",
         mensagem: `A vaga ${vaga.cargo} para ${vaga.nome_candidato} foi aprovada. Encaminhar para agendamento de ASO.`,
-        tipo: "success",
-        link: "/sesmt/agendamento-aso",
-        vaga_id: vaga.id,
+        tipo: "success", link: "/sesmt/agendamento-aso", vaga_id: vaga.id,
       });
+
       toast.success("Vaga aprovada com sucesso!");
+      window.location.reload();
     } catch {
       toast.error("Erro ao aprovar vaga.");
     }
@@ -217,33 +202,33 @@ const AprovacaoVagas = () => {
   const handleReprovar = async () => {
     if (!selectedVaga) return;
     try {
-      await updateStatus.mutateAsync({
-        id: selectedVaga.id,
+      const { error } = await supabase.from("vagas").update({
         status: "Reprovada",
-        observacao: observacao.trim() || undefined,
-      });
+        status_processo: STATUS_PROCESSO.REPROVADO_DIRETORIA,
+        responsavel_etapa: "RH",
+        observacao_reprovacao: observacao.trim() || null,
+      } as any).eq("id", selectedVaga.id);
+      if (error) throw error;
+
+      await supabase.from("vagas_historico" as any).insert({
+        vaga_id: selectedVaga.id, acao: "Reprovada pela Diretoria", usuario_nome: profile?.nome || "Sistema", motivo: observacao.trim() || null,
+      } as any);
+
       await logAction({
-        modulo: "Recursos Humanos",
-        pagina: "Aprovação de Vagas",
-        acao: "reprovacao",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "reprovacao",
         descricao: `Reprovou vaga: ${selectedVaga.cargo} — ${selectedVaga.nome_candidato}`,
-        registro_id: selectedVaga.id,
-        registro_ref: `${selectedVaga.cargo} - ${selectedVaga.nome_candidato}`,
+        registro_id: selectedVaga.id, registro_ref: `${selectedVaga.cargo} - ${selectedVaga.nome_candidato}`,
         motivo: observacao.trim() || undefined,
       });
+
       toast.success("Vaga reprovada.");
       setShowReprovar(false);
       setSelectedVaga(null);
       setObservacao("");
+      window.location.reload();
     } catch {
       toast.error("Erro ao reprovar vaga.");
     }
-  };
-
-  const openReprovar = (vaga: Vaga) => {
-    setSelectedVaga(vaga);
-    setObservacao("");
-    setShowReprovar(true);
   };
 
   const handleDelete = async () => {
@@ -253,28 +238,21 @@ const AprovacaoVagas = () => {
     }
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from("vagas")
-        .update({
-          excluida: true,
-          motivo_exclusao: deleteMotivo.trim(),
-          excluida_at: new Date().toISOString(),
-        } as Record<string, unknown>)
-        .eq("id", deleteVaga.id);
+      const { error } = await supabase.from("vagas").update({
+        excluida: true, motivo_exclusao: deleteMotivo.trim(), excluida_at: new Date().toISOString(),
+      } as any).eq("id", deleteVaga.id);
       if (error) throw error;
+
       await logAction({
-        modulo: "Recursos Humanos",
-        pagina: "Aprovação de Vagas",
-        acao: "exclusao",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "exclusao",
         descricao: `Excluiu vaga: ${deleteVaga.cargo} — ${deleteVaga.nome_candidato}`,
-        registro_id: deleteVaga.id,
-        registro_ref: `${deleteVaga.cargo} - ${deleteVaga.nome_candidato}`,
+        registro_id: deleteVaga.id, registro_ref: `${deleteVaga.cargo} - ${deleteVaga.nome_candidato}`,
         motivo: deleteMotivo.trim(),
       });
+
       toast.success("Vaga excluída com sucesso.");
       setDeleteVaga(null);
       setDeleteMotivo("");
-      // Refetch
       window.location.reload();
     } catch {
       toast.error("Erro ao excluir vaga.");
@@ -283,53 +261,33 @@ const AprovacaoVagas = () => {
     }
   };
 
-  const canDeleteVaga = (vaga: Vaga) => {
-    const criadoPor = (vaga as Record<string, unknown>).criado_por;
-    return criadoPor && user && criadoPor === user.id;
-  };
-
   const handleStatusCandidatoChange = async (vaga: Vaga, newStatus: string) => {
     try {
-      await supabase
-        .from("vagas")
-        .update({
-          status_candidato: newStatus,
-          status_candidato_updated_at: new Date().toISOString(),
-        } as Record<string, unknown>)
-        .eq("id", vaga.id);
-      toast.success(`Status do candidato alterado para "${newStatus}".`);
+      await supabase.from("vagas").update({
+        status_candidato: newStatus, status_candidato_updated_at: new Date().toISOString(),
+      } as any).eq("id", vaga.id);
+
       await logAction({
-        modulo: "Recursos Humanos",
-        pagina: "Aprovação de Vagas",
-        acao: "alteracao_status",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "alteracao_status",
         descricao: `Alterou status do candidato para "${newStatus}": ${vaga.cargo} — ${vaga.nome_candidato}`,
-        registro_id: vaga.id,
-        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+        registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
-      updateStatus.reset();
+
+      toast.success(`Status do candidato alterado para "${newStatus}".`);
       window.location.reload();
     } catch {
       toast.error("Erro ao alterar status do candidato.");
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const config = statusConfig[status] || statusConfig["Aguardando Aprovação"];
-    return (
-      <Badge variant="outline" className={`gap-1 ${config.className}`}>
-        {config.icon}
-        {config.label}
-      </Badge>
-    );
+  const getStatusProcessoBadge = (statusProcesso: string) => {
+    const config = STATUS_PROCESSO_CONFIG[statusProcesso] || { label: statusProcesso, className: "bg-muted text-muted-foreground" };
+    return <Badge variant="outline" className={`gap-1 ${config.className}`}>{config.label}</Badge>;
   };
 
   const getCandidatoStatusBadge = (status: string) => {
     const config = statusCandidatoConfig[status] || statusCandidatoConfig["Em análise"];
-    return (
-      <Badge variant="outline" className={`gap-1 ${config.className}`}>
-        {config.label}
-      </Badge>
-    );
+    return <Badge variant="outline" className={`gap-1 ${config.className}`}>{config.label}</Badge>;
   };
 
   const beneficiosToString = (b: unknown) => {
@@ -343,6 +301,73 @@ const AprovacaoVagas = () => {
     if (obj.planoSaude) items.push("Plano de Saúde");
     if (obj.planoOdontologico) items.push("Plano Odontológico");
     return items.length > 0 ? items.join(", ") : "Nenhum";
+  };
+
+  const renderVagaTable = (vagasList: Vaga[], title: string, showActions: boolean) => {
+    if (vagasList.length === 0) return null;
+    return (
+      <>
+        {title && <h3 className="font-heading text-xl font-bold text-foreground mt-8 mb-4">{title}</h3>}
+        <Card>
+          <CardContent className="pt-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Candidato</TableHead>
+                  <TableHead>Cargo / Função</TableHead>
+                  <TableHead>Centro de Custo</TableHead>
+                  <TableHead>Status do Processo</TableHead>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead className="w-44">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vagasList.map((vaga) => (
+                  <TableRow key={vaga.id}>
+                    <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
+                    <TableCell>{vaga.cargo}</TableCell>
+                    <TableCell>{vaga.centro_custo_nome}</TableCell>
+                    <TableCell>{getStatusProcessoBadge((vaga as any).status_processo || "Aguardando Diretoria")}</TableCell>
+                    <TableCell className="text-sm">{(vaga as any).responsavel_etapa || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 flex-wrap">
+                        <Button variant="ghost" size="icon" title="Ver detalhes" onClick={() => setDetailVaga(vaga)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {showActions && isDiretoria && (vaga as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA && (
+                          <>
+                            <Button variant="ghost" size="icon" title="Aprovar" onClick={() => handleAprovar(vaga)}
+                              className="text-[hsl(var(--success))] hover:text-[hsl(var(--success))]">
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="Reprovar" onClick={() => { setSelectedVaga(vaga); setObservacao(""); setShowReprovar(true); }}
+                              className="text-destructive hover:text-destructive">
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        {canEditVaga(vaga) && (
+                          <Button size="sm" onClick={() => handleReenviar(vaga)}>
+                            Reenviar para Aprovação
+                          </Button>
+                        )}
+                        {isCreator(vaga) && (vaga as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA && (
+                          <Button variant="ghost" size="icon" title="Excluir vaga"
+                            onClick={() => { setDeleteVaga(vaga); setDeleteMotivo(""); }}
+                            className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </>
+    );
   };
 
   return (
@@ -359,153 +384,28 @@ const AprovacaoVagas = () => {
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando...</p>
-      ) : activeVagas.length === 0 ? (
+      ) : activeVagas.length === 0 && devolvidasVagas.length === 0 && reprovadasVagas.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
             Nenhuma vaga cadastrada.
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="pt-6">
-            <Table>
-               <TableHeader>
-                <TableRow>
-                  <TableHead>Candidato</TableHead>
-                  <TableHead>Cargo / Função</TableHead>
-                  <TableHead>Centro de Custo</TableHead>
-                  <TableHead>Site / Contrato</TableHead>
-                  <TableHead>Data de Criação</TableHead>
-                  <TableHead>Status do Candidato</TableHead>
-                  <TableHead className="w-36">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activeVagas.map((vaga) => (
-                  <TableRow key={vaga.id}>
-                    <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
-                    <TableCell>{vaga.cargo}</TableCell>
-                    <TableCell>{vaga.centro_custo_nome}</TableCell>
-                    <TableCell>{vaga.site_contrato}</TableCell>
-                    <TableCell>{new Date(vaga.created_at).toLocaleDateString("pt-BR")}</TableCell>
-                    <TableCell>{getCandidatoStatusBadge((vaga as Record<string, unknown>).status_candidato as string || "Em análise")}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Ver detalhes"
-                          onClick={() => setDetailVaga(vaga)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {isDiretoria && vaga.status === "Aguardando Aprovação" && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              title="Aprovar"
-                              onClick={() => handleAprovar(vaga)}
-                              className="text-[hsl(var(--success))] hover:text-[hsl(var(--success))]"
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              title="Reprovar"
-                              onClick={() => openReprovar(vaga)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        {canDeleteVaga(vaga) && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Excluir vaga"
-                            onClick={() => { setDeleteVaga(vaga); setDeleteMotivo(""); }}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Vagas Devolvidas pelo SESMT */}
-      {devolvidasVagas.length > 0 && (
         <>
-          <h3 className="font-heading text-xl font-bold text-foreground mt-8 mb-4">
-            Vagas Devolvidas pelo SESMT
-          </h3>
-          <Card>
-            <CardContent className="pt-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Candidato</TableHead>
-                    <TableHead>Cargo / Função</TableHead>
-                    <TableHead>Centro de Custo</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-36">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {devolvidasVagas.map((vaga) => (
-                    <TableRow key={vaga.id}>
-                      <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
-                      <TableCell>{vaga.cargo}</TableCell>
-                      <TableCell>{vaga.centro_custo_nome}</TableCell>
-                      <TableCell>{getStatusBadge("Devolvida SESMT")}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Ver detalhes"
-                            onClick={() => setDetailVaga(vaga)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {canDeleteVaga(vaga) && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleReenviar(vaga)}
-                            >
-                              Reenviar para Aprovação
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          {renderVagaTable(activeVagas, activeVagas.length > 0 ? "" : "", true)}
+          {renderVagaTable(devolvidasVagas, "Vagas Devolvidas", true)}
+          {renderVagaTable(reprovadasVagas, "Vagas Reprovadas", true)}
         </>
       )}
 
-      {/* Dialog de Detalhes */}
+      {/* Detail Dialog */}
       <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detalhes da Vaga</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Detalhes da Vaga</DialogTitle></DialogHeader>
           {detailVaga && (
             <DetailDialogContent
               vaga={detailVaga}
-              getStatusBadge={getStatusBadge}
+              getStatusProcessoBadge={getStatusProcessoBadge}
               getCandidatoStatusBadge={getCandidatoStatusBadge}
               beneficiosToString={beneficiosToString}
               handleStatusCandidatoChange={handleStatusCandidatoChange}
@@ -514,56 +414,30 @@ const AprovacaoVagas = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de Reprovação */}
-      <Dialog open={showReprovar} onOpenChange={setShowReprovar}>
+      {/* Reprovar Dialog */}
+      <Dialog open={showReprovar} onOpenChange={() => setShowReprovar(false)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reprovar Vaga</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Deseja reprovar a vaga <strong>{selectedVaga?.cargo}</strong> para{" "}
-            <strong>{selectedVaga?.nome_candidato}</strong>?
-          </p>
-          <Textarea
-            placeholder="Observação / Justificativa (opcional)"
-            value={observacao}
-            onChange={(e) => setObservacao(e.target.value)}
-          />
+          <DialogHeader><DialogTitle>Reprovar Vaga</DialogTitle></DialogHeader>
+          <Textarea placeholder="Motivo da reprovação (obrigatório)" value={observacao} onChange={(e) => setObservacao(e.target.value)} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowReprovar(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={handleReprovar}>
-              Confirmar Reprovação
-            </Button>
+            <Button variant="outline" onClick={() => setShowReprovar(false)}>Cancelar</Button>
+            <Button onClick={handleReprovar} disabled={!observacao.trim()}>Reprovar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de Exclusão */}
+      {/* Delete Dialog */}
       <Dialog open={!!deleteVaga} onOpenChange={() => setDeleteVaga(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Excluir Vaga</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Excluir Vaga</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Deseja excluir a vaga <strong>{deleteVaga?.cargo}</strong> para{" "}
-            <strong>{deleteVaga?.nome_candidato}</strong>?
+            Excluir a vaga <strong>{deleteVaga?.cargo}</strong> do candidato <strong>{deleteVaga?.nome_candidato}</strong>?
           </p>
-          <div className="space-y-2">
-            <Label>Motivo da Exclusão *</Label>
-            <Textarea
-              placeholder="Informe o motivo da exclusão"
-              value={deleteMotivo}
-              onChange={(e) => setDeleteMotivo(e.target.value)}
-            />
-          </div>
+          <Textarea placeholder="Motivo da exclusão (obrigatório)" value={deleteMotivo} onChange={(e) => setDeleteMotivo(e.target.value)} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteVaga(null)}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={() => setDeleteVaga(null)}>Cancelar</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting || !deleteMotivo.trim()}>
-              {deleting ? "Excluindo..." : "Confirmar Exclusão"}
+              {deleting ? "Excluindo..." : "Excluir"}
             </Button>
           </DialogFooter>
         </DialogContent>
