@@ -10,11 +10,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface UnsavedChangesDialogProps {
-  blocker: { state: string; proceed?: () => void; reset?: () => void };
+  unsaved: { showDialog: boolean; confirmLeave: () => void; cancelLeave: () => void };
 }
 
-export function UnsavedChangesDialog({ blocker }: UnsavedChangesDialogProps) {
-  if (blocker.state !== "blocked") return null;
+export function UnsavedChangesDialog({ unsaved }: UnsavedChangesDialogProps) {
+  if (!unsaved.showDialog) return null;
 
   return (
     <AlertDialog open>
@@ -28,10 +28,10 @@ export function UnsavedChangesDialog({ blocker }: UnsavedChangesDialogProps) {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => blocker.reset?.()}>
+          <AlertDialogCancel onClick={unsaved.cancelLeave}>
             Permanecer na página
           </AlertDialogCancel>
-          <AlertDialogAction onClick={() => blocker.proceed?.()}>
+          <AlertDialogAction onClick={unsaved.confirmLeave}>
             Sair sem salvar
           </AlertDialogAction>
         </AlertDialogFooter>
