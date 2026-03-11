@@ -160,6 +160,7 @@ const AdminUsuarios = () => {
         body: { user_id: u.user_id, ativo: !u.ativo },
       });
       if (error || data?.error) throw new Error(data?.error || "Erro");
+      await logAction({ modulo: "Admin", pagina: "Usuários", acao: u.ativo ? "desativacao" : "ativacao", descricao: `${u.ativo ? "Desativou" : "Ativou"} usuário: ${u.nome}`, registro_id: u.user_id, registro_ref: u.nome });
       toast.success("Status atualizado.");
       fetchUsuarios();
     } catch {
