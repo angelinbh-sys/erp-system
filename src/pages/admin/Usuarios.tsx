@@ -135,6 +135,7 @@ const AdminUsuarios = () => {
           },
         });
         if (error || data?.error) throw new Error(data?.error || "Erro ao criar usuário");
+        await logAction({ modulo: "Admin", pagina: "Usuários", acao: "criacao", descricao: `Criou usuário: ${form.nome.trim()} (${form.email.trim()})`, registro_id: data?.user_id, registro_ref: form.nome.trim() });
         toast.success("Usuário criado.");
       }
       resetForm();
