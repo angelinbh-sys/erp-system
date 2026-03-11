@@ -174,6 +174,15 @@ const AprovacaoVagas = () => {
         vaga_id: vaga.id,
       });
 
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "reenvio",
+        descricao: `Reenviou vaga para aprovação: ${vaga.cargo} — ${vaga.nome_candidato}`,
+        registro_id: vaga.id,
+        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+      });
+
       toast.success("Vaga reenviada para aprovação da Diretoria.");
       window.location.reload();
     } catch {
