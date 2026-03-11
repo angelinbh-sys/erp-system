@@ -85,6 +85,11 @@ const SolicitacaoFerias = () => {
         r.id === editId ? { ...r, ...form, qtdDias: Number(form.qtdDias) } : r
       );
       save(updated);
+      logAction({
+        modulo: "Dep. Pessoal", pagina: "Solicitação de Férias", acao: "edicao",
+        descricao: `Editou solicitação de férias: ${form.nomeColaborador}`,
+        registro_id: editId, registro_ref: form.nomeColaborador,
+      });
       toast.success("Solicitação atualizada.");
     } else {
       const novo: SolicitacaoFeriasRegistro = {
