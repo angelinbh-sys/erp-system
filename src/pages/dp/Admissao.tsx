@@ -74,6 +74,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
         {detailVaga && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2 text-sm">
+              {detailVaga.numero_vaga && <div className="col-span-2"><strong>Número da Vaga:</strong> <span className="font-mono text-primary">{detailVaga.numero_vaga}</span></div>}
               <div><strong>Nome:</strong> {detailVaga.nome_candidato}</div>
               <div><strong>Cargo:</strong> {detailVaga.cargo}</div>
               <div><strong>Salário:</strong> {detailVaga.salario}</div>
