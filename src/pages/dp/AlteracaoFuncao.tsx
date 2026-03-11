@@ -115,6 +115,11 @@ const AlteracaoFuncao = () => {
         criadoEm: new Date().toISOString(),
       };
       save([...registros, novo]);
+      logAction({
+        modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "criacao",
+        descricao: `Registrou alteração de função: ${form.nomeColaborador} (${form.cargoAtual} → ${form.novoCargo})`,
+        registro_id: novo.id, registro_ref: form.nomeColaborador,
+      });
       toast.success("Alteração de função registrada.");
     }
     resetForm();
