@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, X, Eye, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil } from "lucide-react";
+import { Check, X, Eye, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil, Ban } from "lucide-react";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
+import { AtualizadoPorInfo } from "@/components/AtualizadoPorInfo";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +48,7 @@ function DetailDialogContent({ vaga, getStatusProcessoBadge, getCandidatoStatusB
   return (
     <div className="space-y-4 text-sm">
       <div className="grid grid-cols-2 gap-2">
+        {(vaga as any).numero_vaga && <div className="col-span-2"><strong>Número da Vaga:</strong> <span className="font-mono text-primary">{(vaga as any).numero_vaga}</span></div>}
         <div><strong>Cargo:</strong> {vaga.cargo}</div>
         <div><strong>Salário:</strong> {vaga.salario}</div>
         <div><strong>Centro de Custo:</strong> {vaga.centro_custo_nome}</div>
@@ -58,6 +60,7 @@ function DetailDialogContent({ vaga, getStatusProcessoBadge, getCandidatoStatusB
       </div>
       <div><strong>Benefícios:</strong> {beneficiosToString(vaga.beneficios)}</div>
       <CriadoPorInfo criadoPorId={vaga.criado_por} criadoEm={vaga.created_at} className="mt-2" />
+      <AtualizadoPorInfo atualizadoPor={(vaga as any).atualizado_por} atualizadoEm={vaga.updated_at} />
       <div className="flex items-center gap-2">
         <strong>Status do Processo:</strong> {getStatusProcessoBadge(vaga.status_processo || "Aguardando Diretoria")}
       </div>
@@ -112,11 +115,16 @@ const AprovacaoVagas = () => {
   const [deleteMotivo, setDeleteMotivo] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  const [cancelVaga, setCancelVaga] = useState<Vaga | null>(null);
+  const [cancelMotivo, setCancelMotivo] = useState("");
+  const [cancelling, setCancelling] = useState(false);
+
   // Filter vagas
-  const notExcluded = vagas.filter((v) => !(v as any).excluida);
+  const notExcluded = vagas.filter((v) => !(v as any).excluida && (v as any).status_processo !== STATUS_PROCESSO.VAGA_CANCELADA);
   const activeVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA || v.status === "Aguardando Aprovação");
   const devolvidasVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.DEVOLVIDO_RH || v.status === "Devolvida SESMT");
   const reprovadasVagas = notExcluded.filter((v) => (v as any).status_processo === STATUS_PROCESSO.REPROVADO_DIRETORIA || v.status === "Reprovada");
+  const canceladasVagas = vagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.VAGA_CANCELADA);
 
   const isCreator = (vaga: Vaga) => {
     const criadoPor = (vaga as any).criado_por;
@@ -128,6 +136,16 @@ const AprovacaoVagas = () => {
     return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.DEVOLVIDO_RH || sp === STATUS_PROCESSO.REPROVADO_DIRETORIA);
   };
 
+  const canDeleteVaga = (vaga: Vaga) => {
+    const sp = (vaga as any).status_processo;
+    return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.RASCUNHO || sp === STATUS_PROCESSO.AGUARDANDO_DIRETORIA);
+  };
+
+  const canCancelVaga = (vaga: Vaga) => {
+    const sp = (vaga as any).status_processo;
+    return (isSuperAdmin || isCreator(vaga)) && sp !== STATUS_PROCESSO.VAGA_CANCELADA && sp !== STATUS_PROCESSO.EFETIVADO;
+  };
+
   const handleReenviar = async (vaga: Vaga) => {
     try {
       const { error } = await supabase
@@ -136,6 +154,7 @@ const AprovacaoVagas = () => {
           status: "Aguardando Aprovação",
           status_processo: STATUS_PROCESSO.AGUARDANDO_DIRETORIA,
           responsavel_etapa: "Diretoria",
+          atualizado_por: profile?.nome || "Sistema",
         } as any)
         .eq("id", vaga.id);
       if (error) throw error;
@@ -173,6 +192,7 @@ const AprovacaoVagas = () => {
         status: "Aprovada",
         status_processo: STATUS_PROCESSO.EM_ANDAMENTO_SESMT,
         responsavel_etapa: "SESMT",
+        atualizado_por: profile?.nome || "Sistema",
       } as any).eq("id", vaga.id);
       if (error) throw error;
 
@@ -207,6 +227,7 @@ const AprovacaoVagas = () => {
         status_processo: STATUS_PROCESSO.REPROVADO_DIRETORIA,
         responsavel_etapa: "RH",
         observacao_reprovacao: observacao.trim() || null,
+        atualizado_por: profile?.nome || "Sistema",
       } as any).eq("id", selectedVaga.id);
       if (error) throw error;
 
@@ -258,6 +279,42 @@ const AprovacaoVagas = () => {
       toast.error("Erro ao excluir vaga.");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleCancelVaga = async () => {
+    if (!cancelVaga || !cancelMotivo.trim()) {
+      toast.error("O motivo do cancelamento é obrigatório.");
+      return;
+    }
+    setCancelling(true);
+    try {
+      const { error } = await supabase.from("vagas").update({
+        status_processo: STATUS_PROCESSO.VAGA_CANCELADA,
+        responsavel_etapa: "—",
+        atualizado_por: profile?.nome || "Sistema",
+      } as any).eq("id", cancelVaga.id);
+      if (error) throw error;
+
+      await supabase.from("vagas_historico" as any).insert({
+        vaga_id: cancelVaga.id, acao: "Vaga cancelada", usuario_nome: profile?.nome || "Sistema", motivo: cancelMotivo.trim(),
+      } as any);
+
+      await logAction({
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "cancelamento",
+        descricao: `Cancelou vaga ${(cancelVaga as any).numero_vaga || ""}: ${cancelVaga.cargo} — ${cancelVaga.nome_candidato}`,
+        registro_id: cancelVaga.id, registro_ref: `${cancelVaga.cargo} - ${cancelVaga.nome_candidato}`,
+        motivo: cancelMotivo.trim(),
+      });
+
+      toast.success("Vaga cancelada com sucesso.");
+      setCancelVaga(null);
+      setCancelMotivo("");
+      window.location.reload();
+    } catch {
+      toast.error("Erro ao cancelar vaga.");
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -313,17 +370,19 @@ const AprovacaoVagas = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Nº</TableHead>
                   <TableHead>Candidato</TableHead>
                   <TableHead>Cargo / Função</TableHead>
                   <TableHead>Centro de Custo</TableHead>
                   <TableHead>Status do Processo</TableHead>
                   <TableHead>Responsável</TableHead>
-                  <TableHead className="w-44">Ações</TableHead>
+                  <TableHead className="w-52">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {vagasList.map((vaga) => (
                   <TableRow key={vaga.id}>
+                    <TableCell className="font-mono text-xs text-primary">{(vaga as any).numero_vaga || "—"}</TableCell>
                     <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
                     <TableCell>{vaga.cargo}</TableCell>
                     <TableCell>{vaga.centro_custo_nome}</TableCell>
@@ -351,11 +410,18 @@ const AprovacaoVagas = () => {
                             Reenviar para Aprovação
                           </Button>
                         )}
-                        {isCreator(vaga) && (vaga as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA && (
+                        {canDeleteVaga(vaga) && (
                           <Button variant="ghost" size="icon" title="Excluir vaga"
                             onClick={() => { setDeleteVaga(vaga); setDeleteMotivo(""); }}
                             className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canCancelVaga(vaga) && (
+                          <Button variant="ghost" size="icon" title="Cancelar vaga"
+                            onClick={() => { setCancelVaga(vaga); setCancelMotivo(""); }}
+                            className="text-orange-600 hover:text-orange-600">
+                            <Ban className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -384,7 +450,7 @@ const AprovacaoVagas = () => {
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando...</p>
-      ) : activeVagas.length === 0 && devolvidasVagas.length === 0 && reprovadasVagas.length === 0 ? (
+      ) : activeVagas.length === 0 && devolvidasVagas.length === 0 && reprovadasVagas.length === 0 && canceladasVagas.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
             Nenhuma vaga cadastrada.
@@ -395,6 +461,7 @@ const AprovacaoVagas = () => {
           {renderVagaTable(activeVagas, activeVagas.length > 0 ? "" : "", true)}
           {renderVagaTable(devolvidasVagas, "Vagas Devolvidas", true)}
           {renderVagaTable(reprovadasVagas, "Vagas Reprovadas", true)}
+          {renderVagaTable(canceladasVagas, "Vagas Canceladas", false)}
         </>
       )}
 
@@ -438,6 +505,24 @@ const AprovacaoVagas = () => {
             <Button variant="outline" onClick={() => setDeleteVaga(null)}>Cancelar</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting || !deleteMotivo.trim()}>
               {deleting ? "Excluindo..." : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Dialog */}
+      <Dialog open={!!cancelVaga} onOpenChange={() => setCancelVaga(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Cancelar Vaga</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Cancelar a vaga <strong>{(cancelVaga as any)?.numero_vaga}</strong> — <strong>{cancelVaga?.cargo}</strong> do candidato <strong>{cancelVaga?.nome_candidato}</strong>?
+          </p>
+          <p className="text-xs text-muted-foreground">A vaga permanecerá no sistema para histórico, mas não poderá mais avançar no fluxo.</p>
+          <Textarea placeholder="Motivo do cancelamento (obrigatório)" value={cancelMotivo} onChange={(e) => setCancelMotivo(e.target.value)} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelVaga(null)}>Voltar</Button>
+            <Button variant="destructive" onClick={handleCancelVaga} disabled={cancelling || !cancelMotivo.trim()}>
+              {cancelling ? "Cancelando..." : "Confirmar Cancelamento"}
             </Button>
           </DialogFooter>
         </DialogContent>

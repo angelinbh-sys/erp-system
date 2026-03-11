@@ -74,6 +74,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
         {detailVaga && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2 text-sm">
+              {detailVaga.numero_vaga && <div className="col-span-2"><strong>Número da Vaga:</strong> <span className="font-mono text-primary">{detailVaga.numero_vaga}</span></div>}
               <div><strong>Nome:</strong> {detailVaga.nome_candidato}</div>
               <div><strong>Cargo:</strong> {detailVaga.cargo}</div>
               <div><strong>Salário:</strong> {detailVaga.salario}</div>
@@ -170,6 +171,7 @@ const Admissao = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Nº</TableHead>
                   <TableHead>Candidato</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Centro de Custo</TableHead>
@@ -183,6 +185,7 @@ const Admissao = () => {
                   const status = getStatusLabel(vaga);
                   return (
                     <TableRow key={vaga.id}>
+                      <TableCell className="font-mono text-xs text-primary">{vaga.numero_vaga || "—"}</TableCell>
                       <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
                       <TableCell>{vaga.cargo}</TableCell>
                       <TableCell>{vaga.centro_custo_nome}</TableCell>

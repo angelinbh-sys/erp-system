@@ -238,6 +238,7 @@ export type Database = {
       }
       vagas: {
         Row: {
+          atualizado_por: string | null
           beneficios: Json | null
           cargo: string
           centro_custo_codigo: string | null
@@ -257,6 +258,7 @@ export type Database = {
           local_trabalho: string
           motivo_exclusao: string | null
           nome_candidato: string
+          numero_vaga: string | null
           observacao_reprovacao: string | null
           responsavel_etapa: string
           resultado_aso_nome: string | null
@@ -271,6 +273,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          atualizado_por?: string | null
           beneficios?: Json | null
           cargo: string
           centro_custo_codigo?: string | null
@@ -290,6 +293,7 @@ export type Database = {
           local_trabalho: string
           motivo_exclusao?: string | null
           nome_candidato: string
+          numero_vaga?: string | null
           observacao_reprovacao?: string | null
           responsavel_etapa?: string
           resultado_aso_nome?: string | null
@@ -304,6 +308,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          atualizado_por?: string | null
           beneficios?: Json | null
           cargo?: string
           centro_custo_codigo?: string | null
@@ -323,6 +328,7 @@ export type Database = {
           local_trabalho?: string
           motivo_exclusao?: string | null
           nome_candidato?: string
+          numero_vaga?: string | null
           observacao_reprovacao?: string | null
           responsavel_etapa?: string
           resultado_aso_nome?: string | null

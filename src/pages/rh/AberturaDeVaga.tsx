@@ -182,21 +182,22 @@ const AberturaDeVaga = () => {
       };
 
       const vaga = await createVaga.mutateAsync(vagaData as VagaInsert);
+      const numeroVaga = (vaga as any).numero_vaga || "";
 
       // Audit log
       await logAction({
         modulo: "Recursos Humanos",
         pagina: "Abertura de Vaga",
         acao: "criacao",
-        descricao: `Criou vaga: ${data.cargo} — Candidato: ${data.nomeCandidato}`,
+        descricao: `Criou vaga ${numeroVaga}: ${data.cargo} — Candidato: ${data.nomeCandidato}`,
         registro_id: vaga.id,
-        registro_ref: `${data.cargo} - ${data.nomeCandidato}`,
+        registro_ref: `${numeroVaga} - ${data.cargo} - ${data.nomeCandidato}`,
       });
 
       // Create notification for Diretoria
       await createNotificacao.mutateAsync({
         titulo: "Nova vaga aguardando aprovação",
-        mensagem: `Vaga: ${data.cargo} | Candidato: ${data.nomeCandidato} | CC: ${ccObj?.nome ?? ""} | Site: ${data.tipoContrato}`,
+        mensagem: `${numeroVaga} | Vaga: ${data.cargo} | Candidato: ${data.nomeCandidato} | CC: ${ccObj?.nome ?? ""} | Site: ${data.tipoContrato}`,
         tipo: "warning",
         link: "/rh/aprovacao-vagas",
         vaga_id: vaga.id,
@@ -205,7 +206,7 @@ const AberturaDeVaga = () => {
       // Call edge function for email notification (async, don't block)
       supabase.functions.invoke("notify-vaga", { body: { vaga } }).catch(console.error);
 
-      toast.success("Vaga cadastrada com sucesso! Aguardando aprovação da Diretoria.");
+      toast.success(`Vaga ${numeroVaga} cadastrada com sucesso! Aguardando aprovação da Diretoria.`);
       form.reset();
       setFile(null);
       setDocFile(null);

@@ -10,6 +10,7 @@ export const STATUS_PROCESSO = {
   ADMISSAO_EM_ANDAMENTO: "Admissão em andamento",
   ADMITIDO: "Admitido",
   EFETIVADO: "Efetivado",
+  VAGA_CANCELADA: "Vaga Cancelada",
 } as const;
 
 export type StatusProcesso = (typeof STATUS_PROCESSO)[keyof typeof STATUS_PROCESSO];
@@ -26,6 +27,7 @@ export const RESPONSAVEL_MAP: Record<string, string> = {
   [STATUS_PROCESSO.ADMISSAO_EM_ANDAMENTO]: "Dep. Pessoal",
   [STATUS_PROCESSO.ADMITIDO]: "Dep. Pessoal",
   [STATUS_PROCESSO.EFETIVADO]: "—",
+  [STATUS_PROCESSO.VAGA_CANCELADA]: "—",
 };
 
 export function getResponsavelEtapa(statusProcesso: string): string {
@@ -44,4 +46,5 @@ export const STATUS_PROCESSO_CONFIG: Record<string, { label: string; className: 
   [STATUS_PROCESSO.ADMISSAO_EM_ANDAMENTO]: { label: "Admissão em andamento", className: "bg-indigo-100 text-indigo-800 border-indigo-300" },
   [STATUS_PROCESSO.ADMITIDO]: { label: "Admitido", className: "bg-teal-100 text-teal-800 border-teal-300" },
   [STATUS_PROCESSO.EFETIVADO]: { label: "Efetivado", className: "bg-green-100 text-green-800 border-green-300" },
+  [STATUS_PROCESSO.VAGA_CANCELADA]: { label: "Vaga Cancelada", className: "bg-gray-200 text-gray-700 border-gray-400" },
 };
