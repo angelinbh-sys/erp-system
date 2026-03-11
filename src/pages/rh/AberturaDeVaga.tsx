@@ -253,7 +253,7 @@ const AberturaDeVaga = () => {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <UnsavedChangesDialog blocker={blocker} />
+      <UnsavedChangesDialog unsaved={unsaved} />
       <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
         Solicitação de Vaga
       </h2>
