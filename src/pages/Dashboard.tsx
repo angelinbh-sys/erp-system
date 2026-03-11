@@ -10,7 +10,6 @@ import {
   XCircle,
   Bell,
   Cake,
-  AlertTriangle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +28,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
 import { STATUS_PROCESSO } from "@/utils/statusProcesso";
+import PainelPendencias from "@/components/PainelPendencias";
 
 /* ─── Status badge helpers ──────────────────────────────────────── */
 function vagaStatusBadge(status: string) {
@@ -256,55 +256,7 @@ const Dashboard = () => {
       )}
 
       {/* ── Minhas Pendências ─────────────────────────────────────── */}
-      {(() => {
-        const grupo = profile?.grupo_permissao?.toLowerCase() || "";
-        const pendencias: Array<{ label: string; count: number; link: string }> = [];
-
-        // Diretoria: vagas aguardando aprovação
-        if (isDiretoria) {
-          const aguardando = activeVagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA).length;
-          if (aguardando > 0) pendencias.push({ label: "Vagas aguardando aprovação", count: aguardando, link: "/rh/aprovacao-vaga" });
-        }
-        // SESMT: vagas em andamento no SESMT
-        if (profile?.super_admin || grupo === "sesmt") {
-          const emSesmt = activeVagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.EM_ANDAMENTO_SESMT).length;
-          if (emSesmt > 0) pendencias.push({ label: "ASO pendente de processamento", count: emSesmt, link: "/sesmt/agendamento-aso" });
-        }
-        // DP: vagas aguardando admissão
-        if (profile?.super_admin || grupo === "dep. pessoal" || grupo === "departamento pessoal") {
-          const aguardandoAdm = activeVagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.AGUARDANDO_ADMISSAO || (v as any).status_processo === STATUS_PROCESSO.ADMISSAO_EM_ANDAMENTO).length;
-          if (aguardandoAdm > 0) pendencias.push({ label: "Admissões aguardando processamento", count: aguardandoAdm, link: "/departamento-pessoal/admissao" });
-        }
-        // RH: vagas devolvidas
-        if (profile?.super_admin || grupo === "rh" || grupo === "recursos humanos") {
-          const devolvidas = activeVagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.DEVOLVIDO_RH || (v as any).status_processo === STATUS_PROCESSO.REPROVADO_DIRETORIA).length;
-          if (devolvidas > 0) pendencias.push({ label: "Vagas devolvidas/reprovadas para correção", count: devolvidas, link: "/rh/aprovacao-vaga" });
-        }
-
-        if (pendencias.length === 0) return null;
-
-        return (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                Minhas Pendências
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {pendencias.map((p, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-md border border-border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => navigate(p.link)}>
-                    <span className="text-sm text-foreground">{p.label}</span>
-                    <Badge variant="secondary" className="text-sm font-bold">{p.count}</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })()}
-
+      <PainelPendencias profile={profile} vagas={vagas} />
       {/* ── Linha 2: Vagas recentes + Aprovação ───────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Últimas Vagas Criadas */}
