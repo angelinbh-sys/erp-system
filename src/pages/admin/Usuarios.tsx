@@ -55,6 +55,7 @@ const AdminUsuarios = () => {
 
   const [usuarios, setUsuarios] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const { logAction } = useAuditLog();
 
   const fetchUsuarios = async () => {
     const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
