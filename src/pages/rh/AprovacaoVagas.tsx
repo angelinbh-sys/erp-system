@@ -169,7 +169,7 @@ const AprovacaoVagas = () => {
         titulo: "Vaga reenviada para aprovação",
         mensagem: `A vaga ${vaga.cargo} (${vaga.nome_candidato}) foi corrigida e reenviada para aprovação.`,
         tipo: "warning",
-        link: "/rh/aprovacao-vagas",
+        link: "/rh/aprovacao-vaga",
         vaga_id: vaga.id,
       });
 
