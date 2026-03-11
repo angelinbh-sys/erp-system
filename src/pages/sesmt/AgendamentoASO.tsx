@@ -194,6 +194,15 @@ const AgendamentoASO = () => {
       usuario_nome: profile?.nome || "Sistema",
     } as any);
 
+    await logAction({
+      modulo: "SESMT",
+      pagina: "Agendamento de ASO",
+      acao: "envio_etapa",
+      descricao: `Enviou para Admissão: ${vaga.nome_candidato} (${vaga.cargo})`,
+      registro_id: vaga.id,
+      registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+    });
+
     toast.success("Candidato enviado para Admissão com sucesso!");
     queryClient.invalidateQueries({ queryKey: ["vagas"] });
   };
