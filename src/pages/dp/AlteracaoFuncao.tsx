@@ -54,6 +54,7 @@ const AlteracaoFuncao = () => {
   const { data: colaboradores = [] } = useColaboradores();
   const { profile } = useAuthContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { logAction } = useAuditLog();
 
   const [registros, setRegistros] = useState<AlteracaoRegistro[]>(() => {
     try {
