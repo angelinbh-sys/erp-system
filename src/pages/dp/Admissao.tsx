@@ -48,6 +48,11 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
               <VagaTimeline vaga={detailVaga} historico={historico} />
             </div>
 
+            {/* Histórico de Auditoria */}
+            <div className="pt-3 border-t border-border">
+              <HistoricoRegistro registroId={detailVaga.id} />
+            </div>
+
             {detailVaga.enviado_admissao ? (
               <div className="rounded-lg bg-green-50 border border-green-200 p-4">
                 <p className="text-sm font-medium text-green-800 flex items-center gap-2">
