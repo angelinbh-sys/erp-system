@@ -325,7 +325,7 @@ const AprovacaoVagas = () => {
       } as any).eq("id", vaga.id);
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "alteracao_status",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "alteracao_status",
         descricao: `Alterou status do candidato para "${newStatus}": ${vaga.cargo} — ${vaga.nome_candidato}`,
         registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
