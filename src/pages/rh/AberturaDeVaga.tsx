@@ -7,6 +7,7 @@ import { Upload, X, Search } from "lucide-react";
 import { useCreateVaga, type VagaInsert } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
