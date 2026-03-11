@@ -483,12 +483,17 @@ const AberturaDeVaga = () => {
                     <Label htmlFor="ben-moradia">Auxílio Moradia</Label>
                   </div>
                   {beneficios.auxilioMoradia && (
-                    <Input
-                      placeholder="R$ 0,00"
-                      value={beneficios.auxilioMoradiaValor}
-                      onChange={(e) => setBeneficios((p) => ({ ...p, auxilioMoradiaValor: formatCurrencyBRL(e.target.value) }))}
-                      className="max-w-xs ml-6"
-                    />
+                    <div className="ml-6">
+                      <Input
+                        placeholder="R$ 0,00"
+                        value={beneficios.auxilioMoradiaValor}
+                        onChange={(e) => setBeneficios((p) => ({ ...p, auxilioMoradiaValor: formatCurrencyBRL(e.target.value) }))}
+                        className="max-w-xs"
+                      />
+                      {beneficios.auxilioMoradia && !beneficios.auxilioMoradiaValor.trim() && (
+                        <p className="text-sm text-destructive mt-1">Valor obrigatório</p>
+                      )}
+                    </div>
                   )}
                 </div>
 
