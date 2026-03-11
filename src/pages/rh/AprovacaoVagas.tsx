@@ -134,6 +134,7 @@ const AprovacaoVagas = () => {
   const updateStatus = useUpdateVagaStatus();
   const createNotificacao = useCreateNotificacao();
   const { profile, user } = useAuthContext();
+  const { logAction } = useAuditLog();
 
   const isDiretoria = profile?.super_admin || profile?.grupo_permissao?.toLowerCase() === "diretoria";
 
