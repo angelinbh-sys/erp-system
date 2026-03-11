@@ -154,6 +154,7 @@ const AprovacaoVagas = () => {
           status: "Aguardando Aprovação",
           status_processo: STATUS_PROCESSO.AGUARDANDO_DIRETORIA,
           responsavel_etapa: "Diretoria",
+          atualizado_por: profile?.nome || "Sistema",
         } as any)
         .eq("id", vaga.id);
       if (error) throw error;
