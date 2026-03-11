@@ -51,6 +51,7 @@ const AlteracaoFuncao = () => {
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
   const { data: colaboradores = [] } = useColaboradores();
+  const { profile } = useAuthContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [registros, setRegistros] = useState<AlteracaoRegistro[]>(() => {
