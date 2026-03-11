@@ -174,7 +174,7 @@ const AprovacaoVagas = () => {
       });
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "reenvio",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "reenvio",
         descricao: `Reenviou vaga para aprovação: ${vaga.cargo} — ${vaga.nome_candidato}`,
         registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
