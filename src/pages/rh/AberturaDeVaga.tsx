@@ -458,12 +458,17 @@ const AberturaDeVaga = () => {
                     <Label htmlFor="ben-va">VA (Vale Alimentação)</Label>
                   </div>
                   {beneficios.va && (
-                    <Input
-                      placeholder="R$ 0,00"
-                      value={beneficios.vaValor}
-                      onChange={(e) => setBeneficios((p) => ({ ...p, vaValor: formatCurrencyBRL(e.target.value) }))}
-                      className="max-w-xs ml-6"
-                    />
+                    <div className="ml-6">
+                      <Input
+                        placeholder="R$ 0,00"
+                        value={beneficios.vaValor}
+                        onChange={(e) => setBeneficios((p) => ({ ...p, vaValor: formatCurrencyBRL(e.target.value) }))}
+                        className="max-w-xs"
+                      />
+                      {beneficios.va && !beneficios.vaValor.trim() && (
+                        <p className="text-sm text-destructive mt-1">Valor obrigatório</p>
+                      )}
+                    </div>
                   )}
                 </div>
 
