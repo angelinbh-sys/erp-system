@@ -117,6 +117,7 @@ const AprovacaoVagas = () => {
         tipo: "warning",
         link: "/rh/aprovacao-vaga",
         vaga_id: vaga.id,
+        destinatario_grupo: "Diretoria",
       });
 
       await logAction({
