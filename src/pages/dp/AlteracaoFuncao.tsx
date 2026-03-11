@@ -315,6 +315,7 @@ const AlteracaoFuncao = () => {
               <p><strong>Data:</strong> {viewItem.dataAlteracao}</p>
               <p><strong>Observações:</strong> {viewItem.observacoes || "—"}</p>
               <p><strong>Anexo:</strong> {viewItem.anexo || "Nenhum"}</p>
+              <CriadoPorInfo criadoPorNome={viewItem.criadoPor} criadoEm={viewItem.criadoEm} className="mt-3 pt-3 border-t border-border" />
             </div>
           )}
         </DialogContent>

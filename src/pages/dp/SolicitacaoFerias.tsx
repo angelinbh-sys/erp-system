@@ -216,7 +216,12 @@ const SolicitacaoFerias = () => {
               <TableBody>
                 {registros.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell>{r.nomeColaborador}</TableCell>
+                    <TableCell>
+                      <div>
+                        {r.nomeColaborador}
+                        <CriadoPorInfo criadoPorNome={r.criadoPor} criadoEm={r.criadoEm} className="mt-1" />
+                      </div>
+                    </TableCell>
                     <TableCell>{r.dataInicio}</TableCell>
                     <TableCell>{r.dataRetorno}</TableCell>
                     <TableCell>{r.qtdDias}</TableCell>
