@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Plus, Pencil, UserX, UserCheck, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ const AdminUsuarios = () => {
 
   const [usuarios, setUsuarios] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const { logAction } = useAuditLog();
 
   const fetchUsuarios = async () => {
     const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
@@ -120,6 +122,7 @@ const AdminUsuarios = () => {
           },
         });
         if (error || data?.error) throw new Error(data?.error || "Erro ao atualizar");
+        await logAction({ modulo: "Admin", pagina: "Usuários", acao: "edicao", descricao: `Editou usuário: ${form.nome.trim()}`, registro_id: editUserId, registro_ref: form.nome.trim() });
         toast.success("Usuário atualizado.");
       } else {
         const { data, error } = await supabase.functions.invoke("admin-create-user", {
@@ -132,6 +135,7 @@ const AdminUsuarios = () => {
           },
         });
         if (error || data?.error) throw new Error(data?.error || "Erro ao criar usuário");
+        await logAction({ modulo: "Admin", pagina: "Usuários", acao: "criacao", descricao: `Criou usuário: ${form.nome.trim()} (${form.email.trim()})`, registro_id: data?.user_id, registro_ref: form.nome.trim() });
         toast.success("Usuário criado.");
       }
       resetForm();
@@ -156,6 +160,7 @@ const AdminUsuarios = () => {
         body: { user_id: u.user_id, ativo: !u.ativo },
       });
       if (error || data?.error) throw new Error(data?.error || "Erro");
+      await logAction({ modulo: "Admin", pagina: "Usuários", acao: u.ativo ? "desativacao" : "ativacao", descricao: `${u.ativo ? "Desativou" : "Ativou"} usuário: ${u.nome}`, registro_id: u.user_id, registro_ref: u.nome });
       toast.success("Status atualizado.");
       fetchUsuarios();
     } catch {
@@ -172,6 +177,7 @@ const AdminUsuarios = () => {
       });
       if (error || data?.error) throw new Error(data?.error || "Erro ao resetar senha");
       setResetDialog({ open: true, user: resetDialog.user, tempPassword: data.temp_password });
+      await logAction({ modulo: "Admin", pagina: "Usuários", acao: "reset_senha", descricao: `Resetou senha do usuário: ${resetDialog.user.nome}`, registro_id: resetDialog.user.user_id, registro_ref: resetDialog.user.nome });
       toast.success("Senha resetada. O usuário deverá alterar no próximo login.");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao resetar senha.";

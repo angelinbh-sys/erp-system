@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Info, ChevronDown } from "lucide-react";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,7 @@ const MODULOS_PAGINAS = [
   },
   {
     modulo: "Admin",
-    paginas: ["Usuários", "Grupos de Permissão"],
+    paginas: ["Usuários", "Grupos de Permissão", "Log de Auditoria"],
   },
 ] as const;
 
@@ -95,6 +96,7 @@ function getHighestPermIndex(modPerms: PaginaPermissoes): number {
 }
 
 const AdminPermissoes = () => {
+  const { logAction } = useAuditLog();
   const [grupos, setGrupos] = useState<GrupoPermissao[]>(() => {
     try {
       const stored = localStorage.getItem("erp_grupos_permissao");
@@ -156,9 +158,12 @@ const AdminPermissoes = () => {
     }
     if (editId) {
       save(grupos.map((g) => (g.id === editId ? { ...g, nome: nome.trim(), permissoes } : g)));
+      logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "edicao", descricao: `Editou grupo de permissão: ${nome.trim()}`, registro_id: editId, registro_ref: nome.trim() });
       toast.success("Grupo atualizado.");
     } else {
-      save([...grupos, { id: crypto.randomUUID(), nome: nome.trim(), permissoes }]);
+      const newId = crypto.randomUUID();
+      save([...grupos, { id: newId, nome: nome.trim(), permissoes }]);
+      logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "criacao", descricao: `Criou grupo de permissão: ${nome.trim()}`, registro_id: newId, registro_ref: nome.trim() });
       toast.success("Grupo de permissão criado.");
     }
     resetForm();
@@ -178,7 +183,9 @@ const AdminPermissoes = () => {
   };
 
   const handleDelete = (id: string) => {
+    const g = grupos.find(g => g.id === id);
     save(grupos.filter((g) => g.id !== id));
+    logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "exclusao", descricao: `Excluiu grupo de permissão: ${g?.nome || "—"}`, registro_id: id, registro_ref: g?.nome });
     toast.success("Grupo excluído.");
   };
 

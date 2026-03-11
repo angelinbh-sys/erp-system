@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 const AlterarSenha = () => {
   const { user, profile, loading, refetchProfile } = useAuthContext();
@@ -16,6 +17,7 @@ const AlterarSenha = () => {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { logAction } = useAuditLog();
 
   if (loading) {
     return (
@@ -59,6 +61,7 @@ const AlterarSenha = () => {
       }
 
       toast.success("Senha alterada com sucesso.");
+      await logAction({ modulo: "Autenticação", pagina: "Alterar Senha", acao: "troca_senha", descricao: "Alterou a senha" });
       refetchProfile();
       navigate("/", { replace: true });
     } catch (err: unknown) {

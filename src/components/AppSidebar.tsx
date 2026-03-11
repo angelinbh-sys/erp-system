@@ -72,6 +72,7 @@ const modules = [
     children: [
       { title: "Usuários", url: "/admin/usuarios" },
       { title: "Grupos de Permissão", url: "/admin/permissoes" },
+      { title: "Log de Auditoria", url: "/admin/audit-log" },
     ],
   },
 ];

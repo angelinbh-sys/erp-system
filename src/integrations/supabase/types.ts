@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          acao: string
+          created_at: string
+          dados_extras: Json | null
+          descricao: string
+          id: string
+          modulo: string
+          motivo: string | null
+          pagina: string
+          registro_id: string | null
+          registro_ref: string | null
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          dados_extras?: Json | null
+          descricao: string
+          id?: string
+          modulo: string
+          motivo?: string | null
+          pagina: string
+          registro_id?: string | null
+          registro_ref?: string | null
+          user_id?: string | null
+          user_name: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          dados_extras?: Json | null
+          descricao?: string
+          id?: string
+          modulo?: string
+          motivo?: string | null
+          pagina?: string
+          registro_id?: string | null
+          registro_ref?: string | null
+          user_id?: string | null
+          user_name?: string
+        }
+        Relationships: []
+      }
       colaboradores: {
         Row: {
           cargo: string

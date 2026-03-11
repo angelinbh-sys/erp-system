@@ -16,8 +16,11 @@ import { Button } from "@/components/ui/button";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
+import { useAuditLog } from "@/hooks/useAuditLog";
+import { HistoricoRegistro } from "@/components/HistoricoRegistro";
+import { useAuthContext } from "@/contexts/AuthContext";
 
-function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any }) {
+function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logAction }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any; logAction: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
 
   return (
@@ -43,6 +46,11 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient }: { deta
             {/* Timeline */}
             <div className="pt-3 border-t border-border">
               <VagaTimeline vaga={detailVaga} historico={historico} />
+            </div>
+
+            {/* Histórico de Auditoria */}
+            <div className="pt-3 border-t border-border">
+              <HistoricoRegistro registroId={detailVaga.id} />
             </div>
 
             {detailVaga.enviado_admissao ? (
@@ -93,6 +101,7 @@ const Admissao = () => {
   const { data: allVagas = [], isLoading } = useVagas("Aprovada");
   const queryClient = useQueryClient();
   const [detailVaga, setDetailVaga] = useState<any>(null);
+  const { logAction } = useAuditLog();
 
   // DP sees all approved vagas
   const vagas = allVagas;
@@ -166,7 +175,7 @@ const Admissao = () => {
       )}
 
       {/* Dialog de Detalhes */}
-      <AdmissaoDetailDialog detailVaga={detailVaga} setDetailVaga={setDetailVaga} queryClient={queryClient} />
+      <AdmissaoDetailDialog detailVaga={detailVaga} setDetailVaga={setDetailVaga} queryClient={queryClient} logAction={logAction} />
     </div>
   );
 };

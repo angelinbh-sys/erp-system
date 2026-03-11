@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Eye, Upload, X } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,7 @@ const AlteracaoFuncao = () => {
   const { data: colaboradores = [] } = useColaboradores();
   const { profile } = useAuthContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { logAction } = useAuditLog();
 
   const [registros, setRegistros] = useState<AlteracaoRegistro[]>(() => {
     try {
@@ -98,6 +100,11 @@ const AlteracaoFuncao = () => {
         r.id === editId ? { ...r, ...form, anexo: anexo?.name || r.anexo } : r
       );
       save(updated);
+      logAction({
+        modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "edicao",
+        descricao: `Editou alteração de função: ${form.nomeColaborador} (${form.cargoAtual} → ${form.novoCargo})`,
+        registro_id: editId, registro_ref: form.nomeColaborador,
+      });
       toast.success("Registro atualizado.");
     } else {
       const novo: AlteracaoRegistro = {
@@ -108,6 +115,11 @@ const AlteracaoFuncao = () => {
         criadoEm: new Date().toISOString(),
       };
       save([...registros, novo]);
+      logAction({
+        modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "criacao",
+        descricao: `Registrou alteração de função: ${form.nomeColaborador} (${form.cargoAtual} → ${form.novoCargo})`,
+        registro_id: novo.id, registro_ref: form.nomeColaborador,
+      });
       toast.success("Alteração de função registrada.");
     }
     resetForm();
@@ -126,7 +138,13 @@ const AlteracaoFuncao = () => {
   };
 
   const handleDelete = (id: string) => {
+    const item = registros.find(r => r.id === id);
     save(registros.filter((r) => r.id !== id));
+    logAction({
+      modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "exclusao",
+      descricao: `Excluiu alteração de função: ${item?.nomeColaborador || "—"}`,
+      registro_id: id, registro_ref: item?.nomeColaborador,
+    });
     toast.success("Registro excluído.");
   };
 

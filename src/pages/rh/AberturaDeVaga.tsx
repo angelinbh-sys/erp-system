@@ -7,6 +7,7 @@ import { Upload, X, Search } from "lucide-react";
 import { useCreateVaga, type VagaInsert } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,6 +108,7 @@ const AberturaDeVaga = () => {
   const { items: centrosCusto } = useCentrosCusto();
   const createVaga = useCreateVaga();
   const createNotificacao = useCreateNotificacao();
+  const { logAction } = useAuditLog();
 
   const form = useForm<VagaForm>({
     resolver: zodResolver(vagaSchema),
@@ -178,6 +180,16 @@ const AberturaDeVaga = () => {
       };
 
       const vaga = await createVaga.mutateAsync(vagaData as VagaInsert);
+
+      // Audit log
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Abertura de Vaga",
+        acao: "criacao",
+        descricao: `Criou vaga: ${data.cargo} — Candidato: ${data.nomeCandidato}`,
+        registro_id: vaga.id,
+        registro_ref: `${data.cargo} - ${data.nomeCandidato}`,
+      });
 
       // Create notification for Diretoria
       await createNotificacao.mutateAsync({

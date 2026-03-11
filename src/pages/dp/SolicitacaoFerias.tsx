@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ interface SolicitacaoFeriasRegistro {
 const SolicitacaoFerias = () => {
   const { items: centrosCusto } = useCentrosCusto();
   const { profile } = useAuthContext();
+  const { logAction } = useAuditLog();
 
   const [registros, setRegistros] = useState<SolicitacaoFeriasRegistro[]>(() => {
     try {
@@ -83,6 +85,11 @@ const SolicitacaoFerias = () => {
         r.id === editId ? { ...r, ...form, qtdDias: Number(form.qtdDias) } : r
       );
       save(updated);
+      logAction({
+        modulo: "Dep. Pessoal", pagina: "Solicitação de Férias", acao: "edicao",
+        descricao: `Editou solicitação de férias: ${form.nomeColaborador}`,
+        registro_id: editId, registro_ref: form.nomeColaborador,
+      });
       toast.success("Solicitação atualizada.");
     } else {
       const novo: SolicitacaoFeriasRegistro = {
@@ -93,6 +100,11 @@ const SolicitacaoFerias = () => {
         criadoEm: new Date().toISOString(),
       };
       save([...registros, novo]);
+      logAction({
+        modulo: "Dep. Pessoal", pagina: "Solicitação de Férias", acao: "criacao",
+        descricao: `Criou solicitação de férias: ${form.nomeColaborador}`,
+        registro_id: novo.id, registro_ref: form.nomeColaborador,
+      });
       toast.success("Solicitação de férias registrada.");
     }
     resetForm();
@@ -111,7 +123,13 @@ const SolicitacaoFerias = () => {
   };
 
   const handleDelete = (id: string) => {
+    const item = registros.find(r => r.id === id);
     save(registros.filter((r) => r.id !== id));
+    logAction({
+      modulo: "Dep. Pessoal", pagina: "Solicitação de Férias", acao: "exclusao",
+      descricao: `Excluiu solicitação de férias: ${item?.nomeColaborador || "—"}`,
+      registro_id: id, registro_ref: item?.nomeColaborador,
+    });
     toast.success("Solicitação excluída.");
   };
 

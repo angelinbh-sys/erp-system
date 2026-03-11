@@ -37,6 +37,8 @@ import { useVagas, useUpdateVagaStatus, type Vaga } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuditLog } from "@/hooks/useAuditLog";
+import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 
 const statusConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
   "Aguardando Aprovação": {
@@ -101,6 +103,11 @@ function DetailDialogContent({ vaga, getStatusBadge, getCandidatoStatusBadge, be
         <VagaTimeline vaga={vaga} historico={historico} />
       </div>
 
+      {/* Histórico de Auditoria */}
+      <div className="pt-3 border-t border-border">
+        <HistoricoRegistro registroId={vaga.id} />
+      </div>
+
       {/* Status do Candidato - editable */}
       <div className="pt-3 border-t border-border">
         <Label className="text-sm font-semibold">Alterar Status do Candidato</Label>
@@ -127,6 +134,7 @@ const AprovacaoVagas = () => {
   const updateStatus = useUpdateVagaStatus();
   const createNotificacao = useCreateNotificacao();
   const { profile, user } = useAuthContext();
+  const { logAction } = useAuditLog();
 
   const isDiretoria = profile?.super_admin || profile?.grupo_permissao?.toLowerCase() === "diretoria";
 
@@ -166,6 +174,15 @@ const AprovacaoVagas = () => {
         vaga_id: vaga.id,
       });
 
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "reenvio",
+        descricao: `Reenviou vaga para aprovação: ${vaga.cargo} — ${vaga.nome_candidato}`,
+        registro_id: vaga.id,
+        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+      });
+
       toast.success("Vaga reenviada para aprovação da Diretoria.");
       window.location.reload();
     } catch {
@@ -176,6 +193,14 @@ const AprovacaoVagas = () => {
   const handleAprovar = async (vaga: Vaga) => {
     try {
       await updateStatus.mutateAsync({ id: vaga.id, status: "Aprovada" });
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "aprovacao",
+        descricao: `Aprovou vaga: ${vaga.cargo} — ${vaga.nome_candidato}`,
+        registro_id: vaga.id,
+        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+      });
       await createNotificacao.mutateAsync({
         titulo: "Vaga aprovada",
         mensagem: `A vaga ${vaga.cargo} para ${vaga.nome_candidato} foi aprovada. Encaminhar para agendamento de ASO.`,
@@ -196,6 +221,15 @@ const AprovacaoVagas = () => {
         id: selectedVaga.id,
         status: "Reprovada",
         observacao: observacao.trim() || undefined,
+      });
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "reprovacao",
+        descricao: `Reprovou vaga: ${selectedVaga.cargo} — ${selectedVaga.nome_candidato}`,
+        registro_id: selectedVaga.id,
+        registro_ref: `${selectedVaga.cargo} - ${selectedVaga.nome_candidato}`,
+        motivo: observacao.trim() || undefined,
       });
       toast.success("Vaga reprovada.");
       setShowReprovar(false);
@@ -228,6 +262,15 @@ const AprovacaoVagas = () => {
         } as Record<string, unknown>)
         .eq("id", deleteVaga.id);
       if (error) throw error;
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "exclusao",
+        descricao: `Excluiu vaga: ${deleteVaga.cargo} — ${deleteVaga.nome_candidato}`,
+        registro_id: deleteVaga.id,
+        registro_ref: `${deleteVaga.cargo} - ${deleteVaga.nome_candidato}`,
+        motivo: deleteMotivo.trim(),
+      });
       toast.success("Vaga excluída com sucesso.");
       setDeleteVaga(null);
       setDeleteMotivo("");
@@ -255,6 +298,14 @@ const AprovacaoVagas = () => {
         } as Record<string, unknown>)
         .eq("id", vaga.id);
       toast.success(`Status do candidato alterado para "${newStatus}".`);
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "alteracao_status",
+        descricao: `Alterou status do candidato para "${newStatus}": ${vaga.cargo} — ${vaga.nome_candidato}`,
+        registro_id: vaga.id,
+        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+      });
       updateStatus.reset();
       window.location.reload();
     } catch {

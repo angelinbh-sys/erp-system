@@ -38,11 +38,13 @@ import {
   type Colaborador,
 } from "@/hooks/useColaboradores";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 const Efetivo = () => {
   const { profile } = useAuthContext();
   const { data: colaboradores = [], isLoading } = useColaboradores();
   const updateColaborador = useUpdateColaborador();
+  const { logAction } = useAuditLog();
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
   const [editForm, setEditForm] = useState({ nome: "", cargo: "", centro_custo: "", site_contrato: "", status: "" });
@@ -113,6 +115,15 @@ const Efetivo = () => {
         id: editColaborador.id,
         updates,
         historico: changes,
+      });
+      await logAction({
+        modulo: "Dep. Pessoal",
+        pagina: "Efetivo",
+        acao: "edicao",
+        descricao: `Editou colaborador ${editColaborador.nome}: ${changes.map(c => c.campo_alterado).join(", ")}`,
+        registro_id: editColaborador.id,
+        registro_ref: editColaborador.nome,
+        motivo: motivo.trim(),
       });
       toast.success("Dados atualizados com sucesso.");
       setEditColaborador(null);

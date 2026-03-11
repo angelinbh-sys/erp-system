@@ -17,6 +17,8 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
+import { useAuditLog } from "@/hooks/useAuditLog";
+import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 
 function VagaTimelineSection({ vagaId, vaga }: { vagaId: string; vaga: any }) {
   const { data: historico = [] } = useVagaHistorico(vagaId);
@@ -45,6 +47,7 @@ const AgendamentoASO = () => {
   const { data: vagas = [], isLoading } = useVagas("Aprovada");
   const queryClient = useQueryClient();
   const { profile } = useAuthContext();
+  const { logAction } = useAuditLog();
 
   // Per-vaga local state
   const [localData, setLocalData] = useState<Record<string, { dataAgendamento: string; dataEntrega: string }>>({});
@@ -99,6 +102,14 @@ const AgendamentoASO = () => {
       toast.error("Erro ao salvar datas.");
       return;
     }
+    await logAction({
+      modulo: "SESMT",
+      pagina: "Agendamento de ASO",
+      acao: "edicao",
+      descricao: `Salvou datas do ASO: ${vaga.nome_candidato} (${vaga.cargo})`,
+      registro_id: vaga.id,
+      registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+    });
     toast.success("Datas salvas com sucesso.");
     queryClient.invalidateQueries({ queryKey: ["vagas"] });
   };
@@ -131,6 +142,14 @@ const AgendamentoASO = () => {
     if (updateError) {
       toast.error("Erro ao salvar referência do arquivo.");
     } else {
+      await logAction({
+        modulo: "SESMT",
+        pagina: "Agendamento de ASO",
+        acao: "edicao",
+        descricao: `Anexou resultado do ASO: ${vaga.nome_candidato} (${vaga.cargo}) — ${arquivo.name}`,
+        registro_id: vaga.id,
+        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+      });
       toast.success("Resultado do ASO anexado com sucesso.");
       queryClient.invalidateQueries({ queryKey: ["vagas"] });
     }
@@ -175,6 +194,15 @@ const AgendamentoASO = () => {
       usuario_nome: profile?.nome || "Sistema",
     } as any);
 
+    await logAction({
+      modulo: "SESMT",
+      pagina: "Agendamento de ASO",
+      acao: "envio_etapa",
+      descricao: `Enviou para Admissão: ${vaga.nome_candidato} (${vaga.cargo})`,
+      registro_id: vaga.id,
+      registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+    });
+
     toast.success("Candidato enviado para Admissão com sucesso!");
     queryClient.invalidateQueries({ queryKey: ["vagas"] });
   };
@@ -214,6 +242,16 @@ const AgendamentoASO = () => {
         tipo: "warning",
         link: "/rh/aprovacao-vagas",
         vaga_id: devolverVaga.id,
+      });
+
+      await logAction({
+        modulo: "SESMT",
+        pagina: "Agendamento de ASO",
+        acao: "devolucao",
+        descricao: `Devolveu vaga para RH: ${devolverVaga.cargo} — ${devolverVaga.nome_candidato}`,
+        registro_id: devolverVaga.id,
+        registro_ref: `${devolverVaga.cargo} - ${devolverVaga.nome_candidato}`,
+        motivo: motivoDevolucao.trim(),
       });
 
       toast.success("Vaga devolvida para o RH com sucesso.");
