@@ -28,6 +28,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
 import { STATUS_PROCESSO } from "@/utils/statusProcesso";
+import PainelPendencias from "@/components/PainelPendencias";
 
 /* ─── Status badge helpers ──────────────────────────────────────── */
 function vagaStatusBadge(status: string) {
