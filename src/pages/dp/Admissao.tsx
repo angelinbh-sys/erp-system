@@ -171,6 +171,7 @@ const Admissao = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Nº</TableHead>
                   <TableHead>Candidato</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Centro de Custo</TableHead>
@@ -184,6 +185,7 @@ const Admissao = () => {
                   const status = getStatusLabel(vaga);
                   return (
                     <TableRow key={vaga.id}>
+                      <TableCell className="font-mono text-xs text-primary">{vaga.numero_vaga || "—"}</TableCell>
                       <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
                       <TableCell>{vaga.cargo}</TableCell>
                       <TableCell>{vaga.centro_custo_nome}</TableCell>

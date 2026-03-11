@@ -147,7 +147,10 @@ const AgendamentoASO = () => {
                 <CardContent className="pt-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-lg text-foreground">{vaga.nome_candidato}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg text-foreground">{vaga.nome_candidato}</h3>
+                        {vaga.numero_vaga && <Badge variant="outline" className="font-mono text-xs">{vaga.numero_vaga}</Badge>}
+                      </div>
                       <p className="text-sm text-muted-foreground">{vaga.cargo} — {vaga.centro_custo_nome} — {vaga.site_contrato}</p>
                       <CriadoPorInfo criadoPorId={vaga.criado_por} criadoEm={vaga.created_at} className="mt-1" />
                     </div>
