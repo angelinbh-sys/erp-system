@@ -119,7 +119,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useAuthContext();
   const { data: vagas = [] } = useVagas();
-  const { data: notificacoes = [] } = useNotificacoes();
+  const grupoNotif = profile?.super_admin ? "super_admin" : profile?.grupo_permissao || "";
+  const { data: notificacoes = [] } = useNotificacoes(grupoNotif);
   const { data: colaboradores = [] } = useColaboradores();
   const updateStatus = useUpdateVagaStatus();
 

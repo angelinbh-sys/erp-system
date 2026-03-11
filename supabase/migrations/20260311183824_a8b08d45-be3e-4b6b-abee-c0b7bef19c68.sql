@@ -1,0 +1,1 @@
+ALTER TABLE public.notificacoes ADD COLUMN IF NOT EXISTS destinatario_grupo text DEFAULT NULL;

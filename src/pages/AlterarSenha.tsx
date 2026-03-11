@@ -60,9 +60,19 @@ const AlterarSenha = () => {
           .eq("user_id", profile.user_id);
       }
 
+      // Update profile in DB first, then refetch to update local state
+      if (profile) {
+        await supabase
+          .from("profiles")
+          .update({ must_change_password: false } as Record<string, unknown>)
+          .eq("user_id", profile.user_id);
+      }
+
+      // Refetch profile so must_change_password is false before navigating
+      await refetchProfile();
+
       toast.success("Senha alterada com sucesso.");
       await logAction({ modulo: "Autenticação", pagina: "Alterar Senha", acao: "troca_senha", descricao: "Alterou a senha" });
-      refetchProfile();
       navigate("/", { replace: true });
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : "";

@@ -41,6 +41,12 @@ const AgendamentoASO = () => {
   const { profile } = useAuthContext();
   const { logAction } = useAuditLog();
 
+  // Check if user has edit permission for SESMT
+  const isSuperAdmin = profile?.super_admin;
+  const grupoLower = profile?.grupo_permissao?.toLowerCase() || "";
+  const isSESMT = isSuperAdmin || grupoLower === "sesmt";
+  const canEdit = isSESMT;
+
   const [localData, setLocalData] = useState<Record<string, { dataAgendamento: string; dataEntrega: string }>>({});
   const [arquivos, setArquivos] = useState<Record<string, File | null>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
@@ -55,6 +61,7 @@ const AgendamentoASO = () => {
   };
 
   const salvarDatas = async (vaga: any) => {
+    if (!canEdit) return;
     const local = getLocal(vaga);
     const { error } = await supabase.from("vagas").update({ data_agendamento_aso: local.dataAgendamento || null, data_entrega_aso: local.dataEntrega || null } as any).eq("id", vaga.id);
     if (error) { toast.error("Erro ao salvar datas."); return; }
@@ -64,6 +71,7 @@ const AgendamentoASO = () => {
   };
 
   const uploadArquivo = async (vaga: any) => {
+    if (!canEdit) return;
     const arquivo = arquivos[vaga.id];
     if (!arquivo) return;
     setUploading((prev) => ({ ...prev, [vaga.id]: true }));
@@ -82,18 +90,20 @@ const AgendamentoASO = () => {
   };
 
   const canSendAdmissao = (vaga: any) => {
+    if (!canEdit) return false;
     const local = getLocal(vaga);
     return (vaga.data_agendamento_aso || local.dataAgendamento) && (vaga.data_entrega_aso || local.dataEntrega) && vaga.resultado_aso_path && !vaga.enviado_admissao;
   };
 
   const enviarAdmissao = async (vaga: any) => {
+    if (!canEdit) return;
     const { error } = await supabase.from("vagas").update({
       enviado_admissao: true, enviado_admissao_at: new Date().toISOString(),
       status_processo: STATUS_PROCESSO.AGUARDANDO_ADMISSAO, responsavel_etapa: "Dep. Pessoal",
     } as any).eq("id", vaga.id);
     if (error) { toast.error("Erro ao enviar para admissão."); return; }
 
-    await supabase.from("notificacoes").insert({ titulo: "Candidato liberado para Admissão", mensagem: `O candidato ${vaga.nome_candidato} (${vaga.cargo}) foi liberado pelo SESMT para admissão.`, tipo: "success", link: "/departamento-pessoal/admissao", vaga_id: vaga.id });
+    await supabase.from("notificacoes").insert({ titulo: "Candidato liberado para Admissão", mensagem: `O candidato ${vaga.nome_candidato} (${vaga.cargo}) foi liberado pelo SESMT para admissão.`, tipo: "success", link: "/departamento-pessoal/admissao", vaga_id: vaga.id, destinatario_grupo: "Dep. Pessoal" } as any);
     await supabase.from("vagas_historico" as any).insert({ vaga_id: vaga.id, acao: "Enviado para Admissão", usuario_nome: profile?.nome || "Sistema" } as any);
     await logAction({ modulo: "SESMT", pagina: "Agendamento de ASO", acao: "envio_etapa", descricao: `Enviou para Admissão: ${vaga.nome_candidato} (${vaga.cargo})`, registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}` });
 
@@ -112,7 +122,7 @@ const AgendamentoASO = () => {
       if (error) throw error;
 
       await supabase.from("vagas_historico" as any).insert({ vaga_id: devolverVaga.id, acao: "Devolvida pelo SESMT para RH", usuario_nome: profile?.nome || "Sistema", motivo: motivoDevolucao.trim() } as any);
-      await supabase.from("notificacoes").insert({ titulo: "Vaga devolvida pelo SESMT", mensagem: `A vaga ${devolverVaga.cargo} (${devolverVaga.nome_candidato}) foi devolvida pelo SESMT. Motivo: ${motivoDevolucao.trim()}`, tipo: "warning", link: "/rh/aprovacao-vaga", vaga_id: devolverVaga.id });
+      await supabase.from("notificacoes").insert({ titulo: "Vaga devolvida pelo SESMT", mensagem: `A vaga ${devolverVaga.cargo} (${devolverVaga.nome_candidato}) foi devolvida pelo SESMT. Motivo: ${motivoDevolucao.trim()}`, tipo: "warning", link: "/rh/aprovacao-vaga", vaga_id: devolverVaga.id, destinatario_grupo: "RH" } as any);
       await logAction({ modulo: "SESMT", pagina: "Agendamento de ASO", acao: "devolucao", descricao: `Devolveu vaga para RH: ${devolverVaga.cargo} — ${devolverVaga.nome_candidato}`, registro_id: devolverVaga.id, registro_ref: `${devolverVaga.cargo} - ${devolverVaga.nome_candidato}`, motivo: motivoDevolucao.trim() });
 
       toast.success("Vaga devolvida para o RH com sucesso.");
@@ -131,6 +141,12 @@ const AgendamentoASO = () => {
     <div className="max-w-6xl mx-auto">
       <h2 className="font-heading text-2xl font-bold text-foreground mb-2">Agendamento de ASO</h2>
       <p className="text-sm text-muted-foreground mb-6">Vagas aprovadas pela Diretoria. Preencha os dados do ASO e envie para Admissão quando completo.</p>
+
+      {!canEdit && (
+        <div className="mb-4 p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
+          Você pode visualizar as vagas, mas apenas membros do grupo <strong>SESMT</strong> podem editar os campos e enviar para admissão.
+        </div>
+      )}
 
       {isLoading ? <p className="text-muted-foreground">Carregando...</p> : vagas.length === 0 ? (
         <Card><CardContent className="pt-6"><div className="flex flex-col items-center justify-center py-8 text-muted-foreground"><Stethoscope className="h-12 w-12 mb-3 opacity-40" /><p>Nenhuma vaga aprovada aguardando processo de ASO.</p></div></CardContent></Card>
@@ -169,14 +185,30 @@ const AgendamentoASO = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg border border-border">
                         <div>
                           <Label>Data de Agendamento do ASO *</Label>
-                          <Input type="date" value={local.dataAgendamento} onChange={(e) => setLocal(vaga.id, "dataAgendamento", e.target.value)} className="mt-1" />
+                          <Input
+                            type="date"
+                            value={local.dataAgendamento}
+                            onChange={(e) => setLocal(vaga.id, "dataAgendamento", e.target.value)}
+                            className="mt-1"
+                            disabled={!canEdit}
+                            readOnly={!canEdit}
+                          />
                         </div>
                         <div>
                           <Label>Data de Entrega do ASO *</Label>
-                          <Input type="date" value={local.dataEntrega} onChange={(e) => setLocal(vaga.id, "dataEntrega", e.target.value)} className="mt-1" />
+                          <Input
+                            type="date"
+                            value={local.dataEntrega}
+                            onChange={(e) => setLocal(vaga.id, "dataEntrega", e.target.value)}
+                            className="mt-1"
+                            disabled={!canEdit}
+                            readOnly={!canEdit}
+                          />
                         </div>
                         <div className="flex items-end">
-                          <Button size="sm" variant="outline" onClick={() => salvarDatas(vaga)}>Salvar Datas</Button>
+                          {canEdit && (
+                            <Button size="sm" variant="outline" onClick={() => salvarDatas(vaga)}>Salvar Datas</Button>
+                          )}
                         </div>
                       </div>
 
@@ -188,29 +220,37 @@ const AgendamentoASO = () => {
                             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 ml-auto">Anexado</Badge>
                           </div>
                         )}
-                        <div className="mt-2 border-2 border-dashed border-input rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors" onClick={() => fileInputRefs.current[vaga.id]?.click()}>
-                          <input ref={(el) => { fileInputRefs.current[vaga.id] = el; }} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setArquivos((prev) => ({ ...prev, [vaga.id]: e.target.files?.[0] || null }))} />
-                          {arquivo ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <span className="text-sm font-medium text-foreground">{arquivo.name}</span>
-                              <button type="button" onClick={(e) => { e.stopPropagation(); setArquivos((prev) => ({ ...prev, [vaga.id]: null })); }} className="text-muted-foreground hover:text-destructive"><X className="h-4 w-4" /></button>
+                        {canEdit && (
+                          <>
+                            <div className="mt-2 border-2 border-dashed border-input rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors" onClick={() => fileInputRefs.current[vaga.id]?.click()}>
+                              <input ref={(el) => { fileInputRefs.current[vaga.id] = el; }} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setArquivos((prev) => ({ ...prev, [vaga.id]: e.target.files?.[0] || null }))} />
+                              {arquivo ? (
+                                <div className="flex items-center justify-center gap-2">
+                                  <span className="text-sm font-medium text-foreground">{arquivo.name}</span>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); setArquivos((prev) => ({ ...prev, [vaga.id]: null })); }} className="text-muted-foreground hover:text-destructive"><X className="h-4 w-4" /></button>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-1 text-muted-foreground"><Upload className="h-6 w-6" /><span className="text-sm">Clique para anexar (PDF, JPG, PNG)</span></div>
+                              )}
                             </div>
-                          ) : (
-                            <div className="flex flex-col items-center gap-1 text-muted-foreground"><Upload className="h-6 w-6" /><span className="text-sm">Clique para anexar (PDF, JPG, PNG)</span></div>
-                          )}
-                        </div>
-                        {arquivo && <Button size="sm" className="mt-2" onClick={() => uploadArquivo(vaga)} disabled={isUploading}>{isUploading ? "Enviando..." : "Enviar Arquivo"}</Button>}
+                            {arquivo && <Button size="sm" className="mt-2" onClick={() => uploadArquivo(vaga)} disabled={isUploading}>{isUploading ? "Enviando..." : "Anexar Arquivo"}</Button>}
+                          </>
+                        )}
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-border">
-                        <Button className="flex-1" disabled={!canSendAdmissao(vaga)} onClick={() => enviarAdmissao(vaga)}>
-                          <Send className="h-4 w-4 mr-2" />Enviar para Admissão
-                        </Button>
-                        <Button variant="outline" className="flex-1" onClick={() => { setDevolverVaga(vaga); setMotivoDevolucao(""); }}>
-                          <Undo2 className="h-4 w-4 mr-2" />Devolver para RH
-                        </Button>
+                        {canEdit && (
+                          <>
+                            <Button className="flex-1" disabled={!canSendAdmissao(vaga)} onClick={() => enviarAdmissao(vaga)}>
+                              <Send className="h-4 w-4 mr-2" />Enviar para Admissão
+                            </Button>
+                            <Button variant="outline" className="flex-1" onClick={() => { setDevolverVaga(vaga); setMotivoDevolucao(""); }}>
+                              <Undo2 className="h-4 w-4 mr-2" />Devolver para RH
+                            </Button>
+                          </>
+                        )}
                       </div>
-                      {!canSendAdmissao(vaga) && <p className="text-xs text-muted-foreground text-center">Preencha a data de agendamento, data de entrega e anexe o resultado do ASO para liberar o envio.</p>}
+                      {canEdit && !canSendAdmissao(vaga) && <p className="text-xs text-muted-foreground text-center">Preencha a data de agendamento, data de entrega e anexe o resultado do ASO para liberar o envio.</p>}
                     </>
                   )}
                 </CardContent>

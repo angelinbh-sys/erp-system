@@ -18,6 +18,7 @@ import Efetivo from "@/pages/dp/Efetivo";
 import AdminUsuarios from "@/pages/admin/Usuarios";
 import AdminPermissoes from "@/pages/admin/Permissoes";
 import AuditLog from "@/pages/admin/AuditLog";
+import LimparDadosTeste from "@/pages/admin/LimparDadosTeste";
 import AgendamentoASO from "@/pages/sesmt/AgendamentoASO";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import NotFound from "./pages/NotFound";
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
               <Route path="/admin/permissoes" element={<AdminPermissoes />} />
               <Route path="/admin/audit-log" element={<AuditLog />} />
+              <Route path="/admin/limpar-dados" element={<LimparDadosTeste />} />
               <Route path="/sesmt/agendamento-aso" element={<AgendamentoASO />} />
               <Route path="/financeiro" element={<ModulePlaceholder title="Financeiro" />} />
               <Route path="/logistica" element={<ModulePlaceholder title="Logística" />} />

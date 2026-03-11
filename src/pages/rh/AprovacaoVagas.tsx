@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, X, Eye, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil, Ban } from "lucide-react";
+import { Check, X, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil, Ban } from "lucide-react";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
@@ -36,65 +36,6 @@ const statusCandidatoConfig: Record<string, { label: string; className: string }
   "Reprovado": { label: "Reprovado", className: "bg-red-100 text-red-800 border-red-300" },
 };
 
-function DetailDialogContent({ vaga, getStatusProcessoBadge, getCandidatoStatusBadge, beneficiosToString, handleStatusCandidatoChange }: {
-  vaga: any;
-  getStatusProcessoBadge: (s: string) => React.ReactNode;
-  getCandidatoStatusBadge: (s: string) => React.ReactNode;
-  beneficiosToString: (b: unknown) => string;
-  handleStatusCandidatoChange: (v: any, s: string) => void;
-}) {
-  const { data: historico = [] } = useVagaHistorico(vaga.id);
-
-  return (
-    <div className="space-y-4 text-sm">
-      <div className="grid grid-cols-2 gap-2">
-        {(vaga as any).numero_vaga && <div className="col-span-2"><strong>Número da Vaga:</strong> <span className="font-mono text-primary">{(vaga as any).numero_vaga}</span></div>}
-        <div><strong>Cargo:</strong> {vaga.cargo}</div>
-        <div><strong>Salário:</strong> {vaga.salario}</div>
-        <div><strong>Centro de Custo:</strong> {vaga.centro_custo_nome}</div>
-        <div><strong>Site / Contrato:</strong> {vaga.site_contrato}</div>
-        <div><strong>Local:</strong> {vaga.local_trabalho}</div>
-        <div><strong>Candidato:</strong> {vaga.nome_candidato}</div>
-        <div><strong>Nascimento:</strong> {vaga.data_nascimento}</div>
-        <div><strong>Telefone:</strong> {vaga.telefone}</div>
-      </div>
-      <div><strong>Benefícios:</strong> {beneficiosToString(vaga.beneficios)}</div>
-      <CriadoPorInfo criadoPorId={vaga.criado_por} criadoEm={vaga.created_at} className="mt-2" />
-      <AtualizadoPorInfo atualizadoPor={(vaga as any).atualizado_por} atualizadoEm={vaga.updated_at} />
-      <div className="flex items-center gap-2">
-        <strong>Status do Processo:</strong> {getStatusProcessoBadge(vaga.status_processo || "Aguardando Diretoria")}
-      </div>
-      <div><strong>Responsável:</strong> {vaga.responsavel_etapa || getResponsavelEtapa(vaga.status_processo || "")}</div>
-      <div><strong>Status do Candidato:</strong> {getCandidatoStatusBadge(vaga.status_candidato || "Em análise")}</div>
-      {vaga.observacao_reprovacao && (
-        <div><strong>Motivo da reprovação:</strong> {vaga.observacao_reprovacao}</div>
-      )}
-
-      <div className="pt-3 border-t border-border">
-        <VagaTimeline vaga={vaga} historico={historico} />
-      </div>
-      <div className="pt-3 border-t border-border">
-        <HistoricoRegistro registroId={vaga.id} />
-      </div>
-
-      <div className="pt-3 border-t border-border">
-        <Label className="text-sm font-semibold">Alterar Status do Candidato</Label>
-        <Select
-          value={vaga.status_candidato || "Em análise"}
-          onValueChange={(v) => handleStatusCandidatoChange(vaga, v)}
-        >
-          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Em análise">Em análise</SelectItem>
-            <SelectItem value="Aprovado">Aprovado</SelectItem>
-            <SelectItem value="Reprovado">Reprovado</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-}
-
 const AprovacaoVagas = () => {
   const { data: vagas = [], isLoading } = useVagas();
   const updateStatus = useUpdateVagaStatus();
@@ -109,7 +50,6 @@ const AprovacaoVagas = () => {
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
   const [showReprovar, setShowReprovar] = useState(false);
   const [observacao, setObservacao] = useState("");
-  const [detailVaga, setDetailVaga] = useState<Vaga | null>(null);
 
   const [deleteVaga, setDeleteVaga] = useState<Vaga | null>(null);
   const [deleteMotivo, setDeleteMotivo] = useState("");
@@ -118,6 +58,11 @@ const AprovacaoVagas = () => {
   const [cancelVaga, setCancelVaga] = useState<Vaga | null>(null);
   const [cancelMotivo, setCancelMotivo] = useState("");
   const [cancelling, setCancelling] = useState(false);
+
+  // Devolver pela Diretoria
+  const [devolverVaga, setDevolverVaga] = useState<Vaga | null>(null);
+  const [devolverMotivo, setDevolverMotivo] = useState("");
+  const [devolvendo, setDevolvendo] = useState(false);
 
   // Filter vagas
   const notExcluded = vagas.filter((v) => !(v as any).excluida && (v as any).status_processo !== STATUS_PROCESSO.VAGA_CANCELADA);
@@ -141,9 +86,10 @@ const AprovacaoVagas = () => {
     return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.RASCUNHO || sp === STATUS_PROCESSO.AGUARDANDO_DIRETORIA);
   };
 
+  // Cancelar vaga: apenas o criador
   const canCancelVaga = (vaga: Vaga) => {
     const sp = (vaga as any).status_processo;
-    return (isSuperAdmin || isCreator(vaga)) && sp !== STATUS_PROCESSO.VAGA_CANCELADA && sp !== STATUS_PROCESSO.EFETIVADO;
+    return isCreator(vaga) && sp !== STATUS_PROCESSO.VAGA_CANCELADA && sp !== STATUS_PROCESSO.EFETIVADO;
   };
 
   const handleReenviar = async (vaga: Vaga) => {
@@ -171,6 +117,7 @@ const AprovacaoVagas = () => {
         tipo: "warning",
         link: "/rh/aprovacao-vaga",
         vaga_id: vaga.id,
+        destinatario_grupo: "Diretoria",
       });
 
       await logAction({
@@ -210,6 +157,7 @@ const AprovacaoVagas = () => {
         titulo: "Vaga aprovada",
         mensagem: `A vaga ${vaga.cargo} para ${vaga.nome_candidato} foi aprovada. Encaminhar para agendamento de ASO.`,
         tipo: "success", link: "/sesmt/agendamento-aso", vaga_id: vaga.id,
+        destinatario_grupo: "SESMT",
       });
 
       toast.success("Vaga aprovada com sucesso!");
@@ -249,6 +197,57 @@ const AprovacaoVagas = () => {
       window.location.reload();
     } catch {
       toast.error("Erro ao reprovar vaga.");
+    }
+  };
+
+  // Devolver pela Diretoria -> volta para o criador
+  const handleDevolver = async () => {
+    if (!devolverVaga || !devolverMotivo.trim()) {
+      toast.error("O motivo da devolução é obrigatório.");
+      return;
+    }
+    setDevolvendo(true);
+    try {
+      const { error } = await supabase.from("vagas").update({
+        status: "Devolvida Diretoria",
+        status_processo: STATUS_PROCESSO.DEVOLVIDO_RH,
+        responsavel_etapa: "RH",
+        observacao_reprovacao: devolverMotivo.trim(),
+        atualizado_por: profile?.nome || "Sistema",
+      } as any).eq("id", devolverVaga.id);
+      if (error) throw error;
+
+      await supabase.from("vagas_historico" as any).insert({
+        vaga_id: devolverVaga.id,
+        acao: "Devolvida pela Diretoria para correção",
+        usuario_nome: profile?.nome || "Sistema",
+        motivo: devolverMotivo.trim(),
+      } as any);
+
+      await createNotificacao.mutateAsync({
+        titulo: "Vaga devolvida pela Diretoria",
+        mensagem: `A vaga ${devolverVaga.cargo} (${devolverVaga.nome_candidato}) foi devolvida pela Diretoria para correção. Motivo: ${devolverMotivo.trim()}`,
+        tipo: "warning",
+        link: "/rh/aprovacao-vaga",
+        vaga_id: devolverVaga.id,
+        destinatario_grupo: "RH",
+      });
+
+      await logAction({
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "devolucao",
+        descricao: `Devolveu vaga para correção: ${devolverVaga.cargo} — ${devolverVaga.nome_candidato}`,
+        registro_id: devolverVaga.id, registro_ref: `${devolverVaga.cargo} - ${devolverVaga.nome_candidato}`,
+        motivo: devolverMotivo.trim(),
+      });
+
+      toast.success("Vaga devolvida para correção.");
+      setDevolverVaga(null);
+      setDevolverMotivo("");
+      window.location.reload();
+    } catch {
+      toast.error("Erro ao devolver vaga.");
+    } finally {
+      setDevolvendo(false);
     }
   };
 
@@ -390,9 +389,6 @@ const AprovacaoVagas = () => {
                     <TableCell className="text-sm">{(vaga as any).responsavel_etapa || "—"}</TableCell>
                     <TableCell>
                       <div className="flex gap-1 flex-wrap">
-                        <Button variant="ghost" size="icon" title="Ver detalhes" onClick={() => setDetailVaga(vaga)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
                         {showActions && isDiretoria && (vaga as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA && (
                           <>
                             <Button variant="ghost" size="icon" title="Aprovar" onClick={() => handleAprovar(vaga)}
@@ -402,6 +398,10 @@ const AprovacaoVagas = () => {
                             <Button variant="ghost" size="icon" title="Reprovar" onClick={() => { setSelectedVaga(vaga); setObservacao(""); setShowReprovar(true); }}
                               className="text-destructive hover:text-destructive">
                               <X className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="Devolver" onClick={() => { setDevolverVaga(vaga); setDevolverMotivo(""); }}
+                              className="text-orange-600 hover:text-orange-600">
+                              <Undo2 className="h-4 w-4" />
                             </Button>
                           </>
                         )}
@@ -444,7 +444,7 @@ const AprovacaoVagas = () => {
 
       {!isDiretoria && (
         <div className="mb-4 p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
-          Você pode visualizar as vagas e seus status, mas apenas membros do grupo <strong>Diretoria</strong> podem aprovar ou reprovar.
+          Você pode visualizar as vagas e seus status, mas apenas membros do grupo <strong>Diretoria</strong> podem aprovar, reprovar ou devolver.
         </div>
       )}
 
@@ -465,22 +465,6 @@ const AprovacaoVagas = () => {
         </>
       )}
 
-      {/* Detail Dialog */}
-      <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Detalhes da Vaga</DialogTitle></DialogHeader>
-          {detailVaga && (
-            <DetailDialogContent
-              vaga={detailVaga}
-              getStatusProcessoBadge={getStatusProcessoBadge}
-              getCandidatoStatusBadge={getCandidatoStatusBadge}
-              beneficiosToString={beneficiosToString}
-              handleStatusCandidatoChange={handleStatusCandidatoChange}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       {/* Reprovar Dialog */}
       <Dialog open={showReprovar} onOpenChange={() => setShowReprovar(false)}>
         <DialogContent>
@@ -489,6 +473,26 @@ const AprovacaoVagas = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowReprovar(false)}>Cancelar</Button>
             <Button onClick={handleReprovar} disabled={!observacao.trim()}>Reprovar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Devolver Dialog */}
+      <Dialog open={!!devolverVaga} onOpenChange={() => setDevolverVaga(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Devolver Vaga para Correção</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Devolver a vaga <strong>{devolverVaga?.cargo}</strong> do candidato <strong>{devolverVaga?.nome_candidato}</strong> para o solicitante corrigir.
+          </p>
+          <div className="space-y-2">
+            <Label>Motivo da Devolução *</Label>
+            <Textarea placeholder="Informe o motivo da devolução" value={devolverMotivo} onChange={(e) => setDevolverMotivo(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDevolverVaga(null)}>Cancelar</Button>
+            <Button onClick={handleDevolver} disabled={devolvendo || !devolverMotivo.trim()}>
+              {devolvendo ? "Devolvendo..." : "Confirmar Devolução"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
