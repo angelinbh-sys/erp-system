@@ -31,6 +31,12 @@ function resolveSteps(vaga: any, historico: VagaHistorico[]): TimelineStep[] {
   });
 
   const devolucoes = historico.filter((h) => h.acao.includes("Devolvida"));
+  const cancelada = sp === STATUS_PROCESSO.VAGA_CANCELADA;
+
+  if (cancelada) {
+    steps.push({ label: "Vaga Cancelada", status: "devolvido", motivo: historico.find((h) => h.acao.includes("cancelada"))?.motivo || undefined });
+    return steps;
+  }
 
   // 2. Aprovação da Diretoria
   if (sp === STATUS_PROCESSO.REPROVADO_DIRETORIA || vaga.status === "Reprovada") {
