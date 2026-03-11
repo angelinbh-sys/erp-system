@@ -367,17 +367,19 @@ const AprovacaoVagas = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Nº</TableHead>
                   <TableHead>Candidato</TableHead>
                   <TableHead>Cargo / Função</TableHead>
                   <TableHead>Centro de Custo</TableHead>
                   <TableHead>Status do Processo</TableHead>
                   <TableHead>Responsável</TableHead>
-                  <TableHead className="w-44">Ações</TableHead>
+                  <TableHead className="w-52">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {vagasList.map((vaga) => (
                   <TableRow key={vaga.id}>
+                    <TableCell className="font-mono text-xs text-primary">{(vaga as any).numero_vaga || "—"}</TableCell>
                     <TableCell className="font-medium">{vaga.nome_candidato}</TableCell>
                     <TableCell>{vaga.cargo}</TableCell>
                     <TableCell>{vaga.centro_custo_nome}</TableCell>
@@ -405,9 +407,20 @@ const AprovacaoVagas = () => {
                             Reenviar para Aprovação
                           </Button>
                         )}
-                        {isCreator(vaga) && (vaga as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA && (
+                        {canDeleteVaga(vaga) && (
                           <Button variant="ghost" size="icon" title="Excluir vaga"
                             onClick={() => { setDeleteVaga(vaga); setDeleteMotivo(""); }}
+                            className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canCancelVaga(vaga) && (
+                          <Button variant="ghost" size="icon" title="Cancelar vaga"
+                            onClick={() => { setCancelVaga(vaga); setCancelMotivo(""); }}
+                            className="text-orange-600 hover:text-orange-600">
+                            <Ban className="h-4 w-4" />
+                          </Button>
+                        )}
                             className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </Button>
