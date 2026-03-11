@@ -89,6 +89,8 @@ const SolicitacaoFerias = () => {
         id: crypto.randomUUID(),
         ...form,
         qtdDias: Number(form.qtdDias),
+        criadoPor: profile?.nome || "Sistema",
+        criadoEm: new Date().toISOString(),
       };
       save([...registros, novo]);
       toast.success("Solicitação de férias registrada.");
