@@ -17,6 +17,8 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
+import { useAuditLog } from "@/hooks/useAuditLog";
+import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 
 function VagaTimelineSection({ vagaId, vaga }: { vagaId: string; vaga: any }) {
   const { data: historico = [] } = useVagaHistorico(vagaId);
