@@ -100,6 +100,11 @@ const SolicitacaoFerias = () => {
         criadoEm: new Date().toISOString(),
       };
       save([...registros, novo]);
+      logAction({
+        modulo: "Dep. Pessoal", pagina: "Solicitação de Férias", acao: "criacao",
+        descricao: `Criou solicitação de férias: ${form.nomeColaborador}`,
+        registro_id: novo.id, registro_ref: form.nomeColaborador,
+      });
       toast.success("Solicitação de férias registrada.");
     }
     resetForm();
