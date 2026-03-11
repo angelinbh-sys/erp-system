@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "@/contexts/AuthContext";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
+import { CriadoPorInfo } from "@/components/CriadoPorInfo";
 
 function VagaTimelineSection({ vagaId, vaga }: { vagaId: string; vaga: any }) {
   const { data: historico = [] } = useVagaHistorico(vagaId);
