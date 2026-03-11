@@ -420,17 +420,7 @@ const AprovacaoVagas = () => {
                             className="text-orange-600 hover:text-orange-600">
                             <Ban className="h-4 w-4" />
                           </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </>
-    );
-  };
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
