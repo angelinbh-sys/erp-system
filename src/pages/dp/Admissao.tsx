@@ -16,6 +16,9 @@ import { Button } from "@/components/ui/button";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
+import { useAuditLog } from "@/hooks/useAuditLog";
+import { HistoricoRegistro } from "@/components/HistoricoRegistro";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
