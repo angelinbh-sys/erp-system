@@ -506,6 +506,24 @@ const AprovacaoVagas = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel Dialog */}
+      <Dialog open={!!cancelVaga} onOpenChange={() => setCancelVaga(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Cancelar Vaga</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Cancelar a vaga <strong>{(cancelVaga as any)?.numero_vaga}</strong> — <strong>{cancelVaga?.cargo}</strong> do candidato <strong>{cancelVaga?.nome_candidato}</strong>?
+          </p>
+          <p className="text-xs text-muted-foreground">A vaga permanecerá no sistema para histórico, mas não poderá mais avançar no fluxo.</p>
+          <Textarea placeholder="Motivo do cancelamento (obrigatório)" value={cancelMotivo} onChange={(e) => setCancelMotivo(e.target.value)} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelVaga(null)}>Voltar</Button>
+            <Button variant="destructive" onClick={handleCancelVaga} disabled={cancelling || !cancelMotivo.trim()}>
+              {cancelling ? "Cancelando..." : "Confirmar Cancelamento"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
