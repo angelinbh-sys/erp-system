@@ -64,5 +64,9 @@ export function useAuth() {
     setProfile(null);
   };
 
-  return { user, profile, loading, signIn, signOut, refetchProfile: () => user && fetchProfile(user.id) };
+  const refetchProfile = useCallback(async () => {
+    if (user) await fetchProfile(user.id);
+  }, [user, fetchProfile]);
+
+  return { user, profile, loading, signIn, signOut, refetchProfile };
 }
