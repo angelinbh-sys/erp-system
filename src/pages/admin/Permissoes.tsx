@@ -183,7 +183,9 @@ const AdminPermissoes = () => {
   };
 
   const handleDelete = (id: string) => {
+    const g = grupos.find(g => g.id === id);
     save(grupos.filter((g) => g.id !== id));
+    logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "exclusao", descricao: `Excluiu grupo de permissão: ${g?.nome || "—"}`, registro_id: id, registro_ref: g?.nome });
     toast.success("Grupo excluído.");
   };
 

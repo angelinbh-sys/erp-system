@@ -177,6 +177,7 @@ const AdminUsuarios = () => {
       });
       if (error || data?.error) throw new Error(data?.error || "Erro ao resetar senha");
       setResetDialog({ open: true, user: resetDialog.user, tempPassword: data.temp_password });
+      await logAction({ modulo: "Admin", pagina: "Usuários", acao: "reset_senha", descricao: `Resetou senha do usuário: ${resetDialog.user.nome}`, registro_id: resetDialog.user.user_id, registro_ref: resetDialog.user.nome });
       toast.success("Senha resetada. O usuário deverá alterar no próximo login.");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao resetar senha.";
