@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Info } from "lucide-react";
+import { Plus, Pencil, Trash2, Info, ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,25 +8,48 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
-const MODULOS = [
-  "Recursos Humanos",
-  "Dep. Pessoal",
-  "SESMT",
-  "Financeiro",
-  "Logística",
-  "Qualidade",
-  "Admin",
+// ─── Structure: modules with pages ───────────────────────────────────
+const MODULOS_PAGINAS = [
+  {
+    modulo: "Início",
+    paginas: ["Página Início"],
+  },
+  {
+    modulo: "Recursos Humanos",
+    paginas: ["Gestão RH", "Abertura de Vaga", "Aprovação de Vagas"],
+  },
+  {
+    modulo: "Dep. Pessoal",
+    paginas: ["Alteração de Função / Cargo", "Solicitação de Férias", "Admissão", "Efetivo"],
+  },
+  {
+    modulo: "SESMT",
+    paginas: ["Agendamento de ASO"],
+  },
+  {
+    modulo: "Financeiro",
+    paginas: ["Financeiro"],
+  },
+  {
+    modulo: "Logística",
+    paginas: ["Logística"],
+  },
+  {
+    modulo: "Qualidade",
+    paginas: ["Qualidade"],
+  },
+  {
+    modulo: "Admin",
+    paginas: ["Usuários", "Grupos de Permissão"],
+  },
 ] as const;
 
-// Ordered from lowest to highest
 const PERMISSOES = ["acesso", "visualizacao", "criacao", "edicao", "exclusao"] as const;
 const PERMISSAO_LABELS: Record<string, string> = {
   acesso: "Acesso",
@@ -36,8 +59,9 @@ const PERMISSAO_LABELS: Record<string, string> = {
   exclusao: "Exclusão",
 };
 
-type ModuloPermissoes = Record<string, boolean>;
-type GrupoPermissoes = Record<string, ModuloPermissoes>;
+// Key = "Modulo::Pagina", value = { acesso: bool, ... }
+type PaginaPermissoes = Record<string, boolean>;
+type GrupoPermissoes = Record<string, PaginaPermissoes>;
 
 export interface GrupoPermissao {
   id: string;
@@ -45,41 +69,25 @@ export interface GrupoPermissao {
   permissoes: GrupoPermissoes;
 }
 
+function makeKey(modulo: string, pagina: string) {
+  return `${modulo}::${pagina}`;
+}
+
 function criarPermissoesVazias(): GrupoPermissoes {
   const result: GrupoPermissoes = {};
-  MODULOS.forEach((mod) => {
-    result[mod] = {};
-    PERMISSOES.forEach((p) => {
-      result[mod][p] = false;
+  MODULOS_PAGINAS.forEach((mod) => {
+    mod.paginas.forEach((pag) => {
+      const key = makeKey(mod.modulo, pag);
+      result[key] = {};
+      PERMISSOES.forEach((p) => {
+        result[key][p] = false;
+      });
     });
   });
   return result;
 }
 
-/**
- * Apply hierarchy: when a higher permission is set, all lower ones are auto-set.
- * Hierarchy order (index): acesso(0) < visualizacao(1) < criacao(2) < edicao(3) < exclusao(4)
- */
-function applyHierarchy(modPerms: ModuloPermissoes): ModuloPermissoes {
-  const result = { ...modPerms };
-  // Find the highest enabled permission
-  let highestIndex = -1;
-  for (let i = PERMISSOES.length - 1; i >= 0; i--) {
-    if (result[PERMISSOES[i]]) {
-      highestIndex = i;
-      break;
-    }
-  }
-  // Enable all below the highest
-  for (let i = 0; i < PERMISSOES.length; i++) {
-    if (i <= highestIndex) {
-      result[PERMISSOES[i]] = true;
-    }
-  }
-  return result;
-}
-
-function getHighestPermIndex(modPerms: ModuloPermissoes): number {
+function getHighestPermIndex(modPerms: PaginaPermissoes): number {
   for (let i = PERMISSOES.length - 1; i >= 0; i--) {
     if (modPerms[PERMISSOES[i]]) return i;
   }
@@ -102,34 +110,36 @@ const AdminPermissoes = () => {
   const [nome, setNome] = useState("");
   const [permissoes, setPermissoes] = useState<GrupoPermissoes>(criarPermissoesVazias);
   const [editId, setEditId] = useState<string | null>(null);
+  const [openModules, setOpenModules] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    MODULOS_PAGINAS.forEach((m) => { initial[m.modulo] = true; });
+    return initial;
+  });
 
-  const togglePermissao = (modulo: string, perm: string) => {
+  const togglePermissao = (key: string, perm: string) => {
     setPermissoes((prev) => {
-      const current = { ...prev[modulo] };
+      const current = { ...prev[key] };
       const permIndex = PERMISSOES.indexOf(perm as typeof PERMISSOES[number]);
 
       if (current[perm]) {
-        // Unchecking: uncheck this and all above
         for (let i = permIndex; i < PERMISSOES.length; i++) {
           current[PERMISSOES[i]] = false;
         }
       } else {
-        // Checking: check this and all below
         for (let i = 0; i <= permIndex; i++) {
           current[PERMISSOES[i]] = true;
         }
       }
 
-      return { ...prev, [modulo]: current };
+      return { ...prev, [key]: current };
     });
   };
 
-  const isDisabledByHierarchy = (modulo: string, perm: string): boolean => {
-    const modPerms = permissoes[modulo];
+  const isDisabledByHierarchy = (key: string, perm: string): boolean => {
+    const modPerms = permissoes[key];
     if (!modPerms) return false;
     const permIndex = PERMISSOES.indexOf(perm as typeof PERMISSOES[number]);
     const highestIndex = getHighestPermIndex(modPerms);
-    // Disabled if it's below the highest and checked (auto-inherited)
     return permIndex < highestIndex && modPerms[perm];
   };
 
@@ -157,12 +167,14 @@ const AdminPermissoes = () => {
   const handleEdit = (g: GrupoPermissao) => {
     setEditId(g.id);
     setNome(g.nome);
-    // Re-apply hierarchy to stored permissions
-    const fixed: GrupoPermissoes = {};
-    MODULOS.forEach((mod) => {
-      fixed[mod] = applyHierarchy(g.permissoes[mod] || {});
+    // Merge stored permissions with current structure (handles new pages)
+    const base = criarPermissoesVazias();
+    Object.keys(g.permissoes).forEach((key) => {
+      if (base[key]) {
+        base[key] = { ...base[key], ...g.permissoes[key] };
+      }
     });
-    setPermissoes(fixed);
+    setPermissoes(base);
   };
 
   const handleDelete = (id: string) => {
@@ -190,53 +202,81 @@ const AdminPermissoes = () => {
           </div>
 
           <div className="mb-4">
-            <Label className="mb-2 block">Permissões por Módulo</Label>
-            <div className="border rounded-lg overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Módulo</TableHead>
-                    {PERMISSOES.map((p) => (
-                      <TableHead key={p} className="text-center">{PERMISSAO_LABELS[p]}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {MODULOS.map((mod) => (
-                    <TableRow key={mod}>
-                      <TableCell className="font-medium">{mod}</TableCell>
-                      {PERMISSOES.map((p) => {
-                        const disabled = isDisabledByHierarchy(mod, p);
-                        return (
-                          <TableCell key={p} className="text-center">
-                            <Checkbox
-                              checked={permissoes[mod]?.[p] ?? false}
-                              onCheckedChange={() => togglePermissao(mod, p)}
-                              disabled={disabled}
-                              className={disabled ? "opacity-60" : ""}
-                            />
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <Label className="mb-2 block">Permissões por Módulo e Página</Label>
+            <div className="space-y-2">
+              {MODULOS_PAGINAS.map((mod) => (
+                <Collapsible
+                  key={mod.modulo}
+                  open={openModules[mod.modulo] ?? true}
+                  onOpenChange={() => setOpenModules((prev) => ({ ...prev, [mod.modulo]: !prev[mod.modulo] }))}
+                >
+                  <CollapsibleTrigger className="flex items-center gap-2 w-full px-3 py-2.5 rounded-md bg-muted/50 hover:bg-muted text-foreground transition-colors border border-border">
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                        openModules[mod.modulo] ? "rotate-180" : ""
+                      }`}
+                    />
+                    <span className="text-sm font-semibold uppercase tracking-wider">
+                      {mod.modulo}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-auto mr-2">
+                      {mod.paginas.length} página(s)
+                    </span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="border border-border border-t-0 rounded-b-lg overflow-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="pl-6">Página</TableHead>
+                            {PERMISSOES.map((p) => (
+                              <TableHead key={p} className="text-center">{PERMISSAO_LABELS[p]}</TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {mod.paginas.map((pag) => {
+                            const key = makeKey(mod.modulo, pag);
+                            return (
+                              <TableRow key={key}>
+                                <TableCell className="font-medium pl-6">{pag}</TableCell>
+                                {PERMISSOES.map((p) => {
+                                  const disabled = isDisabledByHierarchy(key, p);
+                                  return (
+                                    <TableCell key={p} className="text-center">
+                                      <Checkbox
+                                        checked={permissoes[key]?.[p] ?? false}
+                                        onCheckedChange={() => togglePermissao(key, p)}
+                                        disabled={disabled}
+                                        className={disabled ? "opacity-60" : ""}
+                                      />
+                                    </TableCell>
+                                  );
+                                })}
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
             </div>
           </div>
 
-          {/* Legenda de Permissões */}
+          {/* Legenda */}
           <div className="mb-4 p-4 rounded-lg bg-muted/50 border border-border">
             <div className="flex items-center gap-2 mb-3">
               <Info className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-semibold text-foreground">Legenda de Permissões</span>
             </div>
             <ul className="space-y-1.5 text-sm text-muted-foreground">
-              <li><strong className="text-foreground">Acesso</strong> — Define se o usuário pode acessar/entrar no módulo. Sem esta permissão, o módulo nem aparece no menu.</li>
-              <li><strong className="text-foreground">Visualização</strong> — Permite ver os dados/registros existentes no módulo, mas sem poder alterar nada.</li>
-              <li><strong className="text-foreground">Criação</strong> — Permite criar novos registros (ex: abrir uma vaga, cadastrar uma carga).</li>
+              <li><strong className="text-foreground">Acesso</strong> — Define se o usuário pode acessar/entrar na página. Sem esta permissão, a página nem aparece no menu.</li>
+              <li><strong className="text-foreground">Visualização</strong> — Permite ver os dados/registros existentes na página, mas sem poder alterar nada.</li>
+              <li><strong className="text-foreground">Criação</strong> — Permite criar novos registros.</li>
               <li><strong className="text-foreground">Edição</strong> — Permite modificar registros já existentes.</li>
-              <li><strong className="text-foreground">Exclusão</strong> — Permite remover/excluir registros. É uma permissão mais sensível.</li>
+              <li><strong className="text-foreground">Exclusão</strong> — Permite remover/excluir registros.</li>
             </ul>
             <p className="mt-3 text-xs text-muted-foreground italic">
               ⚡ Hierarquia automática: ao marcar uma permissão superior, todas as inferiores são habilitadas automaticamente.

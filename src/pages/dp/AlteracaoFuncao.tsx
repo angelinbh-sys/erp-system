@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Eye, Upload, X } from "lucide-react";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { CriadoPorInfo } from "@/components/CriadoPorInfo";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,12 +43,15 @@ interface AlteracaoRegistro {
   dataAlteracao: string;
   observacoes: string;
   anexo?: string;
+  criadoPor?: string;
+  criadoEm?: string;
 }
 
 const AlteracaoFuncao = () => {
   const { items: cargos } = useCargos();
   const { items: centrosCusto } = useCentrosCusto();
   const { data: colaboradores = [] } = useColaboradores();
+  const { profile } = useAuthContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [registros, setRegistros] = useState<AlteracaoRegistro[]>(() => {
@@ -99,6 +104,8 @@ const AlteracaoFuncao = () => {
         id: crypto.randomUUID(),
         ...form,
         anexo: anexo?.name,
+        criadoPor: profile?.nome || "Sistema",
+        criadoEm: new Date().toISOString(),
       };
       save([...registros, novo]);
       toast.success("Alteração de função registrada.");
@@ -308,6 +315,7 @@ const AlteracaoFuncao = () => {
               <p><strong>Data:</strong> {viewItem.dataAlteracao}</p>
               <p><strong>Observações:</strong> {viewItem.observacoes || "—"}</p>
               <p><strong>Anexo:</strong> {viewItem.anexo || "Nenhum"}</p>
+              <CriadoPorInfo criadoPorNome={viewItem.criadoPor} criadoEm={viewItem.criadoEm} className="mt-3 pt-3 border-t border-border" />
             </div>
           )}
         </DialogContent>

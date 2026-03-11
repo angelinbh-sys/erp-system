@@ -15,6 +15,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
+import { CriadoPorInfo } from "@/components/CriadoPorInfo";
 
 function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
@@ -37,6 +38,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient }: { deta
               <div><strong>Data de Nascimento:</strong> {detailVaga.data_nascimento}</div>
               <div><strong>Telefone:</strong> {detailVaga.telefone}</div>
             </div>
+            <CriadoPorInfo criadoPorId={(detailVaga as any).criado_por} criadoEm={detailVaga.created_at} className="mt-2" />
 
             {/* Timeline */}
             <div className="pt-3 border-t border-border">

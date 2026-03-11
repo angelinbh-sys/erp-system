@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { CriadoPorInfo } from "@/components/CriadoPorInfo";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,10 +35,13 @@ interface SolicitacaoFeriasRegistro {
   dataRetorno: string;
   qtdDias: number;
   observacoes: string;
+  criadoPor?: string;
+  criadoEm?: string;
 }
 
 const SolicitacaoFerias = () => {
   const { items: centrosCusto } = useCentrosCusto();
+  const { profile } = useAuthContext();
 
   const [registros, setRegistros] = useState<SolicitacaoFeriasRegistro[]>(() => {
     try {
@@ -84,6 +89,8 @@ const SolicitacaoFerias = () => {
         id: crypto.randomUUID(),
         ...form,
         qtdDias: Number(form.qtdDias),
+        criadoPor: profile?.nome || "Sistema",
+        criadoEm: new Date().toISOString(),
       };
       save([...registros, novo]);
       toast.success("Solicitação de férias registrada.");
@@ -209,7 +216,12 @@ const SolicitacaoFerias = () => {
               <TableBody>
                 {registros.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell>{r.nomeColaborador}</TableCell>
+                    <TableCell>
+                      <div>
+                        {r.nomeColaborador}
+                        <CriadoPorInfo criadoPorNome={r.criadoPor} criadoEm={r.criadoEm} className="mt-1" />
+                      </div>
+                    </TableCell>
                     <TableCell>{r.dataInicio}</TableCell>
                     <TableCell>{r.dataRetorno}</TableCell>
                     <TableCell>{r.qtdDias}</TableCell>
