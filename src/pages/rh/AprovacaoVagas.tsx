@@ -48,6 +48,7 @@ function DetailDialogContent({ vaga, getStatusProcessoBadge, getCandidatoStatusB
   return (
     <div className="space-y-4 text-sm">
       <div className="grid grid-cols-2 gap-2">
+        {(vaga as any).numero_vaga && <div className="col-span-2"><strong>Número da Vaga:</strong> <span className="font-mono text-primary">{(vaga as any).numero_vaga}</span></div>}
         <div><strong>Cargo:</strong> {vaga.cargo}</div>
         <div><strong>Salário:</strong> {vaga.salario}</div>
         <div><strong>Centro de Custo:</strong> {vaga.centro_custo_nome}</div>
@@ -59,6 +60,7 @@ function DetailDialogContent({ vaga, getStatusProcessoBadge, getCandidatoStatusB
       </div>
       <div><strong>Benefícios:</strong> {beneficiosToString(vaga.beneficios)}</div>
       <CriadoPorInfo criadoPorId={vaga.criado_por} criadoEm={vaga.created_at} className="mt-2" />
+      <AtualizadoPorInfo atualizadoPor={(vaga as any).atualizado_por} atualizadoEm={vaga.updated_at} />
       <div className="flex items-center gap-2">
         <strong>Status do Processo:</strong> {getStatusProcessoBadge(vaga.status_processo || "Aguardando Diretoria")}
       </div>
