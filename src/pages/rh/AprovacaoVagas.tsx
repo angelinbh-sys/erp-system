@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Check, X, Eye, Clock, CheckCircle2, XCircle, Trash2, Undo2 } from "lucide-react";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
+import { CriadoPorInfo } from "@/components/CriadoPorInfo";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
