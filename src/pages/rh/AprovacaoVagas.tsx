@@ -279,6 +279,42 @@ const AprovacaoVagas = () => {
     }
   };
 
+  const handleCancelVaga = async () => {
+    if (!cancelVaga || !cancelMotivo.trim()) {
+      toast.error("O motivo do cancelamento é obrigatório.");
+      return;
+    }
+    setCancelling(true);
+    try {
+      const { error } = await supabase.from("vagas").update({
+        status_processo: STATUS_PROCESSO.VAGA_CANCELADA,
+        responsavel_etapa: "—",
+        atualizado_por: profile?.nome || "Sistema",
+      } as any).eq("id", cancelVaga.id);
+      if (error) throw error;
+
+      await supabase.from("vagas_historico" as any).insert({
+        vaga_id: cancelVaga.id, acao: "Vaga cancelada", usuario_nome: profile?.nome || "Sistema", motivo: cancelMotivo.trim(),
+      } as any);
+
+      await logAction({
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "cancelamento",
+        descricao: `Cancelou vaga ${(cancelVaga as any).numero_vaga || ""}: ${cancelVaga.cargo} — ${cancelVaga.nome_candidato}`,
+        registro_id: cancelVaga.id, registro_ref: `${cancelVaga.cargo} - ${cancelVaga.nome_candidato}`,
+        motivo: cancelMotivo.trim(),
+      });
+
+      toast.success("Vaga cancelada com sucesso.");
+      setCancelVaga(null);
+      setCancelMotivo("");
+      window.location.reload();
+    } catch {
+      toast.error("Erro ao cancelar vaga.");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const handleStatusCandidatoChange = async (vaga: Vaga, newStatus: string) => {
     try {
       await supabase.from("vagas").update({
