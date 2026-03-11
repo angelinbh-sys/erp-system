@@ -157,6 +157,19 @@ const AberturaDeVaga = () => {
       return;
     }
 
+    // Validar benefícios com valor obrigatório
+    const beneficiosComValor = [
+      { checked: beneficios.va, valor: beneficios.vaValor, label: "VA" },
+      { checked: beneficios.auxilioMoradia, valor: beneficios.auxilioMoradiaValor, label: "Auxílio Moradia" },
+      { checked: beneficios.assiduidade, valor: beneficios.assiduidadeValor, label: "Assiduidade" },
+      { checked: beneficios.ajudaCusto, valor: beneficios.ajudaCustoValor, label: "Ajuda de Custo" },
+    ];
+    const beneficiosSemValor = beneficiosComValor.filter((b) => b.checked && !b.valor.trim());
+    if (beneficiosSemValor.length > 0) {
+      toast.error(`Preencha o valor de: ${beneficiosSemValor.map((b) => b.label).join(", ")}`);
+      return;
+    }
+
     const ccObj = centrosCusto.find((c) => c.id === data.centroCusto);
 
     try {
