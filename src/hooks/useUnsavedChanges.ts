@@ -12,27 +12,81 @@ export function useUnsavedChanges(isDirty: boolean) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const currentPath = `${location.pathname}${location.search}${location.hash}`;
+
+  const openUnsavedDialog = useCallback((path: string) => {
+    setPendingPath(path);
+    setShowDialog(true);
+  }, []);
+
   // Block browser navigation (refresh, close tab)
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-      }
+      if (!isDirty) return;
+
+      e.preventDefault();
+      e.returnValue = "";
     };
+
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
+  // Intercept internal link clicks (sidebar, menu, links inside the app)
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handler = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      const anchor = target?.closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+
+      const href = anchor.getAttribute("href");
+      if (
+        !href ||
+        href.startsWith("#") ||
+        href.startsWith("mailto:") ||
+        href.startsWith("tel:") ||
+        anchor.target === "_blank" ||
+        anchor.hasAttribute("download")
+      ) {
+        return;
+      }
+
+      const nextUrl = new URL(anchor.href, window.location.origin);
+      if (nextUrl.origin !== window.location.origin) return;
+
+      const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+      if (nextPath === currentPath) return;
+
+      event.preventDefault();
+      openUnsavedDialog(nextPath);
+    };
+
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, [currentPath, isDirty, openUnsavedDialog]);
+
   const tryNavigate = useCallback(
     (path: string) => {
-      if (isDirty && path !== location.pathname) {
-        setPendingPath(path);
-        setShowDialog(true);
+      if (isDirty && path !== currentPath) {
+        openUnsavedDialog(path);
       } else {
         navigate(path);
       }
     },
-    [isDirty, location.pathname, navigate]
+    [currentPath, isDirty, navigate, openUnsavedDialog]
   );
 
   const confirmLeave = useCallback(() => {
@@ -50,3 +104,4 @@ export function useUnsavedChanges(isDirty: boolean) {
 
   return { showDialog, confirmLeave, cancelLeave, tryNavigate };
 }
+
