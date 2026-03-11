@@ -138,7 +138,13 @@ const AlteracaoFuncao = () => {
   };
 
   const handleDelete = (id: string) => {
+    const item = registros.find(r => r.id === id);
     save(registros.filter((r) => r.id !== id));
+    logAction({
+      modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "exclusao",
+      descricao: `Excluiu alteração de função: ${item?.nomeColaborador || "—"}`,
+      registro_id: id, registro_ref: item?.nomeColaborador,
+    });
     toast.success("Registro excluído.");
   };
 

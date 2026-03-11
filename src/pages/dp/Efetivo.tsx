@@ -116,6 +116,15 @@ const Efetivo = () => {
         updates,
         historico: changes,
       });
+      await logAction({
+        modulo: "Dep. Pessoal",
+        pagina: "Efetivo",
+        acao: "edicao",
+        descricao: `Editou colaborador ${editColaborador.nome}: ${changes.map(c => c.campo_alterado).join(", ")}`,
+        registro_id: editColaborador.id,
+        registro_ref: editColaborador.nome,
+        motivo: motivo.trim(),
+      });
       toast.success("Dados atualizados com sucesso.");
       setEditColaborador(null);
     } catch {

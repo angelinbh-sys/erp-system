@@ -244,6 +244,16 @@ const AgendamentoASO = () => {
         vaga_id: devolverVaga.id,
       });
 
+      await logAction({
+        modulo: "SESMT",
+        pagina: "Agendamento de ASO",
+        acao: "devolucao",
+        descricao: `Devolveu vaga para RH: ${devolverVaga.cargo} — ${devolverVaga.nome_candidato}`,
+        registro_id: devolverVaga.id,
+        registro_ref: `${devolverVaga.cargo} - ${devolverVaga.nome_candidato}`,
+        motivo: motivoDevolucao.trim(),
+      });
+
       toast.success("Vaga devolvida para o RH com sucesso.");
       queryClient.invalidateQueries({ queryKey: ["vagas"] });
       setDevolverVaga(null);

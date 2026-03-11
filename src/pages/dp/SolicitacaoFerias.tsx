@@ -123,7 +123,13 @@ const SolicitacaoFerias = () => {
   };
 
   const handleDelete = (id: string) => {
+    const item = registros.find(r => r.id === id);
     save(registros.filter((r) => r.id !== id));
+    logAction({
+      modulo: "Dep. Pessoal", pagina: "Solicitação de Férias", acao: "exclusao",
+      descricao: `Excluiu solicitação de férias: ${item?.nomeColaborador || "—"}`,
+      registro_id: id, registro_ref: item?.nomeColaborador,
+    });
     toast.success("Solicitação excluída.");
   };
 

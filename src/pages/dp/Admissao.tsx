@@ -175,7 +175,7 @@ const Admissao = () => {
       )}
 
       {/* Dialog de Detalhes */}
-      <AdmissaoDetailDialog detailVaga={detailVaga} setDetailVaga={setDetailVaga} queryClient={queryClient} />
+      <AdmissaoDetailDialog detailVaga={detailVaga} setDetailVaga={setDetailVaga} queryClient={queryClient} logAction={logAction} />
     </div>
   );
 };
