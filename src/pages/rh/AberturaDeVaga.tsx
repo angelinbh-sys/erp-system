@@ -187,7 +187,7 @@ const AberturaDeVaga = () => {
       // Audit log
       await logAction({
         modulo: "Recursos Humanos",
-        pagina: "Abertura de Vaga",
+        pagina: "Solicitação de Vaga",
         acao: "criacao",
         descricao: `Criou vaga ${numeroVaga}: ${data.cargo} — Candidato: ${data.nomeCandidato}`,
         registro_id: vaga.id,
