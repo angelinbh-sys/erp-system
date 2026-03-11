@@ -27,6 +27,7 @@ export const RESPONSAVEL_MAP: Record<string, string> = {
   [STATUS_PROCESSO.ADMISSAO_EM_ANDAMENTO]: "Dep. Pessoal",
   [STATUS_PROCESSO.ADMITIDO]: "Dep. Pessoal",
   [STATUS_PROCESSO.EFETIVADO]: "—",
+  [STATUS_PROCESSO.VAGA_CANCELADA]: "—",
 };
 
 export function getResponsavelEtapa(statusProcesso: string): string {
