@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Stethoscope, Upload, X, Send, FileText, Undo2, ChevronDown, ChevronUp } from "lucide-react";
+import { Stethoscope, Upload, X, Send, FileText, Undo2, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -218,6 +218,29 @@ const AgendamentoASO = () => {
                           <div className="flex items-center gap-2 mt-1 p-2 bg-background rounded-md border border-border">
                             <FileText className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{vaga.resultado_aso_nome}</span>
                             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 ml-auto">Anexado</Badge>
+                            {canEdit && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Excluir arquivo anexado"
+                                className="text-destructive hover:text-destructive h-7 w-7"
+                                onClick={async () => {
+                                  try {
+                                    if (vaga.resultado_aso_path) {
+                                      await supabase.storage.from("aso-documentos").remove([vaga.resultado_aso_path]);
+                                    }
+                                    await supabase.from("vagas").update({ resultado_aso_nome: null, resultado_aso_path: null } as any).eq("id", vaga.id);
+                                    await logAction({ modulo: "SESMT", pagina: "Agendamento de ASO", acao: "exclusao", descricao: `Excluiu arquivo do ASO: ${vaga.nome_candidato} (${vaga.cargo}) — ${vaga.resultado_aso_nome}`, registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}` });
+                                    toast.success("Arquivo excluído com sucesso.");
+                                    queryClient.invalidateQueries({ queryKey: ["vagas"] });
+                                  } catch {
+                                    toast.error("Erro ao excluir arquivo.");
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         )}
                         {canEdit && (

@@ -157,6 +157,19 @@ const AberturaDeVaga = () => {
       return;
     }
 
+    // Validar benefícios com valor obrigatório
+    const beneficiosComValor = [
+      { checked: beneficios.va, valor: beneficios.vaValor, label: "VA" },
+      { checked: beneficios.auxilioMoradia, valor: beneficios.auxilioMoradiaValor, label: "Auxílio Moradia" },
+      { checked: beneficios.assiduidade, valor: beneficios.assiduidadeValor, label: "Assiduidade" },
+      { checked: beneficios.ajudaCusto, valor: beneficios.ajudaCustoValor, label: "Ajuda de Custo" },
+    ];
+    const beneficiosSemValor = beneficiosComValor.filter((b) => b.checked && !b.valor.trim());
+    if (beneficiosSemValor.length > 0) {
+      toast.error(`Preencha o valor de: ${beneficiosSemValor.map((b) => b.label).join(", ")}`);
+      return;
+    }
+
     const ccObj = centrosCusto.find((c) => c.id === data.centroCusto);
 
     try {
@@ -445,12 +458,17 @@ const AberturaDeVaga = () => {
                     <Label htmlFor="ben-va">VA (Vale Alimentação)</Label>
                   </div>
                   {beneficios.va && (
-                    <Input
-                      placeholder="R$ 0,00"
-                      value={beneficios.vaValor}
-                      onChange={(e) => setBeneficios((p) => ({ ...p, vaValor: formatCurrencyBRL(e.target.value) }))}
-                      className="max-w-xs ml-6"
-                    />
+                    <div className="ml-6">
+                      <Input
+                        placeholder="R$ 0,00"
+                        value={beneficios.vaValor}
+                        onChange={(e) => setBeneficios((p) => ({ ...p, vaValor: formatCurrencyBRL(e.target.value) }))}
+                        className="max-w-xs"
+                      />
+                      {beneficios.va && !beneficios.vaValor.trim() && (
+                        <p className="text-sm text-destructive mt-1">Valor obrigatório</p>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -465,12 +483,17 @@ const AberturaDeVaga = () => {
                     <Label htmlFor="ben-moradia">Auxílio Moradia</Label>
                   </div>
                   {beneficios.auxilioMoradia && (
-                    <Input
-                      placeholder="R$ 0,00"
-                      value={beneficios.auxilioMoradiaValor}
-                      onChange={(e) => setBeneficios((p) => ({ ...p, auxilioMoradiaValor: formatCurrencyBRL(e.target.value) }))}
-                      className="max-w-xs ml-6"
-                    />
+                    <div className="ml-6">
+                      <Input
+                        placeholder="R$ 0,00"
+                        value={beneficios.auxilioMoradiaValor}
+                        onChange={(e) => setBeneficios((p) => ({ ...p, auxilioMoradiaValor: formatCurrencyBRL(e.target.value) }))}
+                        className="max-w-xs"
+                      />
+                      {beneficios.auxilioMoradia && !beneficios.auxilioMoradiaValor.trim() && (
+                        <p className="text-sm text-destructive mt-1">Valor obrigatório</p>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -485,12 +508,17 @@ const AberturaDeVaga = () => {
                     <Label htmlFor="ben-assiduidade">Assiduidade</Label>
                   </div>
                   {beneficios.assiduidade && (
-                    <Input
-                      placeholder="R$ 0,00"
-                      value={beneficios.assiduidadeValor}
-                      onChange={(e) => setBeneficios((p) => ({ ...p, assiduidadeValor: formatCurrencyBRL(e.target.value) }))}
-                      className="max-w-xs ml-6"
-                    />
+                    <div className="ml-6">
+                      <Input
+                        placeholder="R$ 0,00"
+                        value={beneficios.assiduidadeValor}
+                        onChange={(e) => setBeneficios((p) => ({ ...p, assiduidadeValor: formatCurrencyBRL(e.target.value) }))}
+                        className="max-w-xs"
+                      />
+                      {beneficios.assiduidade && !beneficios.assiduidadeValor.trim() && (
+                        <p className="text-sm text-destructive mt-1">Valor obrigatório</p>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -505,12 +533,17 @@ const AberturaDeVaga = () => {
                     <Label htmlFor="ben-ajuda-custo">Ajuda de Custo</Label>
                   </div>
                   {beneficios.ajudaCusto && (
-                    <Input
-                      placeholder="R$ 0,00"
-                      value={beneficios.ajudaCustoValor}
-                      onChange={(e) => setBeneficios((p) => ({ ...p, ajudaCustoValor: formatCurrencyBRL(e.target.value) }))}
-                      className="max-w-xs ml-6"
-                    />
+                    <div className="ml-6">
+                      <Input
+                        placeholder="R$ 0,00"
+                        value={beneficios.ajudaCustoValor}
+                        onChange={(e) => setBeneficios((p) => ({ ...p, ajudaCustoValor: formatCurrencyBRL(e.target.value) }))}
+                        className="max-w-xs"
+                      />
+                      {beneficios.ajudaCusto && !beneficios.ajudaCustoValor.trim() && (
+                        <p className="text-sm text-destructive mt-1">Valor obrigatório</p>
+                      )}
+                    </div>
                   )}
                 </div>
 
