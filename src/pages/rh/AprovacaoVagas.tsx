@@ -157,6 +157,7 @@ const AprovacaoVagas = () => {
         titulo: "Vaga aprovada",
         mensagem: `A vaga ${vaga.cargo} para ${vaga.nome_candidato} foi aprovada. Encaminhar para agendamento de ASO.`,
         tipo: "success", link: "/sesmt/agendamento-aso", vaga_id: vaga.id,
+        destinatario_grupo: "SESMT",
       });
 
       toast.success("Vaga aprovada com sucesso!");
