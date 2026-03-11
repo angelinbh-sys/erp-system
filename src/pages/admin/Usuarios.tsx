@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Plus, Pencil, UserX, UserCheck, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
