@@ -199,7 +199,7 @@ const AberturaDeVaga = () => {
         titulo: "Nova vaga aguardando aprovação",
         mensagem: `${numeroVaga} | Vaga: ${data.cargo} | Candidato: ${data.nomeCandidato} | CC: ${ccObj?.nome ?? ""} | Site: ${data.tipoContrato}`,
         tipo: "warning",
-        link: "/rh/aprovacao-vagas",
+        link: "/rh/aprovacao-vaga",
         vaga_id: vaga.id,
       });
 
