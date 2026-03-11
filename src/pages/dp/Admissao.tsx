@@ -101,6 +101,7 @@ const Admissao = () => {
   const { data: allVagas = [], isLoading } = useVagas("Aprovada");
   const queryClient = useQueryClient();
   const [detailVaga, setDetailVaga] = useState<any>(null);
+  const { logAction } = useAuditLog();
 
   // DP sees all approved vagas
   const vagas = allVagas;
