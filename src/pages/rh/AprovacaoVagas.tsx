@@ -201,7 +201,7 @@ const AprovacaoVagas = () => {
       } as any);
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "aprovacao",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "aprovacao",
         descricao: `Aprovou vaga: ${vaga.cargo} — ${vaga.nome_candidato}`,
         registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
