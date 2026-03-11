@@ -222,6 +222,15 @@ const AprovacaoVagas = () => {
         status: "Reprovada",
         observacao: observacao.trim() || undefined,
       });
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "reprovacao",
+        descricao: `Reprovou vaga: ${selectedVaga.cargo} — ${selectedVaga.nome_candidato}`,
+        registro_id: selectedVaga.id,
+        registro_ref: `${selectedVaga.cargo} - ${selectedVaga.nome_candidato}`,
+        motivo: observacao.trim() || undefined,
+      });
       toast.success("Vaga reprovada.");
       setShowReprovar(false);
       setSelectedVaga(null);
