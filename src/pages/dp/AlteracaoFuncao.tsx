@@ -104,6 +104,8 @@ const AlteracaoFuncao = () => {
         id: crypto.randomUUID(),
         ...form,
         anexo: anexo?.name,
+        criadoPor: profile?.nome || "Sistema",
+        criadoEm: new Date().toISOString(),
       };
       save([...registros, novo]);
       toast.success("Alteração de função registrada.");
