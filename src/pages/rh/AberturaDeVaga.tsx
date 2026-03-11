@@ -176,6 +176,8 @@ const AberturaDeVaga = () => {
         curriculo_nome: file.name,
         documento_nome: docFile.name,
         status: "Aguardando Aprovação",
+        status_processo: "Aguardando Diretoria",
+        responsavel_etapa: "Diretoria",
         criado_por: currentUserId,
       };
 
