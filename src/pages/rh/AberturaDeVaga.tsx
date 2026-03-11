@@ -244,7 +244,7 @@ const AberturaDeVaga = () => {
   return (
     <div className="max-w-3xl mx-auto">
       <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
-        Abertura de Vaga
+        Solicitação de Vaga
       </h2>
 
       <Form {...form}>

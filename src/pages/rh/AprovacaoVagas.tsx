@@ -439,7 +439,7 @@ const AprovacaoVagas = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
-        Aprovação de Vagas
+        Aprovação de Vaga
       </h2>
 
       {!isDiretoria && (
