@@ -43,6 +43,7 @@ interface SolicitacaoFeriasRegistro {
 const SolicitacaoFerias = () => {
   const { items: centrosCusto } = useCentrosCusto();
   const { profile } = useAuthContext();
+  const { logAction } = useAuditLog();
 
   const [registros, setRegistros] = useState<SolicitacaoFeriasRegistro[]>(() => {
     try {
