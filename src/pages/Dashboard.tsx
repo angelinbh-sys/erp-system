@@ -335,7 +335,7 @@ const Dashboard = () => {
                     <TableRow
                       key={v.id}
                       className="cursor-pointer"
-                      onClick={() => navigate("/rh/aprovacao-vagas")}
+                      onClick={() => navigate("/rh/aprovacao-vaga")}
                     >
                       <TableCell className="font-mono text-xs text-primary">{(v as any).numero_vaga || "—"}</TableCell>
                       <TableCell className="font-medium">{v.cargo}</TableCell>
