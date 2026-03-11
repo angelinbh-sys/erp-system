@@ -89,6 +89,7 @@ function DetailDialogContent({ vaga, getStatusBadge, getCandidatoStatusBadge, be
         <div><strong>Telefone:</strong> {vaga.telefone}</div>
       </div>
       <div><strong>Benefícios:</strong> {beneficiosToString(vaga.beneficios)}</div>
+      <CriadoPorInfo criadoPorId={(vaga as any).criado_por} criadoEm={vaga.created_at} className="mt-2" />
       <div><strong>Status da Vaga:</strong> {getStatusBadge(vaga.status)}</div>
       <div><strong>Status do Candidato:</strong> {getCandidatoStatusBadge(vaga.status_candidato || "Em análise")}</div>
       {vaga.observacao_reprovacao && (

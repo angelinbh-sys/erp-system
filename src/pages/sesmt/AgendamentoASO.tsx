@@ -269,6 +269,7 @@ const AgendamentoASO = () => {
                     <div>
                       <h3 className="font-semibold text-lg text-foreground">{vaga.nome_candidato}</h3>
                       <p className="text-sm text-muted-foreground">{vaga.cargo} — {vaga.centro_custo_nome} — {vaga.site_contrato}</p>
+                      <CriadoPorInfo criadoPorId={(vaga as any).criado_por} criadoEm={vaga.created_at} className="mt-1" />
                     </div>
                     <Badge variant="outline" className={status.className}>
                       {status.label}

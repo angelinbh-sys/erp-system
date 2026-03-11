@@ -38,6 +38,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient }: { deta
               <div><strong>Data de Nascimento:</strong> {detailVaga.data_nascimento}</div>
               <div><strong>Telefone:</strong> {detailVaga.telefone}</div>
             </div>
+            <CriadoPorInfo criadoPorId={(detailVaga as any).criado_por} criadoEm={detailVaga.created_at} className="mt-2" />
 
             {/* Timeline */}
             <div className="pt-3 border-t border-border">
