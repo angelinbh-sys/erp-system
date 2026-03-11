@@ -508,12 +508,17 @@ const AberturaDeVaga = () => {
                     <Label htmlFor="ben-assiduidade">Assiduidade</Label>
                   </div>
                   {beneficios.assiduidade && (
-                    <Input
-                      placeholder="R$ 0,00"
-                      value={beneficios.assiduidadeValor}
-                      onChange={(e) => setBeneficios((p) => ({ ...p, assiduidadeValor: formatCurrencyBRL(e.target.value) }))}
-                      className="max-w-xs ml-6"
-                    />
+                    <div className="ml-6">
+                      <Input
+                        placeholder="R$ 0,00"
+                        value={beneficios.assiduidadeValor}
+                        onChange={(e) => setBeneficios((p) => ({ ...p, assiduidadeValor: formatCurrencyBRL(e.target.value) }))}
+                        className="max-w-xs"
+                      />
+                      {beneficios.assiduidade && !beneficios.assiduidadeValor.trim() && (
+                        <p className="text-sm text-destructive mt-1">Valor obrigatório</p>
+                      )}
+                    </div>
                   )}
                 </div>
 
