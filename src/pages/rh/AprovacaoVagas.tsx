@@ -136,6 +136,16 @@ const AprovacaoVagas = () => {
     return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.DEVOLVIDO_RH || sp === STATUS_PROCESSO.REPROVADO_DIRETORIA);
   };
 
+  const canDeleteVaga = (vaga: Vaga) => {
+    const sp = (vaga as any).status_processo;
+    return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.RASCUNHO || sp === STATUS_PROCESSO.AGUARDANDO_DIRETORIA);
+  };
+
+  const canCancelVaga = (vaga: Vaga) => {
+    const sp = (vaga as any).status_processo;
+    return (isSuperAdmin || isCreator(vaga)) && sp !== STATUS_PROCESSO.VAGA_CANCELADA && sp !== STATUS_PROCESSO.EFETIVADO;
+  };
+
   const handleReenviar = async (vaga: Vaga) => {
     try {
       const { error } = await supabase
