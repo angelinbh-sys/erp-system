@@ -278,7 +278,7 @@ const Dashboard = () => {
         // RH: vagas devolvidas
         if (profile?.super_admin || grupo === "rh" || grupo === "recursos humanos") {
           const devolvidas = activeVagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.DEVOLVIDO_RH || (v as any).status_processo === STATUS_PROCESSO.REPROVADO_DIRETORIA).length;
-          if (devolvidas > 0) pendencias.push({ label: "Vagas devolvidas/reprovadas para correção", count: devolvidas, link: "/rh/aprovacao-vagas" });
+          if (devolvidas > 0) pendencias.push({ label: "Vagas devolvidas/reprovadas para correção", count: devolvidas, link: "/rh/aprovacao-vaga" });
         }
 
         if (pendencias.length === 0) return null;
