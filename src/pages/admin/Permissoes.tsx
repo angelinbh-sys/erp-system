@@ -158,9 +158,12 @@ const AdminPermissoes = () => {
     }
     if (editId) {
       save(grupos.map((g) => (g.id === editId ? { ...g, nome: nome.trim(), permissoes } : g)));
+      logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "edicao", descricao: `Editou grupo de permissão: ${nome.trim()}`, registro_id: editId, registro_ref: nome.trim() });
       toast.success("Grupo atualizado.");
     } else {
-      save([...grupos, { id: crypto.randomUUID(), nome: nome.trim(), permissoes }]);
+      const newId = crypto.randomUUID();
+      save([...grupos, { id: newId, nome: nome.trim(), permissoes }]);
+      logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "criacao", descricao: `Criou grupo de permissão: ${nome.trim()}`, registro_id: newId, registro_ref: nome.trim() });
       toast.success("Grupo de permissão criado.");
     }
     resetForm();
