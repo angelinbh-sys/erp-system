@@ -463,7 +463,7 @@ const AprovacaoVagas = () => {
           {renderVagaTable(activeVagas, activeVagas.length > 0 ? "" : "", true)}
           {renderVagaTable(devolvidasVagas, "Vagas Devolvidas", true)}
           {renderVagaTable(reprovadasVagas, "Vagas Reprovadas", true)}
-          {renderVagaTable(canceladasVagas, "Vagas Canceladas", false)}
+          {renderVagaTable(canceladasVagas, "Vagas Canceladas", true)}
         </>
       )}
 
