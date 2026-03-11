@@ -249,7 +249,7 @@ const AberturaDeVaga = () => {
       Object.values(beneficios).some((v) => v !== false && v !== "");
   }, [form.formState.isDirty, file, docFile, beneficios]);
 
-  const blocker = useUnsavedChanges(isDirty);
+  const unsaved = useUnsavedChanges(isDirty);
 
   return (
     <div className="max-w-3xl mx-auto">
