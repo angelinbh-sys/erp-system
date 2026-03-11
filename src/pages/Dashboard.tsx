@@ -263,7 +263,7 @@ const Dashboard = () => {
         // Diretoria: vagas aguardando aprovação
         if (isDiretoria) {
           const aguardando = activeVagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA).length;
-          if (aguardando > 0) pendencias.push({ label: "Vagas aguardando aprovação", count: aguardando, link: "/rh/aprovacao-vagas" });
+          if (aguardando > 0) pendencias.push({ label: "Vagas aguardando aprovação", count: aguardando, link: "/rh/aprovacao-vaga" });
         }
         // SESMT: vagas em andamento no SESMT
         if (profile?.super_admin || grupo === "sesmt") {
