@@ -17,6 +17,7 @@ import Admissao from "@/pages/dp/Admissao";
 import Efetivo from "@/pages/dp/Efetivo";
 import AdminUsuarios from "@/pages/admin/Usuarios";
 import AdminPermissoes from "@/pages/admin/Permissoes";
+import AuditLog from "@/pages/admin/AuditLog";
 import AgendamentoASO from "@/pages/sesmt/AgendamentoASO";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import NotFound from "./pages/NotFound";
