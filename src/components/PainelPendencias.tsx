@@ -195,17 +195,21 @@ export default function PainelPendencias({ profile, vagas }: Props) {
             return (
               <Card
                 key={card.id}
-                className={`cursor-pointer border-2 transition-all ${colors.bg} ${colors.border} ${colors.hoverBorder} hover:shadow-md`}
-                onClick={() => setSelectedCard(card)}
+                className={`${card.count > 0 ? "cursor-pointer" : ""} border-2 transition-all ${colors.bg} ${colors.border} ${colors.hoverBorder} hover:shadow-md`}
+                onClick={() => card.count > 0 && setSelectedCard(card)}
               >
                 <CardContent className="p-5 flex flex-col items-center text-center gap-3">
                   <div className={`flex h-12 w-12 items-center justify-center rounded-full ${colors.bg}`}>
                     <Icon className={`h-6 w-6 ${colors.icon}`} />
                   </div>
                   <p className="text-sm font-medium text-foreground">{card.title}</p>
-                  <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold ${colors.badge}`}>
-                    {card.count}
-                  </span>
+                  {card.count > 0 ? (
+                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold ${colors.badge}`}>
+                      {card.count}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground font-medium">Sem pendências</span>
+                  )}
                 </CardContent>
               </Card>
             );
