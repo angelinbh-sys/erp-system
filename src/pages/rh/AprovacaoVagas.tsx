@@ -265,7 +265,7 @@ const AprovacaoVagas = () => {
       if (error) throw error;
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "exclusao",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "exclusao",
         descricao: `Excluiu vaga: ${deleteVaga.cargo} — ${deleteVaga.nome_candidato}`,
         registro_id: deleteVaga.id, registro_ref: `${deleteVaga.cargo} - ${deleteVaga.nome_candidato}`,
         motivo: deleteMotivo.trim(),
