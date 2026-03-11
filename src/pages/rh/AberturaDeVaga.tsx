@@ -181,6 +181,16 @@ const AberturaDeVaga = () => {
 
       const vaga = await createVaga.mutateAsync(vagaData as VagaInsert);
 
+      // Audit log
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Abertura de Vaga",
+        acao: "criacao",
+        descricao: `Criou vaga: ${data.cargo} — Candidato: ${data.nomeCandidato}`,
+        registro_id: vaga.id,
+        registro_ref: `${data.cargo} - ${data.nomeCandidato}`,
+      });
+
       // Create notification for Diretoria
       await createNotificacao.mutateAsync({
         titulo: "Nova vaga aguardando aprovação",

@@ -298,6 +298,14 @@ const AprovacaoVagas = () => {
         } as Record<string, unknown>)
         .eq("id", vaga.id);
       toast.success(`Status do candidato alterado para "${newStatus}".`);
+      await logAction({
+        modulo: "Recursos Humanos",
+        pagina: "Aprovação de Vagas",
+        acao: "alteracao_status",
+        descricao: `Alterou status do candidato para "${newStatus}": ${vaga.cargo} — ${vaga.nome_candidato}`,
+        registro_id: vaga.id,
+        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+      });
       updateStatus.reset();
       window.location.reload();
     } catch {
