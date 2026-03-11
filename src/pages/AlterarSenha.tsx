@@ -17,6 +17,7 @@ const AlterarSenha = () => {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { logAction } = useAuditLog();
 
   if (loading) {
     return (
