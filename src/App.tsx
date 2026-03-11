@@ -37,8 +37,8 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/rh/gestao-rh" element={<GestaoRH />} />
-              <Route path="/rh/abertura-de-vaga" element={<AberturaDeVaga />} />
-              <Route path="/rh/aprovacao-vagas" element={<AprovacaoVagas />} />
+              <Route path="/rh/solicitacao-de-vaga" element={<AberturaDeVaga />} />
+              <Route path="/rh/aprovacao-vaga" element={<AprovacaoVagas />} />
               <Route path="/departamento-pessoal/alteracao-funcao" element={<AlteracaoFuncao />} />
               <Route path="/departamento-pessoal/solicitacao-ferias" element={<SolicitacaoFerias />} />
               <Route path="/departamento-pessoal/admissao" element={<Admissao />} />

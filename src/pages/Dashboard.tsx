@@ -263,7 +263,7 @@ const Dashboard = () => {
         // Diretoria: vagas aguardando aprovação
         if (isDiretoria) {
           const aguardando = activeVagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.AGUARDANDO_DIRETORIA).length;
-          if (aguardando > 0) pendencias.push({ label: "Vagas aguardando aprovação", count: aguardando, link: "/rh/aprovacao-vagas" });
+          if (aguardando > 0) pendencias.push({ label: "Vagas aguardando aprovação", count: aguardando, link: "/rh/aprovacao-vaga" });
         }
         // SESMT: vagas em andamento no SESMT
         if (profile?.super_admin || grupo === "sesmt") {
@@ -278,7 +278,7 @@ const Dashboard = () => {
         // RH: vagas devolvidas
         if (profile?.super_admin || grupo === "rh" || grupo === "recursos humanos") {
           const devolvidas = activeVagas.filter((v) => (v as any).status_processo === STATUS_PROCESSO.DEVOLVIDO_RH || (v as any).status_processo === STATUS_PROCESSO.REPROVADO_DIRETORIA).length;
-          if (devolvidas > 0) pendencias.push({ label: "Vagas devolvidas/reprovadas para correção", count: devolvidas, link: "/rh/aprovacao-vagas" });
+          if (devolvidas > 0) pendencias.push({ label: "Vagas devolvidas/reprovadas para correção", count: devolvidas, link: "/rh/aprovacao-vaga" });
         }
 
         if (pendencias.length === 0) return null;
@@ -335,7 +335,7 @@ const Dashboard = () => {
                     <TableRow
                       key={v.id}
                       className="cursor-pointer"
-                      onClick={() => navigate("/rh/aprovacao-vagas")}
+                      onClick={() => navigate("/rh/aprovacao-vaga")}
                     >
                       <TableCell className="font-mono text-xs text-primary">{(v as any).numero_vaga || "—"}</TableCell>
                       <TableCell className="font-medium">{v.cargo}</TableCell>

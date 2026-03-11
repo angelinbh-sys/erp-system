@@ -19,7 +19,7 @@ import {
 const MODULOS_PAGINAS = [
   {
     modulo: "Recursos Humanos",
-    paginas: ["Gestão RH", "Abertura de Vaga", "Aprovação de Vagas"],
+    paginas: ["Gestão RH", "Solicitação de Vaga", "Aprovação de Vaga"],
   },
   {
     modulo: "Dep. Pessoal",

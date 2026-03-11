@@ -187,7 +187,7 @@ const AberturaDeVaga = () => {
       // Audit log
       await logAction({
         modulo: "Recursos Humanos",
-        pagina: "Abertura de Vaga",
+        pagina: "Solicitação de Vaga",
         acao: "criacao",
         descricao: `Criou vaga ${numeroVaga}: ${data.cargo} — Candidato: ${data.nomeCandidato}`,
         registro_id: vaga.id,
@@ -199,7 +199,7 @@ const AberturaDeVaga = () => {
         titulo: "Nova vaga aguardando aprovação",
         mensagem: `${numeroVaga} | Vaga: ${data.cargo} | Candidato: ${data.nomeCandidato} | CC: ${ccObj?.nome ?? ""} | Site: ${data.tipoContrato}`,
         tipo: "warning",
-        link: "/rh/aprovacao-vagas",
+        link: "/rh/aprovacao-vaga",
         vaga_id: vaga.id,
       });
 
@@ -244,7 +244,7 @@ const AberturaDeVaga = () => {
   return (
     <div className="max-w-3xl mx-auto">
       <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
-        Abertura de Vaga
+        Solicitação de Vaga
       </h2>
 
       <Form {...form}>

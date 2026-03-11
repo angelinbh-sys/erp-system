@@ -169,12 +169,12 @@ const AprovacaoVagas = () => {
         titulo: "Vaga reenviada para aprovação",
         mensagem: `A vaga ${vaga.cargo} (${vaga.nome_candidato}) foi corrigida e reenviada para aprovação.`,
         tipo: "warning",
-        link: "/rh/aprovacao-vagas",
+        link: "/rh/aprovacao-vaga",
         vaga_id: vaga.id,
       });
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "reenvio",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "reenvio",
         descricao: `Reenviou vaga para aprovação: ${vaga.cargo} — ${vaga.nome_candidato}`,
         registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
@@ -201,7 +201,7 @@ const AprovacaoVagas = () => {
       } as any);
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "aprovacao",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "aprovacao",
         descricao: `Aprovou vaga: ${vaga.cargo} — ${vaga.nome_candidato}`,
         registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
@@ -236,7 +236,7 @@ const AprovacaoVagas = () => {
       } as any);
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "reprovacao",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "reprovacao",
         descricao: `Reprovou vaga: ${selectedVaga.cargo} — ${selectedVaga.nome_candidato}`,
         registro_id: selectedVaga.id, registro_ref: `${selectedVaga.cargo} - ${selectedVaga.nome_candidato}`,
         motivo: observacao.trim() || undefined,
@@ -265,7 +265,7 @@ const AprovacaoVagas = () => {
       if (error) throw error;
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "exclusao",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "exclusao",
         descricao: `Excluiu vaga: ${deleteVaga.cargo} — ${deleteVaga.nome_candidato}`,
         registro_id: deleteVaga.id, registro_ref: `${deleteVaga.cargo} - ${deleteVaga.nome_candidato}`,
         motivo: deleteMotivo.trim(),
@@ -301,7 +301,7 @@ const AprovacaoVagas = () => {
       } as any);
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "cancelamento",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "cancelamento",
         descricao: `Cancelou vaga ${(cancelVaga as any).numero_vaga || ""}: ${cancelVaga.cargo} — ${cancelVaga.nome_candidato}`,
         registro_id: cancelVaga.id, registro_ref: `${cancelVaga.cargo} - ${cancelVaga.nome_candidato}`,
         motivo: cancelMotivo.trim(),
@@ -325,7 +325,7 @@ const AprovacaoVagas = () => {
       } as any).eq("id", vaga.id);
 
       await logAction({
-        modulo: "Recursos Humanos", pagina: "Aprovação de Vagas", acao: "alteracao_status",
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "alteracao_status",
         descricao: `Alterou status do candidato para "${newStatus}": ${vaga.cargo} — ${vaga.nome_candidato}`,
         registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
@@ -439,7 +439,7 @@ const AprovacaoVagas = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
-        Aprovação de Vagas
+        Aprovação de Vaga
       </h2>
 
       {!isDiretoria && (
