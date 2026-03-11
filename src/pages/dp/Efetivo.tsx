@@ -44,6 +44,7 @@ const Efetivo = () => {
   const { profile } = useAuthContext();
   const { data: colaboradores = [], isLoading } = useColaboradores();
   const updateColaborador = useUpdateColaborador();
+  const { logAction } = useAuditLog();
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
   const [editForm, setEditForm] = useState({ nome: "", cargo: "", centro_custo: "", site_contrato: "", status: "" });
