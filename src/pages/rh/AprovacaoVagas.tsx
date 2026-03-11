@@ -227,6 +227,7 @@ const AprovacaoVagas = () => {
         status_processo: STATUS_PROCESSO.REPROVADO_DIRETORIA,
         responsavel_etapa: "RH",
         observacao_reprovacao: observacao.trim() || null,
+        atualizado_por: profile?.nome || "Sistema",
       } as any).eq("id", selectedVaga.id);
       if (error) throw error;
 
