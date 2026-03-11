@@ -47,6 +47,7 @@ const AgendamentoASO = () => {
   const { data: vagas = [], isLoading } = useVagas("Aprovada");
   const queryClient = useQueryClient();
   const { profile } = useAuthContext();
+  const { logAction } = useAuditLog();
 
   // Per-vaga local state
   const [localData, setLocalData] = useState<Record<string, { dataAgendamento: string; dataEntrega: string }>>({});
