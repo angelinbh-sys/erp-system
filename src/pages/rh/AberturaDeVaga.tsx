@@ -244,8 +244,16 @@ const AberturaDeVaga = () => {
     onChange(formatPhone(pasted));
   };
 
+  const isDirty = useMemo(() => {
+    return form.formState.isDirty || !!file || !!docFile ||
+      Object.values(beneficios).some((v) => v !== false && v !== "");
+  }, [form.formState.isDirty, file, docFile, beneficios]);
+
+  const blocker = useUnsavedChanges(isDirty);
+
   return (
     <div className="max-w-3xl mx-auto">
+      <UnsavedChangesDialog blocker={blocker} />
       <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
         Solicitação de Vaga
       </h2>
