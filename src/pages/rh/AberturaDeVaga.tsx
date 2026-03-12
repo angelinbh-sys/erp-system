@@ -49,6 +49,8 @@ import { useCentrosCusto, useCargos } from "@/hooks/useCadastros";
 import { cidadesBrasil, getCidadeLabel } from "@/data/cidadesBrasil";
 import { formatCurrencyBRL } from "@/utils/currency";
 import { formatPhone } from "@/utils/phone";
+import { formatCPF, isValidCPF } from "@/utils/cpf";
+import { formatFirstLastName } from "@/utils/formatName";
 
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
