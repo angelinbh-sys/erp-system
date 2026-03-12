@@ -166,7 +166,14 @@ const Dashboard = () => {
   );
 
   const aniversariantesDoMes = useMemo(
-    () => colaboradores.filter((c) => isBirthdayThisMonth(c.data_nascimento)),
+    () =>
+      colaboradores
+        .filter((c) => isBirthdayThisMonth(c.data_nascimento))
+        .sort((a, b) => {
+          const dayA = new Date(a.data_nascimento + "T00:00:00").getDate();
+          const dayB = new Date(b.data_nascimento + "T00:00:00").getDate();
+          return dayA - dayB;
+        }),
     [colaboradores]
   );
 
