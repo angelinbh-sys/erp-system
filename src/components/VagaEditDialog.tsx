@@ -101,6 +101,16 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
     setReenviarLoading(true);
     try {
       const { error } = await supabase.from("vagas").update({
+        nome_candidato: capitalizeName(editForm.nome_candidato),
+        cargo: editForm.cargo,
+        salario: editForm.salario,
+        telefone: editForm.telefone,
+        cpf: editForm.cpf,
+        sexo: editForm.sexo,
+        centro_custo_nome: editForm.centro_custo_nome,
+        site_contrato: editForm.site_contrato,
+        local_trabalho: editForm.local_trabalho,
+        data_nascimento: editForm.data_nascimento,
         status: "Aguardando Aprovação",
         status_processo: STATUS_PROCESSO.AGUARDANDO_DIRETORIA,
         responsavel_etapa: "Diretoria",
