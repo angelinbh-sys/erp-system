@@ -285,11 +285,8 @@ export default function PainelPendencias({ profile, vagas }: Props) {
               variant="outline"
               size="sm"
               onClick={() => {
-                const target = selectedCard?.id === "devolvidas" && selectedCard.vagas.length === 1
-                  ? `${selectedCard.link}?vaga=${selectedCard.vagas[0].id}&acao=editar`
-                  : selectedCard?.link;
                 setSelectedCard(null);
-                if (target) navigate(target);
+                if (selectedCard?.link) navigate(selectedCard.link);
               }}
             >
               Abrir página completa <ChevronRight className="h-4 w-4 ml-1" />
@@ -297,6 +294,16 @@ export default function PainelPendencias({ profile, vagas }: Props) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <VagaEditDialog
+        vaga={editingVaga}
+        onClose={() => setEditingVaga(null)}
+        onSaved={() => {
+          setEditingVaga(null);
+          setSelectedCard(null);
+          window.location.reload();
+        }}
+      />
     </>
   );
 }
