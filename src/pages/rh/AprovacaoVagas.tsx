@@ -223,7 +223,7 @@ const AprovacaoVagas = () => {
       await supabase.from("vagas_historico" as any).insert({
         vaga_id: devolverVaga.id,
         acao: "Devolvida pela Diretoria para correção",
-        usuario_nome: profile?.nome || "Sistema",
+        usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
         motivo: devolverMotivo.trim(),
       } as any);
 
