@@ -141,7 +141,7 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
 
   return (
     <Dialog open={!!vaga} onOpenChange={(o) => !o && onClose()}>
-<DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden p-6 pb-10">
+<DialogContent className="max-w-lg max-h-[80vh] flex flex-col overflow-hidden p-6 pb-6">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Editar Dados da Vaga</DialogTitle>
         </DialogHeader>
@@ -171,7 +171,7 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
             </div>
           )}
         </div>
-        <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 pt-4 pb-2 border-t mt-2">
+        <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 pt-4 border-t mt-2 mb-0">
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button variant="secondary" onClick={handleSave} disabled={saving}>
             {saving ? "Salvando..." : "Salvar Alterações"}
