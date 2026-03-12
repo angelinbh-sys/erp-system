@@ -15,7 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
+import { formatFirstLastName } from "@/utils/formatName";
 
 function getInitials(name: string) {
   const parts = name.trim().split(/\s+/);
