@@ -92,6 +92,7 @@ interface Props {
 export default function PainelPendencias({ profile, vagas }: Props) {
   const navigate = useNavigate();
   const [selectedCard, setSelectedCard] = useState<PendenciaCard | null>(null);
+  const [editingVaga, setEditingVaga] = useState<Vaga | null>(null);
 
   const grupo = (profile?.grupo_permissao || "").toLowerCase();
   const isSuper = !!profile?.super_admin;
