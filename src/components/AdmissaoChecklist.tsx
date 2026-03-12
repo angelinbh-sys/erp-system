@@ -295,7 +295,7 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
       </Card>
 
       {/* Bank Data Fields */}
-      <BankDataFields vaga={vaga} canEdit={canEdit} />
+      <BankDataFields vaga={vaga} canEdit={canEdit} onSaved={onBankDataSaved} />
 
       {/* Process Documents */}
       <Card>

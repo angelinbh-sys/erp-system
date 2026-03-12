@@ -101,7 +101,13 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
             {(detailVaga.enviado_admissao || isAdmitido) && (
               <div className="pt-3 border-t border-border">
                 <h4 className="text-sm font-semibold text-foreground mb-3">📋 Checklist de Documentos para Admissão</h4>
-                <AdmissaoChecklist vaga={detailVaga} canEdit={!!canEditChecklist} />
+                <AdmissaoChecklist
+                  vaga={detailVaga}
+                  canEdit={!!canEditChecklist}
+                  onBankDataSaved={(bankData) => {
+                    setDetailVaga((prev: any) => (prev ? { ...prev, ...bankData } : prev));
+                  }}
+                />
               </div>
             )}
 
