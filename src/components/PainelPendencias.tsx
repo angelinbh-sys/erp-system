@@ -6,11 +6,8 @@ import {
   UserPlus,
   RotateCcw,
   ChevronRight,
-  CheckCircle,
-  XCircle,
   Eye,
   Pencil,
-  ArrowRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +29,7 @@ import {
 import { STATUS_PROCESSO, STATUS_PROCESSO_CONFIG } from "@/utils/statusProcesso";
 import type { Vaga } from "@/hooks/useVagas";
 import type { Profile } from "@/hooks/useAuth";
+import VagaEditDialog from "@/components/VagaEditDialog";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 interface PendenciaCard {
@@ -94,6 +92,7 @@ interface Props {
 export default function PainelPendencias({ profile, vagas }: Props) {
   const navigate = useNavigate();
   const [selectedCard, setSelectedCard] = useState<PendenciaCard | null>(null);
+  const [editingVaga, setEditingVaga] = useState<Vaga | null>(null);
 
   const grupo = (profile?.grupo_permissao || "").toLowerCase();
   const isSuper = !!profile?.super_admin;
@@ -253,19 +252,28 @@ export default function PainelPendencias({ profile, vagas }: Props) {
                   <TableCell className="text-xs">{formatDate(v.created_at)}</TableCell>
                   <TableCell>{statusBadge(v.status_processo)}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const target = selectedCard?.id === "devolvidas"
-                          ? `${selectedCard.link}?vaga=${v.id}&acao=editar`
-                          : selectedCard!.link;
-                        setSelectedCard(null);
-                        navigate(target);
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-1" /> Ver
-                    </Button>
+                    {selectedCard?.id === "devolvidas" ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingVaga(v);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" /> Editar
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedCard(null);
+                          navigate(selectedCard!.link);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" /> Ver
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -277,11 +285,8 @@ export default function PainelPendencias({ profile, vagas }: Props) {
               variant="outline"
               size="sm"
               onClick={() => {
-                const target = selectedCard?.id === "devolvidas" && selectedCard.vagas.length === 1
-                  ? `${selectedCard.link}?vaga=${selectedCard.vagas[0].id}&acao=editar`
-                  : selectedCard?.link;
                 setSelectedCard(null);
-                if (target) navigate(target);
+                if (selectedCard?.link) navigate(selectedCard.link);
               }}
             >
               Abrir página completa <ChevronRight className="h-4 w-4 ml-1" />
@@ -289,6 +294,16 @@ export default function PainelPendencias({ profile, vagas }: Props) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <VagaEditDialog
+        vaga={editingVaga}
+        onClose={() => setEditingVaga(null)}
+        onSaved={() => {
+          setEditingVaga(null);
+          setSelectedCard(null);
+          window.location.reload();
+        }}
+      />
     </>
   );
 }
