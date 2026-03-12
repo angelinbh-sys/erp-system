@@ -125,6 +125,8 @@ const AberturaDeVaga = () => {
       localTrabalho: "",
       tipoContrato: "",
       nomeCandidato: "",
+      cpf: "",
+      sexo: "",
       dataNascimento: "",
       telefone: "",
     },
