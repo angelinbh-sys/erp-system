@@ -1,13 +1,17 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmissaoDocumentos, useInvalidateAdmissaoDocumentos, DOCUMENTOS_OBRIGATORIOS, type AdmissaoDocumento } from "@/hooks/useAdmissaoDocumentos";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle, Upload, Trash2, RefreshCw, FileText, User, Clock } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
+import { formatFirstLastName } from "@/utils/formatName";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AdmissaoChecklistProps {
   vaga: any;
@@ -18,22 +22,8 @@ const formatUploadError = (err: unknown) => {
   if (!err) return "erro desconhecido";
   if (typeof err === "string") return err;
   if (err instanceof Error) return err.message;
-
-  const supabaseError = err as {
-    message?: string;
-    details?: string;
-    error_description?: string;
-    error?: string;
-    statusCode?: string | number;
-  };
-
-  return (
-    supabaseError.message ||
-    supabaseError.details ||
-    supabaseError.error_description ||
-    supabaseError.error ||
-    (supabaseError.statusCode ? `código ${supabaseError.statusCode}` : "erro desconhecido")
-  );
+  const supabaseError = err as { message?: string; details?: string; error_description?: string; error?: string; statusCode?: string | number };
+  return supabaseError.message || supabaseError.details || supabaseError.error_description || supabaseError.error || (supabaseError.statusCode ? `código ${supabaseError.statusCode}` : "erro desconhecido");
 };
 
 const normalizeExtension = (fileName: string) => {
@@ -43,22 +33,131 @@ const normalizeExtension = (fileName: string) => {
 
 const getAllowedFormats = (formatos: readonly string[]) => {
   const normalized = new Set(formatos.map((format) => format.toLowerCase()));
-
   if (normalized.has(".jpeg") || normalized.has(".jpg")) {
     normalized.add(".jpeg");
     normalized.add(".jpg");
     normalized.add(".jfif");
   }
-
   return normalized;
 };
 
 const sanitizeFileName = (fileName: string) =>
-  fileName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "_")
-    .replace(/_+/g, "_");
+  fileName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+/g, "_");
+
+interface BankDataState {
+  agencia: string;
+  digito_agencia: string;
+  conta: string;
+  digito_conta: string;
+}
+
+function BankDataFields({ vaga, canEdit }: { vaga: any; canEdit: boolean }) {
+  const queryClient = useQueryClient();
+  const [bankData, setBankData] = useState<BankDataState>({
+    agencia: vaga?.agencia || "",
+    digito_agencia: vaga?.digito_agencia || "",
+    conta: vaga?.conta || "",
+    digito_conta: vaga?.digito_conta || "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setBankData({
+      agencia: vaga?.agencia || "",
+      digito_agencia: vaga?.digito_agencia || "",
+      conta: vaga?.conta || "",
+      digito_conta: vaga?.digito_conta || "",
+    });
+  }, [vaga?.agencia, vaga?.digito_agencia, vaga?.conta, vaga?.digito_conta]);
+
+  const onlyDigits = (value: string, max: number) => value.replace(/\D/g, "").slice(0, max);
+
+  const handleSave = async () => {
+    if (!bankData.agencia.trim()) { toast.error("Agência é obrigatório."); return; }
+    if (!bankData.conta.trim()) { toast.error("Conta é obrigatório."); return; }
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("vagas").update({
+        agencia: bankData.agencia,
+        digito_agencia: bankData.digito_agencia || null,
+        conta: bankData.conta,
+        digito_conta: bankData.digito_conta || null,
+      } as any).eq("id", vaga.id);
+      if (error) throw error;
+      toast.success("Dados bancários salvos com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["vagas"] });
+    } catch {
+      toast.error("Erro ao salvar dados bancários.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const hasSavedData = vaga?.agencia && vaga?.conta;
+
+  return (
+    <Card className="border-primary/20">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          🏦 Dados Bancários
+          {hasSavedData && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">Preenchido</Badge>}
+          {!hasSavedData && <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">Pendente</Badge>}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <Label className="text-xs">Agência *</Label>
+            <Input
+              placeholder="000000"
+              value={bankData.agencia}
+              onChange={(e) => setBankData(prev => ({ ...prev, agencia: onlyDigits(e.target.value, 6) }))}
+              disabled={!canEdit}
+              maxLength={6}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Dígito Agência</Label>
+            <Input
+              placeholder="0"
+              value={bankData.digito_agencia}
+              onChange={(e) => setBankData(prev => ({ ...prev, digito_agencia: onlyDigits(e.target.value, 2) }))}
+              disabled={!canEdit}
+              maxLength={2}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Conta *</Label>
+            <Input
+              placeholder="00000000"
+              value={bankData.conta}
+              onChange={(e) => setBankData(prev => ({ ...prev, conta: onlyDigits(e.target.value, 8) }))}
+              disabled={!canEdit}
+              maxLength={8}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Dígito Conta</Label>
+            <Input
+              placeholder="0"
+              value={bankData.digito_conta}
+              onChange={(e) => setBankData(prev => ({ ...prev, digito_conta: onlyDigits(e.target.value, 2) }))}
+              disabled={!canEdit}
+              maxLength={2}
+            />
+          </div>
+        </div>
+        {canEdit && (
+          <div className="mt-3 flex justify-end">
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar Dados Bancários"}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
   const { data: documentos = [], isLoading } = useAdmissaoDocumentos(vaga?.id || null);
@@ -71,34 +170,26 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
   const getDocStatus = (tipo: string): AdmissaoDocumento | undefined =>
     documentos.find((d) => d.tipo_documento === tipo);
 
-  // Documents received in the process
   const hasCV = !!vaga?.curriculo_nome;
   const hasASO = !!vaga?.resultado_aso_nome;
+  const hasBankData = !!(vaga?.agencia && vaga?.conta);
 
   const checklistCount = DOCUMENTOS_OBRIGATORIOS.length;
   const completedChecklist = DOCUMENTOS_OBRIGATORIOS.filter((d) => getDocStatus(d.tipo)?.status === "anexado").length;
   const processDocsCount = (hasCV ? 1 : 0) + (hasASO ? 1 : 0);
-  const totalRequired = checklistCount + 2; // +CV +ASO
-  const totalCompleted = completedChecklist + processDocsCount;
+  const totalRequired = checklistCount + 2 + 1; // +CV +ASO +BankData
+  const totalCompleted = completedChecklist + processDocsCount + (hasBankData ? 1 : 0);
   const pendingCount = totalRequired - totalCompleted;
 
-  const allComplete = pendingCount === 0;
-
   const handleUpload = async (tipo: string, formatos: readonly string[]) => {
-    if (!vaga?.id) {
-      toast.error("Não foi possível identificar a vaga para anexar o documento.");
-      return;
-    }
-
+    if (!vaga?.id) { toast.error("Não foi possível identificar a vaga para anexar o documento."); return; }
     const input = fileInputRefs.current[tipo];
     if (!input) return;
-
     const file = input.files?.[0];
     if (!file) return;
 
     const ext = normalizeExtension(file.name);
     const allowedFormats = getAllowedFormats(formatos);
-
     if (!allowedFormats.has(ext)) {
       toast.error(`Formato inválido. Formatos aceitos: ${formatos.join(", ")}`);
       input.value = "";
@@ -111,34 +202,18 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
     try {
       const sanitizedName = sanitizeFileName(file.name);
       const filePath = `${vaga.id}/${tipo}/${crypto.randomUUID()}_${sanitizedName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("admissao-documentos")
-        .upload(filePath, file, {
-          upsert: true,
-          contentType: file.type || undefined,
-        });
-
-      if (uploadError) {
-        console.error("Storage upload error:", uploadError);
-        throw uploadError;
-      }
+      const { error: uploadError } = await supabase.storage.from("admissao-documentos").upload(filePath, file, { upsert: true, contentType: file.type || undefined });
+      if (uploadError) { console.error("Storage upload error:", uploadError); throw uploadError; }
 
       const documentoPayload = {
-        vaga_id: vaga.id,
-        tipo_documento: tipo,
-        arquivo_nome: file.name,
-        arquivo_path: filePath,
-        anexado_por: profile?.nome || "Sistema",
+        vaga_id: vaga.id, tipo_documento: tipo,
+        arquivo_nome: file.name, arquivo_path: filePath,
+        anexado_por: formatFirstLastName(profile?.nome) || "Sistema",
         anexado_por_id: user?.id || null,
-        anexado_em: new Date().toISOString(),
-        status: "anexado",
+        anexado_em: new Date().toISOString(), status: "anexado",
       };
 
-      const { error: upsertError } = await supabase
-        .from("admissao_documentos")
-        .upsert(documentoPayload, { onConflict: "vaga_id,tipo_documento" });
-
+      const { error: upsertError } = await supabase.from("admissao_documentos").upsert(documentoPayload, { onConflict: "vaga_id,tipo_documento" });
       if (upsertError) {
         await supabase.storage.from("admissao-documentos").remove([filePath]);
         console.error("DB upsert error:", upsertError);
@@ -146,22 +221,14 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
       }
 
       if (existing?.arquivo_path && existing.arquivo_path !== filePath) {
-        const { error: removeOldError } = await supabase.storage
-          .from("admissao-documentos")
-          .remove([existing.arquivo_path]);
-
-        if (removeOldError) {
-          console.warn("Erro ao remover arquivo anterior:", removeOldError);
-        }
+        await supabase.storage.from("admissao-documentos").remove([existing.arquivo_path]).catch(console.warn);
       }
 
       await logAction({
-        modulo: "Dep. Pessoal",
-        pagina: "Admissão",
+        modulo: "Dep. Pessoal", pagina: "Admissão",
         acao: existing ? "substituicao_documento" : "anexo_documento",
         descricao: `${existing ? "Substituiu" : "Anexou"} documento: ${DOCUMENTOS_OBRIGATORIOS.find((d) => d.tipo === tipo)?.label} para ${vaga.nome_candidato}`,
-        registro_id: vaga.id,
-        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+        registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
 
       toast.success("Documento anexado com sucesso!");
@@ -179,22 +246,11 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
   const handleDelete = async (tipo: string) => {
     const doc = getDocStatus(tipo);
     if (!doc) return;
-
     try {
-      if (doc.arquivo_path) {
-        await supabase.storage.from("admissao-documentos").remove([doc.arquivo_path]);
-      }
-      const { error: updateError } = await supabase
-        .from("admissao_documentos")
-        .update({
-          arquivo_nome: null,
-          arquivo_path: null,
-          anexado_por: null,
-          anexado_por_id: null,
-          anexado_em: null,
-          status: "pendente",
-        })
-        .eq("id", doc.id);
+      if (doc.arquivo_path) await supabase.storage.from("admissao-documentos").remove([doc.arquivo_path]);
+      const { error: updateError } = await supabase.from("admissao_documentos").update({
+        arquivo_nome: null, arquivo_path: null, anexado_por: null, anexado_por_id: null, anexado_em: null, status: "pendente",
+      }).eq("id", doc.id);
       if (updateError) throw updateError;
 
       await logAction({
@@ -202,12 +258,9 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
         descricao: `Excluiu documento: ${DOCUMENTOS_OBRIGATORIOS.find(d => d.tipo === tipo)?.label} de ${vaga.nome_candidato}`,
         registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
       });
-
       toast.success("Documento excluído.");
       invalidate(vaga.id);
-    } catch {
-      toast.error("Erro ao excluir documento.");
-    }
+    } catch { toast.error("Erro ao excluir documento."); }
   };
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando checklist...</p>;
@@ -233,6 +286,9 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Bank Data Fields */}
+      <BankDataFields vaga={vaga} canEdit={canEdit} />
 
       {/* Process Documents */}
       <Card>
@@ -267,31 +323,15 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
             const isUploadingThis = uploading === doc.tipo;
 
             return (
-              <div
-                key={doc.tipo}
-                className={`flex items-center gap-3 p-3 rounded-lg border text-sm ${
-                  isAnexado ? "bg-green-50/50 border-green-200" : "bg-red-50/30 border-red-200"
-                }`}
-              >
-                {isAnexado ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                )}
-
+              <div key={doc.tipo} className={`flex items-center gap-3 p-3 rounded-lg border text-sm ${isAnexado ? "bg-green-50/50 border-green-200" : "bg-red-50/30 border-red-200"}`}>
+                {isAnexado ? <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" /> : <XCircle className="h-4 w-4 text-red-500 shrink-0" />}
                 <div className="flex-1 min-w-0">
                   <div className="font-medium">{doc.label}</div>
                   <div className="text-xs text-muted-foreground">Formato: {doc.formatoLabel}</div>
                   {isAnexado && status && (
                     <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-3">
-                      <span className="flex items-center gap-1">
-                        <FileText className="h-3 w-3" />{status.arquivo_nome}
-                      </span>
-                      {status.anexado_por && (
-                        <span className="flex items-center gap-1">
-                          <User className="h-3 w-3" />{status.anexado_por}
-                        </span>
-                      )}
+                      <span className="flex items-center gap-1"><FileText className="h-3 w-3" />{status.arquivo_nome}</span>
+                      {status.anexado_por && <span className="flex items-center gap-1"><User className="h-3 w-3" />{formatFirstLastName(status.anexado_por)}</span>}
                       {status.anexado_em && (
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
@@ -302,45 +342,21 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
                     </div>
                   )}
                 </div>
-
                 {canEdit && (
                   <div className="flex items-center gap-1 shrink-0">
-                    <input
-                      type="file"
-                      ref={(el) => { fileInputRefs.current[doc.tipo] = el; }}
-                      className="hidden"
-                      accept={doc.formatos.join(",")}
-                      onChange={() => handleUpload(doc.tipo, doc.formatos)}
-                    />
+                    <input type="file" ref={(el) => { fileInputRefs.current[doc.tipo] = el; }} className="hidden" accept={doc.formatos.join(",")} onChange={() => handleUpload(doc.tipo, doc.formatos)} />
                     {isAnexado ? (
                       <>
-                        <Button
-                          variant="ghost" size="icon" className="h-8 w-8"
-                          onClick={() => fileInputRefs.current[doc.tipo]?.click()}
-                          disabled={isUploadingThis}
-                          title="Substituir arquivo"
-                        >
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => fileInputRefs.current[doc.tipo]?.click()} disabled={isUploadingThis} title="Substituir arquivo">
                           <RefreshCw className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost" size="icon" className="h-8 w-8 text-destructive"
-                          onClick={() => handleDelete(doc.tipo)}
-                          title="Excluir arquivo"
-                        >
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(doc.tipo)} title="Excluir arquivo">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </>
                     ) : (
-                      <Button
-                        variant="outline" size="sm"
-                        onClick={() => fileInputRefs.current[doc.tipo]?.click()}
-                        disabled={isUploadingThis}
-                      >
-                        {isUploadingThis ? (
-                          <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
-                        ) : (
-                          <Upload className="h-4 w-4 mr-1" />
-                        )}
+                      <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[doc.tipo]?.click()} disabled={isUploadingThis}>
+                        {isUploadingThis ? <RefreshCw className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
                         Anexar
                       </Button>
                     )}
@@ -360,9 +376,10 @@ export function useChecklistComplete(vaga: any) {
   
   const hasCV = !!vaga?.curriculo_nome;
   const hasASO = !!vaga?.resultado_aso_nome;
+  const hasBankData = !!(vaga?.agencia && vaga?.conta);
   const checklistComplete = DOCUMENTOS_OBRIGATORIOS.every(
     (d) => documentos.find((doc) => doc.tipo_documento === d.tipo)?.status === "anexado"
   );
 
-  return hasCV && hasASO && checklistComplete;
+  return hasCV && hasASO && hasBankData && checklistComplete;
 }
