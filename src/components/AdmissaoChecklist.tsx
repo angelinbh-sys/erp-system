@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 interface AdmissaoChecklistProps {
   vaga: any;
   canEdit: boolean;
+  onBankDataSaved?: (data: Partial<BankDataState>) => void;
 }
 
 const formatUploadError = (err: unknown) => {

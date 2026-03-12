@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { ClipboardList, Eye, Lock, Unlock, Undo2, CheckCircle2 } from "lucide-react";
 import { toast } from "@/lib/toast";
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
