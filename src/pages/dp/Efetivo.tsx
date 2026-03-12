@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Pencil, History, User as UserIcon } from "lucide-react";
 import { toast } from "@/lib/toast";
 
@@ -65,6 +66,7 @@ function useColaboradorFotos(colaboradores: Colaborador[]) {
 }
 
 const Efetivo = () => {
+  const navigate = useNavigate();
   const { profile } = useAuthContext();
   const { data: colaboradores = [], isLoading } = useColaboradores();
   const updateColaborador = useUpdateColaborador();
@@ -163,7 +165,11 @@ const Efetivo = () => {
                 {colaboradores.map((c) => {
                   const fotoUrl = c.vaga_id ? fotos[c.vaga_id] : undefined;
                   return (
-                    <TableRow key={c.id}>
+                    <TableRow
+                      key={c.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/departamento-pessoal/efetivo/${c.id}`)}
+                    >
                       <TableCell>
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={fotoUrl} />
@@ -181,7 +187,7 @@ const Efetivo = () => {
                         <Badge variant={c.status === "Ativo" ? "default" : "secondary"}>{c.status}</Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" title="Editar" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" title="Histórico" onClick={() => setHistColaboradorId(c.id)}><History className="h-4 w-4" /></Button>
                         </div>

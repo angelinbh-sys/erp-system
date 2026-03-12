@@ -52,6 +52,11 @@ const AprovacaoVagas = () => {
   const [showReprovar, setShowReprovar] = useState(false);
   const [observacao, setObservacao] = useState("");
 
+  // Edit devolvida
+  const [editVaga, setEditVaga] = useState<Vaga | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [editSaving, setEditSaving] = useState(false);
+
   const [deleteVaga, setDeleteVaga] = useState<Vaga | null>(null);
   const [deleteMotivo, setDeleteMotivo] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -93,6 +98,42 @@ const AprovacaoVagas = () => {
   const canCancelVaga = (vaga: Vaga) => {
     const sp = (vaga as any).status_processo;
     return isCreator(vaga) && sp !== STATUS_PROCESSO.VAGA_CANCELADA && sp !== STATUS_PROCESSO.EFETIVADO;
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editVaga) return;
+    setEditSaving(true);
+    try {
+      const { error } = await supabase.from("vagas").update({
+        nome_candidato: editForm.nome_candidato,
+        cargo: editForm.cargo,
+        salario: editForm.salario,
+        telefone: editForm.telefone,
+        cpf: editForm.cpf,
+        sexo: editForm.sexo,
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
+      } as any).eq("id", editVaga.id);
+      if (error) throw error;
+
+      await supabase.from("vagas_historico" as any).insert({
+        vaga_id: editVaga.id, acao: "Dados editados após devolução",
+        usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
+      } as any);
+
+      await logAction({
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "edicao",
+        descricao: `Editou dados da vaga devolvida: ${editForm.cargo} — ${editForm.nome_candidato}`,
+        registro_id: editVaga.id, registro_ref: `${editForm.cargo} - ${editForm.nome_candidato}`,
+      });
+
+      toast.success("Dados da vaga atualizados com sucesso.");
+      setEditVaga(null);
+      window.location.reload();
+    } catch {
+      toast.error("Erro ao salvar alterações.");
+    } finally {
+      setEditSaving(false);
+    }
   };
 
   const handleReenviar = async (vaga: Vaga) => {
@@ -409,9 +450,24 @@ const AprovacaoVagas = () => {
                           </>
                         )}
                         {canEditVaga(vaga) && (
-                          <Button size="sm" onClick={() => handleReenviar(vaga)}>
-                            Reenviar para Aprovação
-                          </Button>
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => {
+                              setEditVaga(vaga);
+                              setEditForm({
+                                nome_candidato: vaga.nome_candidato || "",
+                                cargo: vaga.cargo || "",
+                                salario: vaga.salario || "",
+                                telefone: vaga.telefone || "",
+                                cpf: (vaga as any).cpf || "",
+                                sexo: (vaga as any).sexo || "",
+                              });
+                            }}>
+                              <Pencil className="h-4 w-4 mr-1" /> Editar dados
+                            </Button>
+                            <Button size="sm" onClick={() => handleReenviar(vaga)}>
+                              Reenviar para Aprovação
+                            </Button>
+                          </>
                         )}
                         {canDeleteVaga(vaga) && (
                           <Button variant="ghost" size="icon" title="Excluir vaga"
@@ -530,6 +586,41 @@ const AprovacaoVagas = () => {
             <Button variant="outline" onClick={() => setCancelVaga(null)}>Voltar</Button>
             <Button variant="destructive" onClick={handleCancelVaga} disabled={cancelling || !cancelMotivo.trim()}>
               {cancelling ? "Cancelando..." : "Confirmar Cancelamento"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Devolvida Dialog */}
+      <Dialog open={!!editVaga} onOpenChange={() => setEditVaga(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Editar Dados da Vaga</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>Nome do Candidato</Label><Input value={editForm.nome_candidato || ""} onChange={(e) => setEditForm(p => ({ ...p, nome_candidato: e.target.value }))} /></div>
+            <div><Label>Cargo / Função</Label><Input value={editForm.cargo || ""} onChange={(e) => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
+            <div><Label>Salário</Label><Input value={editForm.salario || ""} onChange={(e) => setEditForm(p => ({ ...p, salario: e.target.value }))} /></div>
+            <div><Label>Telefone</Label><Input value={editForm.telefone || ""} onChange={(e) => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
+            <div><Label>CPF</Label><Input value={editForm.cpf || ""} onChange={(e) => setEditForm(p => ({ ...p, cpf: e.target.value }))} maxLength={14} /></div>
+            <div>
+              <Label>Sexo</Label>
+              <Select value={editForm.sexo || ""} onValueChange={(v) => setEditForm(p => ({ ...p, sexo: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Masculino">Masculino</SelectItem>
+                  <SelectItem value="Feminino">Feminino</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {(editVaga as any)?.observacao_reprovacao && (
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm">
+              <strong>Motivo da devolução:</strong> {(editVaga as any).observacao_reprovacao}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditVaga(null)}>Cancelar</Button>
+            <Button onClick={handleSaveEdit} disabled={editSaving}>
+              {editSaving ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
         </DialogContent>

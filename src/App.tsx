@@ -15,6 +15,7 @@ import AlteracaoFuncao from "@/pages/dp/AlteracaoFuncao";
 import SolicitacaoFerias from "@/pages/dp/SolicitacaoFerias";
 import Admissao from "@/pages/dp/Admissao";
 import Efetivo from "@/pages/dp/Efetivo";
+import ColaboradorDetalhes from "@/pages/dp/ColaboradorDetalhes";
 import AdminUsuarios from "@/pages/admin/Usuarios";
 import AdminPermissoes from "@/pages/admin/Permissoes";
 import AuditLog from "@/pages/admin/AuditLog";
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/departamento-pessoal/solicitacao-ferias" element={<SolicitacaoFerias />} />
               <Route path="/departamento-pessoal/admissao" element={<Admissao />} />
               <Route path="/departamento-pessoal/efetivo" element={<Efetivo />} />
+              <Route path="/departamento-pessoal/efetivo/:id" element={<ColaboradorDetalhes />} />
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
               <Route path="/admin/permissoes" element={<AdminPermissoes />} />
               <Route path="/admin/audit-log" element={<AuditLog />} />

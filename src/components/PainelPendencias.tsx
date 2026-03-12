@@ -143,7 +143,7 @@ export default function PainelPendencias({ profile, vagas }: Props) {
     }
 
     // DP — Admissões Pendentes
-    if (isSuper || grupo === "dep. pessoal" || grupo === "departamento pessoal") {
+    if (isSuper || grupo === "dep. pessoal" || grupo === "departamento pessoal" || grupo === "dp") {
       const items = activeVagas.filter(
         (v) =>
           v.status_processo === STATUS_PROCESSO.AGUARDANDO_ADMISSAO ||
