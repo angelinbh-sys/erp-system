@@ -191,6 +191,8 @@ const AberturaDeVaga = () => {
         site_contrato: data.tipoContrato,
         local_trabalho: data.localTrabalho,
         nome_candidato: data.nomeCandidato,
+        cpf: data.cpf,
+        sexo: data.sexo,
         data_nascimento: data.dataNascimento,
         telefone: data.telefone,
         beneficios: JSON.parse(JSON.stringify(beneficios)),
