@@ -29,6 +29,7 @@ import {
 import { STATUS_PROCESSO, STATUS_PROCESSO_CONFIG } from "@/utils/statusProcesso";
 import type { Vaga } from "@/hooks/useVagas";
 import type { Profile } from "@/hooks/useAuth";
+import VagaEditDialog from "@/components/VagaEditDialog";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 interface PendenciaCard {
