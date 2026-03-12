@@ -41,6 +41,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
       const { error } = await supabase.from("vagas").update({
         status_processo: STATUS_PROCESSO.ADMITIDO,
         responsavel_etapa: "Dep. Pessoal",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", detailVaga.id);
       if (error) throw error;
 
