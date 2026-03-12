@@ -141,11 +141,11 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
 
   return (
     <Dialog open={!!vaga} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden p-6 pb-8">
+<DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden p-6 pb-10">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Editar Dados da Vaga</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 overflow-y-auto flex-1 pr-2 min-h-0">
+        <div className="space-y-4 overflow-y-auto flex-1 pr-2 min-h-0 py-2">
           <div><Label>Nome do Candidato</Label><Input value={editForm.nome_candidato || ""} onChange={(e) => setEditForm(p => ({ ...p, nome_candidato: e.target.value }))} /></div>
           <div><Label>Cargo / Função</Label><Input value={editForm.cargo || ""} onChange={(e) => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
           <div><Label>Salário</Label><Input value={editForm.salario || ""} onChange={(e) => setEditForm(p => ({ ...p, salario: e.target.value }))} /></div>
@@ -171,7 +171,7 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
             </div>
           )}
         </div>
-        <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 pt-4 border-t mt-2">
+        <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 pt-4 pb-2 border-t mt-2">
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button variant="secondary" onClick={handleSave} disabled={saving}>
             {saving ? "Salvando..." : "Salvar Alterações"}
