@@ -655,17 +655,38 @@ const AberturaDeVaga = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Sexo *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Masculino">Masculino</SelectItem>
-                          <SelectItem value="Feminino">Feminino</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <div className="flex gap-4 pt-1">
+                          <label className={`flex items-center gap-2 px-4 py-2 rounded-md border cursor-pointer transition-colors ${field.value === "Masculino" ? "border-primary bg-primary/10 text-primary font-medium" : "border-input hover:border-primary/50"}`}>
+                            <input
+                              type="radio"
+                              name="sexo"
+                              value="Masculino"
+                              checked={field.value === "Masculino"}
+                              onChange={() => field.onChange("Masculino")}
+                              className="sr-only"
+                            />
+                            <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${field.value === "Masculino" ? "border-primary" : "border-muted-foreground"}`}>
+                              {field.value === "Masculino" && <div className="h-2 w-2 rounded-full bg-primary" />}
+                            </div>
+                            Masculino
+                          </label>
+                          <label className={`flex items-center gap-2 px-4 py-2 rounded-md border cursor-pointer transition-colors ${field.value === "Feminino" ? "border-primary bg-primary/10 text-primary font-medium" : "border-input hover:border-primary/50"}`}>
+                            <input
+                              type="radio"
+                              name="sexo"
+                              value="Feminino"
+                              checked={field.value === "Feminino"}
+                              onChange={() => field.onChange("Feminino")}
+                              className="sr-only"
+                            />
+                            <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${field.value === "Feminino" ? "border-primary" : "border-muted-foreground"}`}>
+                              {field.value === "Feminino" && <div className="h-2 w-2 rounded-full bg-primary" />}
+                            </div>
+                            Feminino
+                          </label>
+                        </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

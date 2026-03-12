@@ -64,6 +64,10 @@ const AgendamentoASO = () => {
   const salvarDatas = async (vaga: any) => {
     if (!canEdit) return;
     const local = getLocal(vaga);
+    if (local.dataAgendamento && local.dataEntrega && local.dataEntrega < local.dataAgendamento) {
+      toast.error("A data de entrega do ASO não pode ser anterior à data de agendamento do ASO.");
+      return;
+    }
     const { error } = await supabase.from("vagas").update({ data_agendamento_aso: local.dataAgendamento || null, data_entrega_aso: local.dataEntrega || null } as any).eq("id", vaga.id);
     if (error) { toast.error("Erro ao salvar datas."); return; }
     await logAction({ modulo: "SESMT", pagina: "Agendamento de ASO", acao: "edicao", descricao: `Salvou datas do ASO: ${vaga.nome_candidato} (${vaga.cargo})`, registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}` });

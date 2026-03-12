@@ -409,9 +409,14 @@ const AprovacaoVagas = () => {
                           </>
                         )}
                         {canEditVaga(vaga) && (
-                          <Button size="sm" onClick={() => handleReenviar(vaga)}>
-                            Reenviar para Aprovação
-                          </Button>
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => setSelectedVaga(vaga)}>
+                              <Pencil className="h-4 w-4 mr-1" /> Editar dados
+                            </Button>
+                            <Button size="sm" onClick={() => handleReenviar(vaga)}>
+                              Reenviar para Aprovação
+                            </Button>
+                          </>
                         )}
                         {canDeleteVaga(vaga) && (
                           <Button variant="ghost" size="icon" title="Excluir vaga"

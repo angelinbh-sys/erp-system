@@ -112,46 +112,50 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div>
-            <Label className="text-xs">Agência *</Label>
-            <Input
-              placeholder="000000"
-              value={bankData.agencia}
-              onChange={(e) => setBankData(prev => ({ ...prev, agencia: onlyDigits(e.target.value, 6) }))}
-              disabled={!canEdit}
-              maxLength={6}
-            />
+        <div className="space-y-3">
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <Label className="text-xs">Agência *</Label>
+              <Input
+                placeholder="000000"
+                value={bankData.agencia}
+                onChange={(e) => setBankData(prev => ({ ...prev, agencia: onlyDigits(e.target.value, 6) }))}
+                disabled={!canEdit}
+                maxLength={6}
+              />
+            </div>
+            <div className="w-16">
+              <Label className="text-xs">Dígito</Label>
+              <Input
+                placeholder="0"
+                value={bankData.digito_agencia}
+                onChange={(e) => setBankData(prev => ({ ...prev, digito_agencia: onlyDigits(e.target.value, 2) }))}
+                disabled={!canEdit}
+                maxLength={2}
+              />
+            </div>
           </div>
-          <div>
-            <Label className="text-xs">Dígito Agência</Label>
-            <Input
-              placeholder="0"
-              value={bankData.digito_agencia}
-              onChange={(e) => setBankData(prev => ({ ...prev, digito_agencia: onlyDigits(e.target.value, 2) }))}
-              disabled={!canEdit}
-              maxLength={2}
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Conta *</Label>
-            <Input
-              placeholder="00000000"
-              value={bankData.conta}
-              onChange={(e) => setBankData(prev => ({ ...prev, conta: onlyDigits(e.target.value, 8) }))}
-              disabled={!canEdit}
-              maxLength={8}
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Dígito Conta</Label>
-            <Input
-              placeholder="0"
-              value={bankData.digito_conta}
-              onChange={(e) => setBankData(prev => ({ ...prev, digito_conta: onlyDigits(e.target.value, 2) }))}
-              disabled={!canEdit}
-              maxLength={2}
-            />
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <Label className="text-xs">Conta *</Label>
+              <Input
+                placeholder="00000000"
+                value={bankData.conta}
+                onChange={(e) => setBankData(prev => ({ ...prev, conta: onlyDigits(e.target.value, 8) }))}
+                disabled={!canEdit}
+                maxLength={8}
+              />
+            </div>
+            <div className="w-16">
+              <Label className="text-xs">Dígito</Label>
+              <Input
+                placeholder="0"
+                value={bankData.digito_conta}
+                onChange={(e) => setBankData(prev => ({ ...prev, digito_conta: onlyDigits(e.target.value, 2) }))}
+                disabled={!canEdit}
+                maxLength={2}
+              />
+            </div>
           </div>
         </div>
         {canEdit && (
