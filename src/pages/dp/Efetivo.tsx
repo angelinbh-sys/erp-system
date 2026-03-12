@@ -48,11 +48,11 @@ function useColaboradorFotos(colaboradores: Colaborador[]) {
       const fotoMap: Record<string, string> = {};
       for (const doc of data) {
         if (doc.arquivo_path) {
-          const { data: urlData } = supabase.storage
+          const { data: urlData } = await supabase.storage
             .from("admissao-documentos")
-            .getPublicUrl(doc.arquivo_path);
-          if (urlData?.publicUrl) {
-            fotoMap[doc.vaga_id] = urlData.publicUrl;
+            .createSignedUrl(doc.arquivo_path, 3600);
+          if (urlData?.signedUrl) {
+            fotoMap[doc.vaga_id] = urlData.signedUrl;
           }
         }
       }

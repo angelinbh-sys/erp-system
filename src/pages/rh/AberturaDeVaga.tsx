@@ -198,7 +198,7 @@ const AberturaDeVaga = () => {
         centro_custo_codigo: ccObj?.codigo ?? "",
         site_contrato: data.tipoContrato,
         local_trabalho: data.localTrabalho,
-        nome_candidato: data.nomeCandidato,
+        nome_candidato: capitalizeName(data.nomeCandidato),
         cpf: data.cpf,
         sexo: data.sexo,
         data_nascimento: data.dataNascimento,

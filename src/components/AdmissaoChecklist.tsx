@@ -387,11 +387,12 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
 
 export function useChecklistComplete(vaga: any) {
   const { data: documentos = [] } = useAdmissaoDocumentos(vaga?.id || null);
+  const documentosObrigatorios = getDocumentosObrigatorios(vaga?.sexo);
   
   const hasCV = !!vaga?.curriculo_nome;
   const hasASO = !!vaga?.resultado_aso_nome;
   const hasBankData = !!(vaga?.agencia && vaga?.conta);
-  const checklistComplete = DOCUMENTOS_OBRIGATORIOS.every(
+  const checklistComplete = documentosObrigatorios.every(
     (d) => documentos.find((doc) => doc.tipo_documento === d.tipo)?.status === "anexado"
   );
 
