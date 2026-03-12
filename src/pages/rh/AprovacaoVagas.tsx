@@ -511,6 +511,22 @@ const AprovacaoVagas = () => {
     );
   };
 
+  useEffect(() => {
+    const vagaId = searchParams.get("vaga");
+    const acao = searchParams.get("acao");
+    if (acao !== "editar" || !vagaId || editVaga) return;
+
+    const vagaAlvo = [...devolvidasVagas, ...reprovadasVagas].find((vaga) => vaga.id === vagaId);
+    if (!vagaAlvo || !canEditVaga(vagaAlvo)) return;
+
+    openEditDialog(vagaAlvo);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("vaga");
+    nextParams.delete("acao");
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, editVaga, devolvidasVagas, reprovadasVagas, setSearchParams]);
+
   return (
     <div className="max-w-6xl mx-auto">
       <h2 className="font-heading text-2xl font-bold text-foreground mb-6">
