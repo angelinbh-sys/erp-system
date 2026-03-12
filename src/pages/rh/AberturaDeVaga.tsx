@@ -50,7 +50,7 @@ import { cidadesBrasil, getCidadeLabel } from "@/data/cidadesBrasil";
 import { formatCurrencyBRL } from "@/utils/currency";
 import { formatPhone } from "@/utils/phone";
 import { formatCPF, isValidCPF } from "@/utils/cpf";
-import { formatFirstLastName } from "@/utils/formatName";
+import { formatFirstLastName, capitalizeName } from "@/utils/formatName";
 
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
@@ -67,7 +67,15 @@ const vagaSchema = z.object({
   nomeCandidato: z.string().min(1, "Nome do Candidato é obrigatório").max(200),
   cpf: z.string().min(14, "CPF é obrigatório").refine((val) => isValidCPF(val), { message: "CPF inválido" }),
   sexo: z.string().min(1, "Sexo é obrigatório"),
-  dataNascimento: z.string().min(1, "Data de Nascimento é obrigatória"),
+  dataNascimento: z.string().min(1, "Data de Nascimento é obrigatória").refine((val) => {
+    if (!val) return true;
+    const birth = new Date(val);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age >= 14 && age <= 80;
+  }, { message: "A data de nascimento informada é inválida. O candidato deve ter entre 14 e 80 anos." }),
   telefone: z.string().min(14, "Telefone de Contato é obrigatório"),
 });
 
@@ -190,7 +198,7 @@ const AberturaDeVaga = () => {
         centro_custo_codigo: ccObj?.codigo ?? "",
         site_contrato: data.tipoContrato,
         local_trabalho: data.localTrabalho,
-        nome_candidato: data.nomeCandidato,
+        nome_candidato: capitalizeName(data.nomeCandidato),
         cpf: data.cpf,
         sexo: data.sexo,
         data_nascimento: data.dataNascimento,

@@ -46,8 +46,8 @@ const ColaboradorDetalhes = () => {
           .eq("status", "anexado")
           .maybeSingle();
         if (fotoDoc?.arquivo_path) {
-          const { data: urlData } = supabase.storage.from("admissao-documentos").getPublicUrl(fotoDoc.arquivo_path);
-          if (urlData?.publicUrl) setFotoUrl(urlData.publicUrl);
+          const { data: urlData } = await supabase.storage.from("admissao-documentos").createSignedUrl(fotoDoc.arquivo_path, 3600);
+          if (urlData?.signedUrl) setFotoUrl(urlData.signedUrl);
         }
       }
       setLoading(false);

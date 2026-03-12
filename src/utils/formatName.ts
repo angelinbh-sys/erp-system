@@ -8,3 +8,16 @@ export function formatFirstLastName(fullName: string | null | undefined): string
   if (parts.length <= 2) return fullName.trim();
   return `${parts[0]} ${parts[parts.length - 1]}`;
 }
+
+/**
+ * Capitalizes each word in a name: first letter uppercase, rest lowercase.
+ * Example: "JOÃO DA SILVA" → "João Da Silva"
+ */
+export function capitalizeName(name: string): string {
+  if (!name) return "";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}

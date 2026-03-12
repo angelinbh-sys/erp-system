@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { Check, X, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil, Ban } from "lucide-react";
-import { formatFirstLastName } from "@/utils/formatName";
+import { formatFirstLastName, capitalizeName } from "@/utils/formatName";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
@@ -105,12 +105,16 @@ const AprovacaoVagas = () => {
     setEditSaving(true);
     try {
       const { error } = await supabase.from("vagas").update({
-        nome_candidato: editForm.nome_candidato,
+        nome_candidato: capitalizeName(editForm.nome_candidato),
         cargo: editForm.cargo,
         salario: editForm.salario,
         telefone: editForm.telefone,
         cpf: editForm.cpf,
         sexo: editForm.sexo,
+        centro_custo_nome: editForm.centro_custo_nome,
+        site_contrato: editForm.site_contrato,
+        local_trabalho: editForm.local_trabalho,
+        data_nascimento: editForm.data_nascimento,
         atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", editVaga.id);
       if (error) throw error;
@@ -144,6 +148,7 @@ const AprovacaoVagas = () => {
           status: "Aguardando Aprovação",
           status_processo: STATUS_PROCESSO.AGUARDANDO_DIRETORIA,
           responsavel_etapa: "Diretoria",
+          observacao_reprovacao: null,
           atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
         } as any)
         .eq("id", vaga.id);
@@ -460,6 +465,10 @@ const AprovacaoVagas = () => {
                                 telefone: vaga.telefone || "",
                                 cpf: (vaga as any).cpf || "",
                                 sexo: (vaga as any).sexo || "",
+                                centro_custo_nome: vaga.centro_custo_nome || "",
+                                site_contrato: vaga.site_contrato || "",
+                                local_trabalho: (vaga as any).local_trabalho || "",
+                                data_nascimento: (vaga as any).data_nascimento || "",
                               });
                             }}>
                               <Pencil className="h-4 w-4 mr-1" /> Editar dados
@@ -595,10 +604,14 @@ const AprovacaoVagas = () => {
       <Dialog open={!!editVaga} onOpenChange={() => setEditVaga(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Editar Dados da Vaga</DialogTitle></DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             <div><Label>Nome do Candidato</Label><Input value={editForm.nome_candidato || ""} onChange={(e) => setEditForm(p => ({ ...p, nome_candidato: e.target.value }))} /></div>
             <div><Label>Cargo / Função</Label><Input value={editForm.cargo || ""} onChange={(e) => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
             <div><Label>Salário</Label><Input value={editForm.salario || ""} onChange={(e) => setEditForm(p => ({ ...p, salario: e.target.value }))} /></div>
+            <div><Label>Centro de Custo</Label><Input value={editForm.centro_custo_nome || ""} onChange={(e) => setEditForm(p => ({ ...p, centro_custo_nome: e.target.value }))} /></div>
+            <div><Label>Site / Contrato</Label><Input value={editForm.site_contrato || ""} onChange={(e) => setEditForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
+            <div><Label>Local de Trabalho</Label><Input value={editForm.local_trabalho || ""} onChange={(e) => setEditForm(p => ({ ...p, local_trabalho: e.target.value }))} /></div>
+            <div><Label>Data de Nascimento</Label><Input type="date" value={editForm.data_nascimento || ""} onChange={(e) => setEditForm(p => ({ ...p, data_nascimento: e.target.value }))} /></div>
             <div><Label>Telefone</Label><Input value={editForm.telefone || ""} onChange={(e) => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
             <div><Label>CPF</Label><Input value={editForm.cpf || ""} onChange={(e) => setEditForm(p => ({ ...p, cpf: e.target.value }))} maxLength={14} /></div>
             <div>

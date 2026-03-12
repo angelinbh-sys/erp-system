@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdmissaoDocumentos, useInvalidateAdmissaoDocumentos, DOCUMENTOS_OBRIGATORIOS, type AdmissaoDocumento } from "@/hooks/useAdmissaoDocumentos";
+import { useAdmissaoDocumentos, useInvalidateAdmissaoDocumentos, DOCUMENTOS_OBRIGATORIOS, getDocumentosObrigatorios, type AdmissaoDocumento } from "@/hooks/useAdmissaoDocumentos";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -178,6 +178,9 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
   const [uploading, setUploading] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  const sexo = vaga?.sexo as string | undefined;
+  const documentosObrigatorios = getDocumentosObrigatorios(sexo);
+
   const getDocStatus = (tipo: string): AdmissaoDocumento | undefined =>
     documentos.find((d) => d.tipo_documento === tipo);
 
@@ -185,8 +188,8 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
   const hasASO = !!vaga?.resultado_aso_nome;
   const hasBankData = !!(vaga?.agencia && vaga?.conta);
 
-  const checklistCount = DOCUMENTOS_OBRIGATORIOS.length;
-  const completedChecklist = DOCUMENTOS_OBRIGATORIOS.filter((d) => getDocStatus(d.tipo)?.status === "anexado").length;
+  const checklistCount = documentosObrigatorios.length;
+  const completedChecklist = documentosObrigatorios.filter((d) => getDocStatus(d.tipo)?.status === "anexado").length;
   const processDocsCount = (hasCV ? 1 : 0) + (hasASO ? 1 : 0);
   const totalRequired = checklistCount + 2 + 1; // +CV +ASO +BankData
   const totalCompleted = completedChecklist + processDocsCount + (hasBankData ? 1 : 0);
@@ -328,7 +331,7 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
           <CardTitle className="text-sm font-semibold">Checklist de Documentos para Admissão</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {DOCUMENTOS_OBRIGATORIOS.map((doc) => {
+          {documentosObrigatorios.map((doc) => {
             const status = getDocStatus(doc.tipo);
             const isAnexado = status?.status === "anexado";
             const isUploadingThis = uploading === doc.tipo;
@@ -384,11 +387,12 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
 
 export function useChecklistComplete(vaga: any) {
   const { data: documentos = [] } = useAdmissaoDocumentos(vaga?.id || null);
+  const documentosObrigatorios = getDocumentosObrigatorios(vaga?.sexo);
   
   const hasCV = !!vaga?.curriculo_nome;
   const hasASO = !!vaga?.resultado_aso_nome;
   const hasBankData = !!(vaga?.agencia && vaga?.conta);
-  const checklistComplete = DOCUMENTOS_OBRIGATORIOS.every(
+  const checklistComplete = documentosObrigatorios.every(
     (d) => documentos.find((doc) => doc.tipo_documento === d.tipo)?.status === "anexado"
   );
 
