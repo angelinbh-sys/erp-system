@@ -294,7 +294,7 @@ const AprovacaoVagas = () => {
       const { error } = await supabase.from("vagas").update({
         status_processo: STATUS_PROCESSO.VAGA_CANCELADA,
         responsavel_etapa: "—",
-        atualizado_por: profile?.nome || "Sistema",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", cancelVaga.id);
       if (error) throw error;
 
