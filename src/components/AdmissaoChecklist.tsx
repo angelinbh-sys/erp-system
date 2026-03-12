@@ -331,7 +331,7 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
           <CardTitle className="text-sm font-semibold">Checklist de Documentos para Admissão</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {DOCUMENTOS_OBRIGATORIOS.map((doc) => {
+          {documentosObrigatorios.map((doc) => {
             const status = getDocStatus(doc.tipo);
             const isAnexado = status?.status === "anexado";
             const isUploadingThis = uploading === doc.tipo;
