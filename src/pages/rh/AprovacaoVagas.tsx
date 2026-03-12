@@ -111,7 +111,7 @@ const AprovacaoVagas = () => {
       await supabase.from("vagas_historico" as any).insert({
         vaga_id: vaga.id,
         acao: "Reenviada pelo RH para aprovação",
-        usuario_nome: profile?.nome || "Sistema",
+        usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
       } as any);
 
       await createNotificacao.mutateAsync({
