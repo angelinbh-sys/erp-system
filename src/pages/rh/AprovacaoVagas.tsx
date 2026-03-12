@@ -600,10 +600,14 @@ const AprovacaoVagas = () => {
       <Dialog open={!!editVaga} onOpenChange={() => setEditVaga(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Editar Dados da Vaga</DialogTitle></DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             <div><Label>Nome do Candidato</Label><Input value={editForm.nome_candidato || ""} onChange={(e) => setEditForm(p => ({ ...p, nome_candidato: e.target.value }))} /></div>
             <div><Label>Cargo / Função</Label><Input value={editForm.cargo || ""} onChange={(e) => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
             <div><Label>Salário</Label><Input value={editForm.salario || ""} onChange={(e) => setEditForm(p => ({ ...p, salario: e.target.value }))} /></div>
+            <div><Label>Centro de Custo</Label><Input value={editForm.centro_custo_nome || ""} onChange={(e) => setEditForm(p => ({ ...p, centro_custo_nome: e.target.value }))} /></div>
+            <div><Label>Site / Contrato</Label><Input value={editForm.site_contrato || ""} onChange={(e) => setEditForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
+            <div><Label>Local de Trabalho</Label><Input value={editForm.local_trabalho || ""} onChange={(e) => setEditForm(p => ({ ...p, local_trabalho: e.target.value }))} /></div>
+            <div><Label>Data de Nascimento</Label><Input type="date" value={editForm.data_nascimento || ""} onChange={(e) => setEditForm(p => ({ ...p, data_nascimento: e.target.value }))} /></div>
             <div><Label>Telefone</Label><Input value={editForm.telefone || ""} onChange={(e) => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
             <div><Label>CPF</Label><Input value={editForm.cpf || ""} onChange={(e) => setEditForm(p => ({ ...p, cpf: e.target.value }))} maxLength={14} /></div>
             <div>
