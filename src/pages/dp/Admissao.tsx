@@ -23,7 +23,7 @@ import { STATUS_PROCESSO } from "@/utils/statusProcesso";
 import { AdmissaoChecklist, useChecklistComplete } from "@/components/AdmissaoChecklist";
 import { formatFirstLastName } from "@/utils/formatName";
 
-function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logAction, profile }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any; logAction: any; profile: any }) {
+function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logAction, profile }: { detailVaga: any; setDetailVaga: Dispatch<SetStateAction<any>>; queryClient: any; logAction: any; profile: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
   const sp = detailVaga?.status_processo;
   const isAdmitido = sp === STATUS_PROCESSO.ADMITIDO || sp === STATUS_PROCESSO.EFETIVADO;
