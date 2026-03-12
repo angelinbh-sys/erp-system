@@ -20,6 +20,7 @@ import { useAuditLog } from "@/hooks/useAuditLog";
 import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { STATUS_PROCESSO } from "@/utils/statusProcesso";
+import { AdmissaoChecklist, useChecklistComplete } from "@/components/AdmissaoChecklist";
 
 function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logAction, profile }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any; logAction: any; profile: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
