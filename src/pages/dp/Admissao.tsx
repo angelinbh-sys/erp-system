@@ -92,6 +92,8 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
               <div><strong>Local de Trabalho:</strong> {detailVaga.local_trabalho}</div>
               <div><strong>Data de Nascimento:</strong> {detailVaga.data_nascimento}</div>
               <div><strong>Telefone:</strong> {detailVaga.telefone}</div>
+              {detailVaga.cpf && <div><strong>CPF:</strong> {detailVaga.cpf}</div>}
+              {detailVaga.sexo && <div><strong>Sexo:</strong> {detailVaga.sexo}</div>}
             </div>
             <CriadoPorInfo criadoPorId={detailVaga.criado_por} criadoEm={detailVaga.created_at} className="mt-2" />
 
