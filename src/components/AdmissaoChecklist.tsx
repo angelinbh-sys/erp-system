@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 interface AdmissaoChecklistProps {
   vaga: any;
   canEdit: boolean;
+  onBankDataSaved?: (data: Partial<BankDataState>) => void;
 }
 
 const formatUploadError = (err: unknown) => {
@@ -51,7 +52,7 @@ interface BankDataState {
   digito_conta: string;
 }
 
-function BankDataFields({ vaga, canEdit }: { vaga: any; canEdit: boolean }) {
+function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolean; onSaved?: (data: Partial<BankDataState>) => void }) {
   const queryClient = useQueryClient();
   const [bankData, setBankData] = useState<BankDataState>({
     agencia: vaga?.agencia || "",
@@ -85,6 +86,12 @@ function BankDataFields({ vaga, canEdit }: { vaga: any; canEdit: boolean }) {
       } as any).eq("id", vaga.id);
       if (error) throw error;
       toast.success("Dados bancários salvos com sucesso!");
+      onSaved?.({
+        agencia: bankData.agencia,
+        digito_agencia: bankData.digito_agencia,
+        conta: bankData.conta,
+        digito_conta: bankData.digito_conta,
+      });
       queryClient.invalidateQueries({ queryKey: ["vagas"] });
     } catch {
       toast.error("Erro ao salvar dados bancários.");
@@ -159,7 +166,7 @@ function BankDataFields({ vaga, canEdit }: { vaga: any; canEdit: boolean }) {
   );
 }
 
-export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
+export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoChecklistProps) {
   const { data: documentos = [], isLoading } = useAdmissaoDocumentos(vaga?.id || null);
   const invalidate = useInvalidateAdmissaoDocumentos();
   const { logAction } = useAuditLog();
@@ -288,7 +295,7 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
       </Card>
 
       {/* Bank Data Fields */}
-      <BankDataFields vaga={vaga} canEdit={canEdit} />
+      <BankDataFields vaga={vaga} canEdit={canEdit} onSaved={onBankDataSaved} />
 
       {/* Process Documents */}
       <Card>
