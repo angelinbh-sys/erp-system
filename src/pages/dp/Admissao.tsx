@@ -58,7 +58,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
       if (colabError) console.error("Erro ao criar colaborador:", colabError);
 
       await supabase.from("vagas_historico" as any).insert({
-        vaga_id: detailVaga.id, acao: "Admissão concluída", usuario_nome: profile?.nome || "Sistema",
+        vaga_id: detailVaga.id, acao: "Admissão concluída", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
       } as any);
 
       await logAction({
