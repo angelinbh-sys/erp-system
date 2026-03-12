@@ -183,7 +183,7 @@ const AprovacaoVagas = () => {
       if (error) throw error;
 
       await supabase.from("vagas_historico" as any).insert({
-        vaga_id: selectedVaga.id, acao: "Reprovada pela Diretoria", usuario_nome: profile?.nome || "Sistema", motivo: observacao.trim() || null,
+        vaga_id: selectedVaga.id, acao: "Reprovada pela Diretoria", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema", motivo: observacao.trim() || null,
       } as any);
 
       await logAction({
