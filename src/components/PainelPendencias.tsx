@@ -5,7 +5,6 @@ import {
   Stethoscope,
   UserPlus,
   RotateCcw,
-  ChevronRight,
   Eye,
   Pencil,
 } from "lucide-react";

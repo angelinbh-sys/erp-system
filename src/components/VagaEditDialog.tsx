@@ -171,7 +171,7 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
             </div>
           )}
         </div>
-        <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 pt-4 pb-2 border-t mt-2">
+        <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 pt-4 border-t mt-2 mb-0">
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button variant="secondary" onClick={handleSave} disabled={saving}>
             {saving ? "Salvando..." : "Salvar Alterações"}
