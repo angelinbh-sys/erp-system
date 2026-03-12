@@ -6,11 +6,8 @@ import {
   UserPlus,
   RotateCcw,
   ChevronRight,
-  CheckCircle,
-  XCircle,
   Eye,
   Pencil,
-  ArrowRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
