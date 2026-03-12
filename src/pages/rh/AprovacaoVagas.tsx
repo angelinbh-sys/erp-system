@@ -415,7 +415,17 @@ const AprovacaoVagas = () => {
                         )}
                         {canEditVaga(vaga) && (
                           <>
-                            <Button size="sm" variant="outline" onClick={() => setSelectedVaga(vaga)}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                              setEditVaga(vaga);
+                              setEditForm({
+                                nome_candidato: vaga.nome_candidato || "",
+                                cargo: vaga.cargo || "",
+                                salario: vaga.salario || "",
+                                telefone: vaga.telefone || "",
+                                cpf: (vaga as any).cpf || "",
+                                sexo: (vaga as any).sexo || "",
+                              });
+                            }}>
                               <Pencil className="h-4 w-4 mr-1" /> Editar dados
                             </Button>
                             <Button size="sm" onClick={() => handleReenviar(vaga)}>
