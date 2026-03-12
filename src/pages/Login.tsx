@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 // Log login after successful auth (can't use useAuditLog since profile may not be ready)
 async function logLoginAudit(email: string) {

@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { ClipboardList, Eye, Lock, Unlock, Undo2, CheckCircle2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import VagaTimeline from "@/components/VagaTimeline";
