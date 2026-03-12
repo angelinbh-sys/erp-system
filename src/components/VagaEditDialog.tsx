@@ -141,11 +141,11 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
 
   return (
     <Dialog open={!!vaga} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Editar Dados da Vaga</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+        <div className="space-y-4 overflow-y-auto flex-1 pr-2 min-h-0">
           <div><Label>Nome do Candidato</Label><Input value={editForm.nome_candidato || ""} onChange={(e) => setEditForm(p => ({ ...p, nome_candidato: e.target.value }))} /></div>
           <div><Label>Cargo / Função</Label><Input value={editForm.cargo || ""} onChange={(e) => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
           <div><Label>Salário</Label><Input value={editForm.salario || ""} onChange={(e) => setEditForm(p => ({ ...p, salario: e.target.value }))} /></div>
@@ -165,13 +165,13 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
               </SelectContent>
             </Select>
           </div>
+          {(vaga as any)?.observacao_reprovacao && (
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm">
+              <strong>Motivo da devolução:</strong> {(vaga as any).observacao_reprovacao}
+            </div>
+          )}
         </div>
-        {(vaga as any)?.observacao_reprovacao && (
-          <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm">
-            <strong>Motivo da devolução:</strong> {(vaga as any).observacao_reprovacao}
-          </div>
-        )}
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button variant="secondary" onClick={handleSave} disabled={saving}>
             {saving ? "Salvando..." : "Salvar Alterações"}
