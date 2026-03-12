@@ -88,10 +88,10 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
       toast.success("Dados bancários salvos com sucesso!");
       onSaved?.({
         agencia: bankData.agencia,
-        digito_agencia: bankData.digito_agencia || null,
+        digito_agencia: bankData.digito_agencia,
         conta: bankData.conta,
-        digito_conta: bankData.digito_conta || null,
-      } as any);
+        digito_conta: bankData.digito_conta,
+      });
       queryClient.invalidateQueries({ queryKey: ["vagas"] });
     } catch {
       toast.error("Erro ao salvar dados bancários.");
