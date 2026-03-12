@@ -105,12 +105,16 @@ const AprovacaoVagas = () => {
     setEditSaving(true);
     try {
       const { error } = await supabase.from("vagas").update({
-        nome_candidato: editForm.nome_candidato,
+        nome_candidato: capitalizeName(editForm.nome_candidato),
         cargo: editForm.cargo,
         salario: editForm.salario,
         telefone: editForm.telefone,
         cpf: editForm.cpf,
         sexo: editForm.sexo,
+        centro_custo_nome: editForm.centro_custo_nome,
+        site_contrato: editForm.site_contrato,
+        local_trabalho: editForm.local_trabalho,
+        data_nascimento: editForm.data_nascimento,
         atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", editVaga.id);
       if (error) throw error;
