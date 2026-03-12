@@ -100,6 +100,42 @@ const AprovacaoVagas = () => {
     return isCreator(vaga) && sp !== STATUS_PROCESSO.VAGA_CANCELADA && sp !== STATUS_PROCESSO.EFETIVADO;
   };
 
+  const handleSaveEdit = async () => {
+    if (!editVaga) return;
+    setEditSaving(true);
+    try {
+      const { error } = await supabase.from("vagas").update({
+        nome_candidato: editForm.nome_candidato,
+        cargo: editForm.cargo,
+        salario: editForm.salario,
+        telefone: editForm.telefone,
+        cpf: editForm.cpf,
+        sexo: editForm.sexo,
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
+      } as any).eq("id", editVaga.id);
+      if (error) throw error;
+
+      await supabase.from("vagas_historico" as any).insert({
+        vaga_id: editVaga.id, acao: "Dados editados após devolução",
+        usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
+      } as any);
+
+      await logAction({
+        modulo: "Recursos Humanos", pagina: "Aprovação de Vaga", acao: "edicao",
+        descricao: `Editou dados da vaga devolvida: ${editForm.cargo} — ${editForm.nome_candidato}`,
+        registro_id: editVaga.id, registro_ref: `${editForm.cargo} - ${editForm.nome_candidato}`,
+      });
+
+      toast.success("Dados da vaga atualizados com sucesso.");
+      setEditVaga(null);
+      window.location.reload();
+    } catch {
+      toast.error("Erro ao salvar alterações.");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const handleReenviar = async (vaga: Vaga) => {
     try {
       const { error } = await supabase
