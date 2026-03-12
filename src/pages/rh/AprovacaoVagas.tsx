@@ -299,7 +299,7 @@ const AprovacaoVagas = () => {
       if (error) throw error;
 
       await supabase.from("vagas_historico" as any).insert({
-        vaga_id: cancelVaga.id, acao: "Vaga cancelada", usuario_nome: profile?.nome || "Sistema", motivo: cancelMotivo.trim(),
+        vaga_id: cancelVaga.id, acao: "Vaga cancelada", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema", motivo: cancelMotivo.trim(),
       } as any);
 
       await logAction({
