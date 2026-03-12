@@ -4,7 +4,7 @@ import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Upload, X, Search } from "lucide-react";
 import { useCreateVaga, type VagaInsert } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
