@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Check, X, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil, Ban } from "lucide-react";
+import { formatFirstLastName } from "@/utils/formatName";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
@@ -102,7 +103,7 @@ const AprovacaoVagas = () => {
           status: "Aguardando Aprovação",
           status_processo: STATUS_PROCESSO.AGUARDANDO_DIRETORIA,
           responsavel_etapa: "Diretoria",
-          atualizado_por: profile?.nome || "Sistema",
+          atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
         } as any)
         .eq("id", vaga.id);
       if (error) throw error;
@@ -110,7 +111,7 @@ const AprovacaoVagas = () => {
       await supabase.from("vagas_historico" as any).insert({
         vaga_id: vaga.id,
         acao: "Reenviada pelo RH para aprovação",
-        usuario_nome: profile?.nome || "Sistema",
+        usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
       } as any);
 
       await createNotificacao.mutateAsync({
@@ -141,12 +142,12 @@ const AprovacaoVagas = () => {
         status: "Aprovada",
         status_processo: STATUS_PROCESSO.EM_ANDAMENTO_SESMT,
         responsavel_etapa: "SESMT",
-        atualizado_por: profile?.nome || "Sistema",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", vaga.id);
       if (error) throw error;
 
       await supabase.from("vagas_historico" as any).insert({
-        vaga_id: vaga.id, acao: "Aprovada pela Diretoria", usuario_nome: profile?.nome || "Sistema",
+        vaga_id: vaga.id, acao: "Aprovada pela Diretoria", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
       } as any);
 
       await logAction({
@@ -177,12 +178,12 @@ const AprovacaoVagas = () => {
         status_processo: STATUS_PROCESSO.REPROVADO_DIRETORIA,
         responsavel_etapa: "RH",
         observacao_reprovacao: observacao.trim() || null,
-        atualizado_por: profile?.nome || "Sistema",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", selectedVaga.id);
       if (error) throw error;
 
       await supabase.from("vagas_historico" as any).insert({
-        vaga_id: selectedVaga.id, acao: "Reprovada pela Diretoria", usuario_nome: profile?.nome || "Sistema", motivo: observacao.trim() || null,
+        vaga_id: selectedVaga.id, acao: "Reprovada pela Diretoria", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema", motivo: observacao.trim() || null,
       } as any);
 
       await logAction({
@@ -215,14 +216,14 @@ const AprovacaoVagas = () => {
         status_processo: STATUS_PROCESSO.DEVOLVIDO_RH,
         responsavel_etapa: "RH",
         observacao_reprovacao: devolverMotivo.trim(),
-        atualizado_por: profile?.nome || "Sistema",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", devolverVaga.id);
       if (error) throw error;
 
       await supabase.from("vagas_historico" as any).insert({
         vaga_id: devolverVaga.id,
         acao: "Devolvida pela Diretoria para correção",
-        usuario_nome: profile?.nome || "Sistema",
+        usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
         motivo: devolverMotivo.trim(),
       } as any);
 
@@ -293,12 +294,12 @@ const AprovacaoVagas = () => {
       const { error } = await supabase.from("vagas").update({
         status_processo: STATUS_PROCESSO.VAGA_CANCELADA,
         responsavel_etapa: "—",
-        atualizado_por: profile?.nome || "Sistema",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", cancelVaga.id);
       if (error) throw error;
 
       await supabase.from("vagas_historico" as any).insert({
-        vaga_id: cancelVaga.id, acao: "Vaga cancelada", usuario_nome: profile?.nome || "Sistema", motivo: cancelMotivo.trim(),
+        vaga_id: cancelVaga.id, acao: "Vaga cancelada", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema", motivo: cancelMotivo.trim(),
       } as any);
 
       await logAction({

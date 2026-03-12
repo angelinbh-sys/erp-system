@@ -291,17 +291,22 @@ export type Database = {
       }
       vagas: {
         Row: {
+          agencia: string | null
           atualizado_por: string | null
           beneficios: Json | null
           cargo: string
           centro_custo_codigo: string | null
           centro_custo_nome: string
+          conta: string | null
+          cpf: string | null
           created_at: string
           criado_por: string | null
           curriculo_nome: string | null
           data_agendamento_aso: string | null
           data_entrega_aso: string | null
           data_nascimento: string
+          digito_agencia: string | null
+          digito_conta: string | null
           documento_nome: string | null
           enviado_admissao: boolean
           enviado_admissao_at: string | null
@@ -317,6 +322,7 @@ export type Database = {
           resultado_aso_nome: string | null
           resultado_aso_path: string | null
           salario: string
+          sexo: string | null
           site_contrato: string
           status: string
           status_candidato: string
@@ -326,17 +332,22 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agencia?: string | null
           atualizado_por?: string | null
           beneficios?: Json | null
           cargo: string
           centro_custo_codigo?: string | null
           centro_custo_nome: string
+          conta?: string | null
+          cpf?: string | null
           created_at?: string
           criado_por?: string | null
           curriculo_nome?: string | null
           data_agendamento_aso?: string | null
           data_entrega_aso?: string | null
           data_nascimento: string
+          digito_agencia?: string | null
+          digito_conta?: string | null
           documento_nome?: string | null
           enviado_admissao?: boolean
           enviado_admissao_at?: string | null
@@ -352,6 +363,7 @@ export type Database = {
           resultado_aso_nome?: string | null
           resultado_aso_path?: string | null
           salario: string
+          sexo?: string | null
           site_contrato: string
           status?: string
           status_candidato?: string
@@ -361,17 +373,22 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agencia?: string | null
           atualizado_por?: string | null
           beneficios?: Json | null
           cargo?: string
           centro_custo_codigo?: string | null
           centro_custo_nome?: string
+          conta?: string | null
+          cpf?: string | null
           created_at?: string
           criado_por?: string | null
           curriculo_nome?: string | null
           data_agendamento_aso?: string | null
           data_entrega_aso?: string | null
           data_nascimento?: string
+          digito_agencia?: string | null
+          digito_conta?: string | null
           documento_nome?: string | null
           enviado_admissao?: boolean
           enviado_admissao_at?: string | null
@@ -387,6 +404,7 @@ export type Database = {
           resultado_aso_nome?: string | null
           resultado_aso_path?: string | null
           salario?: string
+          sexo?: string | null
           site_contrato?: string
           status?: string
           status_candidato?: string

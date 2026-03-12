@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Plus, Pencil, Trash2, Info, ChevronDown } from "lucide-react";
 import { useAuditLog } from "@/hooks/useAuditLog";
 

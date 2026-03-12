@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { formatFirstLastName } from "@/utils/formatName";
 
 export interface AuditLogEntry {
   id: string;
@@ -37,7 +38,7 @@ export function useAuditLog() {
       try {
         await supabase.from("audit_logs" as any).insert({
           user_id: user?.id || null,
-          user_name: profile?.nome || "Sistema",
+          user_name: formatFirstLastName(profile?.nome) || "Sistema",
           modulo: params.modulo,
           pagina: params.pagina,
           acao: params.acao,
@@ -75,24 +76,12 @@ export function useAuditLogs(filters: AuditLogFilters) {
         .order("created_at", { ascending: false })
         .limit(500);
 
-      if (filters.startDate) {
-        query = query.gte("created_at", `${filters.startDate}T00:00:00`);
-      }
-      if (filters.endDate) {
-        query = query.lte("created_at", `${filters.endDate}T23:59:59`);
-      }
-      if (filters.usuario) {
-        query = query.ilike("user_name", `%${filters.usuario}%`);
-      }
-      if (filters.modulo) {
-        query = query.eq("modulo", filters.modulo);
-      }
-      if (filters.pagina) {
-        query = query.eq("pagina", filters.pagina);
-      }
-      if (filters.acao) {
-        query = query.ilike("acao", `%${filters.acao}%`);
-      }
+      if (filters.startDate) query = query.gte("created_at", `${filters.startDate}T00:00:00`);
+      if (filters.endDate) query = query.lte("created_at", `${filters.endDate}T23:59:59`);
+      if (filters.usuario) query = query.ilike("user_name", `%${filters.usuario}%`);
+      if (filters.modulo) query = query.eq("modulo", filters.modulo);
+      if (filters.pagina) query = query.eq("pagina", filters.pagina);
+      if (filters.acao) query = query.ilike("acao", `%${filters.acao}%`);
 
       const { data, error } = await query;
       if (error) throw error;
@@ -101,7 +90,6 @@ export function useAuditLogs(filters: AuditLogFilters) {
   });
 }
 
-// Hook to get audit logs for a specific record
 export function useRecordAuditLogs(registroId: string | null) {
   return useQuery({
     queryKey: ["audit_logs_record", registroId],

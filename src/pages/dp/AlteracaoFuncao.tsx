@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Plus, Pencil, Trash2, Eye, Upload, X } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";

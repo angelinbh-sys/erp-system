@@ -4,7 +4,7 @@ import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Upload, X, Search } from "lucide-react";
 import { useCreateVaga, type VagaInsert } from "@/hooks/useVagas";
 import { useCreateNotificacao } from "@/hooks/useNotificacoes";
@@ -49,6 +49,8 @@ import { useCentrosCusto, useCargos } from "@/hooks/useCadastros";
 import { cidadesBrasil, getCidadeLabel } from "@/data/cidadesBrasil";
 import { formatCurrencyBRL } from "@/utils/currency";
 import { formatPhone } from "@/utils/phone";
+import { formatCPF, isValidCPF } from "@/utils/cpf";
+import { formatFirstLastName } from "@/utils/formatName";
 
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
@@ -63,6 +65,8 @@ const vagaSchema = z.object({
   localTrabalho: z.string().min(1, "Local de trabalho é obrigatório"),
   tipoContrato: z.string().min(1, "Site / Contrato é obrigatório"),
   nomeCandidato: z.string().min(1, "Nome do Candidato é obrigatório").max(200),
+  cpf: z.string().min(14, "CPF é obrigatório").refine((val) => isValidCPF(val), { message: "CPF inválido" }),
+  sexo: z.string().min(1, "Sexo é obrigatório"),
   dataNascimento: z.string().min(1, "Data de Nascimento é obrigatória"),
   telefone: z.string().min(14, "Telefone de Contato é obrigatório"),
 });
@@ -121,6 +125,8 @@ const AberturaDeVaga = () => {
       localTrabalho: "",
       tipoContrato: "",
       nomeCandidato: "",
+      cpf: "",
+      sexo: "",
       dataNascimento: "",
       telefone: "",
     },
@@ -185,6 +191,8 @@ const AberturaDeVaga = () => {
         site_contrato: data.tipoContrato,
         local_trabalho: data.localTrabalho,
         nome_candidato: data.nomeCandidato,
+        cpf: data.cpf,
+        sexo: data.sexo,
         data_nascimento: data.dataNascimento,
         telefone: data.telefone,
         beneficios: JSON.parse(JSON.stringify(beneficios)),
@@ -615,6 +623,49 @@ const AberturaDeVaga = () => {
                           onPaste={(e) => handlePhonePaste(e, field.onChange)}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="cpf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="000.000.000-00"
+                          value={field.value}
+                          onChange={(e) => field.onChange(formatCPF(e.target.value))}
+                          onPaste={(e) => {
+                            e.preventDefault();
+                            field.onChange(formatCPF(e.clipboardData.getData("text")));
+                          }}
+                          maxLength={14}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="sexo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sexo *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Masculino">Masculino</SelectItem>
+                          <SelectItem value="Feminino">Feminino</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

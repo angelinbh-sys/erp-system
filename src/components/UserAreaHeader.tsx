@@ -15,7 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
+import { formatFirstLastName } from "@/utils/formatName";
 
 function getInitials(name: string) {
   const parts = name.trim().split(/\s+/);
@@ -144,7 +145,7 @@ export function UserAreaHeader() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <div className="px-3 py-2">
-            <p className="text-sm font-medium text-foreground">{profile?.nome}</p>
+            <p className="text-sm font-medium text-foreground">{formatFirstLastName(profile?.nome)}</p>
             <p className="text-xs text-muted-foreground">{profile?.email}</p>
           </div>
           <DropdownMenuSeparator />

@@ -25,7 +25,7 @@ import { useVagas, useUpdateVagaStatus } from "@/hooks/useVagas";
 import { useNotificacoes } from "@/hooks/useNotificacoes";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useColaboradores } from "@/hooks/useColaboradores";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { STATUS_PROCESSO } from "@/utils/statusProcesso";
 import PainelPendencias from "@/components/PainelPendencias";
 

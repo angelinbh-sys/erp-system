@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { ClipboardList, Eye, Lock, Unlock, Undo2, CheckCircle2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import VagaTimeline from "@/components/VagaTimeline";
@@ -21,6 +21,7 @@ import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { STATUS_PROCESSO } from "@/utils/statusProcesso";
 import { AdmissaoChecklist, useChecklistComplete } from "@/components/AdmissaoChecklist";
+import { formatFirstLastName } from "@/utils/formatName";
 
 function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logAction, profile }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any; logAction: any; profile: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
@@ -40,6 +41,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
       const { error } = await supabase.from("vagas").update({
         status_processo: STATUS_PROCESSO.ADMITIDO,
         responsavel_etapa: "Dep. Pessoal",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", detailVaga.id);
       if (error) throw error;
 
@@ -56,7 +58,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
       if (colabError) console.error("Erro ao criar colaborador:", colabError);
 
       await supabase.from("vagas_historico" as any).insert({
-        vaga_id: detailVaga.id, acao: "Admissão concluída", usuario_nome: profile?.nome || "Sistema",
+        vaga_id: detailVaga.id, acao: "Admissão concluída", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
       } as any);
 
       await logAction({
@@ -90,6 +92,8 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
               <div><strong>Local de Trabalho:</strong> {detailVaga.local_trabalho}</div>
               <div><strong>Data de Nascimento:</strong> {detailVaga.data_nascimento}</div>
               <div><strong>Telefone:</strong> {detailVaga.telefone}</div>
+              {detailVaga.cpf && <div><strong>CPF:</strong> {detailVaga.cpf}</div>}
+              {detailVaga.sexo && <div><strong>Sexo:</strong> {detailVaga.sexo}</div>}
             </div>
             <CriadoPorInfo criadoPorId={detailVaga.criado_por} criadoEm={detailVaga.created_at} className="mt-2" />
 
