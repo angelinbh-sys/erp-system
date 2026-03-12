@@ -173,11 +173,8 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
         </div>
         <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 pt-4 border-t mt-2 mb-0">
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button variant="secondary" onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar Alterações"}
-          </Button>
-          <Button onClick={handleReenviar} disabled={reenviarLoading || saving}>
-            {reenviarLoading ? "Reenviando..." : "Salvar e Reenviar para Aprovação"}
+          <Button onClick={handleReenviar} disabled={reenviarLoading}>
+            {reenviarLoading ? "Reenviando..." : "Reenviar para Aprovação"}
           </Button>
         </DialogFooter>
       </DialogContent>
