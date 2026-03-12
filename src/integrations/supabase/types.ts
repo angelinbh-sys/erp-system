@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      admissao_documentos: {
+        Row: {
+          anexado_em: string | null
+          anexado_por: string | null
+          anexado_por_id: string | null
+          arquivo_nome: string | null
+          arquivo_path: string | null
+          created_at: string
+          id: string
+          status: string
+          tipo_documento: string
+          updated_at: string
+          vaga_id: string
+        }
+        Insert: {
+          anexado_em?: string | null
+          anexado_por?: string | null
+          anexado_por_id?: string | null
+          arquivo_nome?: string | null
+          arquivo_path?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          tipo_documento: string
+          updated_at?: string
+          vaga_id: string
+        }
+        Update: {
+          anexado_em?: string | null
+          anexado_por?: string | null
+          anexado_por_id?: string | null
+          arquivo_nome?: string | null
+          arquivo_path?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          tipo_documento?: string
+          updated_at?: string
+          vaga_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admissao_documentos_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           acao: string

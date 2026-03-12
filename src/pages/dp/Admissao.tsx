@@ -20,22 +20,29 @@ import { useAuditLog } from "@/hooks/useAuditLog";
 import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { STATUS_PROCESSO } from "@/utils/statusProcesso";
+import { AdmissaoChecklist, useChecklistComplete } from "@/components/AdmissaoChecklist";
 
 function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logAction, profile }: { detailVaga: any; setDetailVaga: (v: any) => void; queryClient: any; logAction: any; profile: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
   const sp = detailVaga?.status_processo;
   const isAdmitido = sp === STATUS_PROCESSO.ADMITIDO || sp === STATUS_PROCESSO.EFETIVADO;
+  const checklistComplete = useChecklistComplete(detailVaga);
+
+  // canEdit: only when liberado and not yet admitido
+  const canEditChecklist = detailVaga?.enviado_admissao && !isAdmitido;
 
   const handleConcluirAdmissao = async () => {
+    if (!checklistComplete) {
+      toast.error("Existem documentos obrigatórios pendentes no checklist de admissão.");
+      return;
+    }
     try {
-      // Update vaga status
       const { error } = await supabase.from("vagas").update({
         status_processo: STATUS_PROCESSO.ADMITIDO,
         responsavel_etapa: "Dep. Pessoal",
       } as any).eq("id", detailVaga.id);
       if (error) throw error;
 
-      // Create colaborador automatically
       const { error: colabError } = await supabase.from("colaboradores").insert({
         nome: detailVaga.nome_candidato,
         cargo: detailVaga.cargo,
@@ -69,7 +76,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
 
   return (
     <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Detalhes do Candidato</DialogTitle></DialogHeader>
         {detailVaga && (
           <div className="space-y-4">
@@ -85,6 +92,14 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
               <div><strong>Telefone:</strong> {detailVaga.telefone}</div>
             </div>
             <CriadoPorInfo criadoPorId={detailVaga.criado_por} criadoEm={detailVaga.created_at} className="mt-2" />
+
+            {/* Checklist de Documentos */}
+            {(detailVaga.enviado_admissao || isAdmitido) && (
+              <div className="pt-3 border-t border-border">
+                <h4 className="text-sm font-semibold text-foreground mb-3">📋 Checklist de Documentos para Admissão</h4>
+                <AdmissaoChecklist vaga={detailVaga} canEdit={!!canEditChecklist} />
+              </div>
+            )}
 
             <div className="pt-3 border-t border-border">
               <VagaTimeline vaga={detailVaga} historico={historico} />
@@ -108,9 +123,12 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
                   Liberado em {detailVaga.enviado_admissao_at ? new Date(detailVaga.enviado_admissao_at).toLocaleDateString("pt-BR") : "—"}
                 </p>
                 <div className="mt-4 flex gap-2">
-                  <Button onClick={handleConcluirAdmissao}>
+                  <Button onClick={handleConcluirAdmissao} disabled={!checklistComplete}>
                     <CheckCircle2 className="h-4 w-4 mr-1" />Concluir Admissão
                   </Button>
+                  {!checklistComplete && (
+                    <p className="text-xs text-amber-600 self-center">Existem documentos obrigatórios pendentes no checklist de admissão.</p>
+                  )}
                   <Button variant="outline" size="sm"
                     onClick={async () => {
                       const { error } = await supabase.from("vagas").update({
