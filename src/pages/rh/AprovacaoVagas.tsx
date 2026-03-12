@@ -590,6 +590,41 @@ const AprovacaoVagas = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Devolvida Dialog */}
+      <Dialog open={!!editVaga} onOpenChange={() => setEditVaga(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Editar Dados da Vaga</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>Nome do Candidato</Label><Input value={editForm.nome_candidato || ""} onChange={(e) => setEditForm(p => ({ ...p, nome_candidato: e.target.value }))} /></div>
+            <div><Label>Cargo / Função</Label><Input value={editForm.cargo || ""} onChange={(e) => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
+            <div><Label>Salário</Label><Input value={editForm.salario || ""} onChange={(e) => setEditForm(p => ({ ...p, salario: e.target.value }))} /></div>
+            <div><Label>Telefone</Label><Input value={editForm.telefone || ""} onChange={(e) => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
+            <div><Label>CPF</Label><Input value={editForm.cpf || ""} onChange={(e) => setEditForm(p => ({ ...p, cpf: e.target.value }))} maxLength={14} /></div>
+            <div>
+              <Label>Sexo</Label>
+              <Select value={editForm.sexo || ""} onValueChange={(v) => setEditForm(p => ({ ...p, sexo: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Masculino">Masculino</SelectItem>
+                  <SelectItem value="Feminino">Feminino</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {(editVaga as any)?.observacao_reprovacao && (
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm">
+              <strong>Motivo da devolução:</strong> {(editVaga as any).observacao_reprovacao}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditVaga(null)}>Cancelar</Button>
+            <Button onClick={handleSaveEdit} disabled={editSaving}>
+              {editSaving ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
