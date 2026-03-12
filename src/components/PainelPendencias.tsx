@@ -280,18 +280,6 @@ export default function PainelPendencias({ profile, vagas }: Props) {
             </TableBody>
           </Table>
 
-          <div className="flex justify-end mt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSelectedCard(null);
-                if (selectedCard?.link) navigate(selectedCard.link);
-              }}
-            >
-              Abrir página completa <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
 
