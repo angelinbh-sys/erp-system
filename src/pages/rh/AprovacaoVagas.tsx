@@ -44,6 +44,7 @@ const AprovacaoVagas = () => {
   const createNotificacao = useCreateNotificacao();
   const { profile, user } = useAuthContext();
   const { logAction } = useAuditLog();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const isSuperAdmin = profile?.super_admin;
   const grupoLower = profile?.grupo_permissao?.toLowerCase() || "";
@@ -80,12 +81,31 @@ const AprovacaoVagas = () => {
 
   const isCreator = (vaga: Vaga) => {
     const criadoPor = (vaga as any).criado_por;
-    return criadoPor && user && criadoPor === user.id;
+    const creatorCandidates = [user?.id, profile?.user_id, profile?.id].filter(Boolean);
+    return !!criadoPor && creatorCandidates.includes(criadoPor);
   };
 
   const canEditVaga = (vaga: Vaga) => {
     const sp = (vaga as any).status_processo;
     return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.DEVOLVIDO_RH || sp === STATUS_PROCESSO.REPROVADO_DIRETORIA);
+  };
+
+  const getEditFormFromVaga = (vaga: Vaga): Record<string, string> => ({
+    nome_candidato: vaga.nome_candidato || "",
+    cargo: vaga.cargo || "",
+    salario: vaga.salario || "",
+    telefone: vaga.telefone || "",
+    cpf: (vaga as any).cpf || "",
+    sexo: (vaga as any).sexo || "",
+    centro_custo_nome: vaga.centro_custo_nome || "",
+    site_contrato: vaga.site_contrato || "",
+    local_trabalho: (vaga as any).local_trabalho || "",
+    data_nascimento: (vaga as any).data_nascimento || "",
+  });
+
+  const openEditDialog = (vaga: Vaga) => {
+    setEditVaga(vaga);
+    setEditForm(getEditFormFromVaga(vaga));
   };
 
   const canDeleteVaga = (vaga: Vaga) => {
