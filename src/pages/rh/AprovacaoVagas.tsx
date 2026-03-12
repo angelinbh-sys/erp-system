@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { Check, X, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil, Ban } from "lucide-react";
-import { formatFirstLastName } from "@/utils/formatName";
+import { formatFirstLastName, capitalizeName } from "@/utils/formatName";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
