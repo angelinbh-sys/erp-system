@@ -65,6 +65,8 @@ const vagaSchema = z.object({
   localTrabalho: z.string().min(1, "Local de trabalho é obrigatório"),
   tipoContrato: z.string().min(1, "Site / Contrato é obrigatório"),
   nomeCandidato: z.string().min(1, "Nome do Candidato é obrigatório").max(200),
+  cpf: z.string().min(14, "CPF é obrigatório").refine((val) => isValidCPF(val), { message: "CPF inválido" }),
+  sexo: z.string().min(1, "Sexo é obrigatório"),
   dataNascimento: z.string().min(1, "Data de Nascimento é obrigatória"),
   telefone: z.string().min(14, "Telefone de Contato é obrigatório"),
 });
