@@ -166,7 +166,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
   );
 }
 
-export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
+export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoChecklistProps) {
   const { data: documentos = [], isLoading } = useAdmissaoDocumentos(vaga?.id || null);
   const invalidate = useInvalidateAdmissaoDocumentos();
   const { logAction } = useAuditLog();
