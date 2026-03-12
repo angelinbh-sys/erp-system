@@ -52,7 +52,7 @@ interface BankDataState {
   digito_conta: string;
 }
 
-function BankDataFields({ vaga, canEdit }: { vaga: any; canEdit: boolean }) {
+function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolean; onSaved?: (data: Partial<BankDataState>) => void }) {
   const queryClient = useQueryClient();
   const [bankData, setBankData] = useState<BankDataState>({
     agencia: vaga?.agencia || "",
