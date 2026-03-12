@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdmissaoDocumentos, useInvalidateAdmissaoDocumentos, DOCUMENTOS_OBRIGATORIOS, type AdmissaoDocumento } from "@/hooks/useAdmissaoDocumentos";
+import { useAdmissaoDocumentos, useInvalidateAdmissaoDocumentos, DOCUMENTOS_OBRIGATORIOS, getDocumentosObrigatorios, type AdmissaoDocumento } from "@/hooks/useAdmissaoDocumentos";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
