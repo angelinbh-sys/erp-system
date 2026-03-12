@@ -14,6 +14,52 @@ interface AdmissaoChecklistProps {
   canEdit: boolean;
 }
 
+const formatUploadError = (err: unknown) => {
+  if (!err) return "erro desconhecido";
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+
+  const supabaseError = err as {
+    message?: string;
+    details?: string;
+    error_description?: string;
+    error?: string;
+    statusCode?: string | number;
+  };
+
+  return (
+    supabaseError.message ||
+    supabaseError.details ||
+    supabaseError.error_description ||
+    supabaseError.error ||
+    (supabaseError.statusCode ? `código ${supabaseError.statusCode}` : "erro desconhecido")
+  );
+};
+
+const normalizeExtension = (fileName: string) => {
+  const extension = fileName.includes(".") ? `.${fileName.split(".").pop()?.toLowerCase()}` : "";
+  return extension;
+};
+
+const getAllowedFormats = (formatos: readonly string[]) => {
+  const normalized = new Set(formatos.map((format) => format.toLowerCase()));
+
+  if (normalized.has(".jpeg") || normalized.has(".jpg")) {
+    normalized.add(".jpeg");
+    normalized.add(".jpg");
+    normalized.add(".jfif");
+  }
+
+  return normalized;
+};
+
+const sanitizeFileName = (fileName: string) =>
+  fileName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/_+/g, "_");
+
 export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
   const { data: documentos = [], isLoading } = useAdmissaoDocumentos(vaga?.id || null);
   const invalidate = useInvalidateAdmissaoDocumentos();
@@ -39,88 +85,91 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
   const allComplete = pendingCount === 0;
 
   const handleUpload = async (tipo: string, formatos: readonly string[]) => {
+    if (!vaga?.id) {
+      toast.error("Não foi possível identificar a vaga para anexar o documento.");
+      return;
+    }
+
     const input = fileInputRefs.current[tipo];
     if (!input) return;
 
     const file = input.files?.[0];
     if (!file) return;
 
-    const ext = "." + file.name.split(".").pop()?.toLowerCase();
-    if (!formatos.includes(ext)) {
+    const ext = normalizeExtension(file.name);
+    const allowedFormats = getAllowedFormats(formatos);
+
+    if (!allowedFormats.has(ext)) {
       toast.error(`Formato inválido. Formatos aceitos: ${formatos.join(", ")}`);
       input.value = "";
       return;
     }
 
     setUploading(tipo);
+    const existing = getDocStatus(tipo);
+
     try {
-      const filePath = `${vaga.id}/${tipo}/${Date.now()}_${file.name}`;
+      const sanitizedName = sanitizeFileName(file.name);
+      const filePath = `${vaga.id}/${tipo}/${crypto.randomUUID()}_${sanitizedName}`;
+
       const { error: uploadError } = await supabase.storage
         .from("admissao-documentos")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type || undefined,
+        });
+
       if (uploadError) {
         console.error("Storage upload error:", uploadError);
         throw uploadError;
       }
 
-      // Check if record exists
-      const existing = getDocStatus(tipo);
-      if (existing) {
-        // Delete old file if exists
-        if (existing.arquivo_path) {
-          await supabase.storage.from("admissao-documentos").remove([existing.arquivo_path]);
-        }
-        const { error: updateError } = await supabase
-          .from("admissao_documentos")
-          .update({
-            arquivo_nome: file.name,
-            arquivo_path: filePath,
-            anexado_por: profile?.nome || "Sistema",
-            anexado_por_id: user?.id || null,
-            anexado_em: new Date().toISOString(),
-            status: "anexado",
-          })
-          .eq("id", existing.id);
-        if (updateError) {
-          console.error("DB update error:", updateError);
-          throw updateError;
-        }
+      const documentoPayload = {
+        vaga_id: vaga.id,
+        tipo_documento: tipo,
+        arquivo_nome: file.name,
+        arquivo_path: filePath,
+        anexado_por: profile?.nome || "Sistema",
+        anexado_por_id: user?.id || null,
+        anexado_em: new Date().toISOString(),
+        status: "anexado",
+      };
 
-        await logAction({
-          modulo: "Dep. Pessoal", pagina: "Admissão", acao: "substituicao_documento",
-          descricao: `Substituiu documento: ${DOCUMENTOS_OBRIGATORIOS.find(d => d.tipo === tipo)?.label} para ${vaga.nome_candidato}`,
-          registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
-        });
-      } else {
-        const { error: insertError } = await supabase
-          .from("admissao_documentos")
-          .insert({
-            vaga_id: vaga.id,
-            tipo_documento: tipo,
-            arquivo_nome: file.name,
-            arquivo_path: filePath,
-            anexado_por: profile?.nome || "Sistema",
-            anexado_por_id: user?.id || null,
-            anexado_em: new Date().toISOString(),
-            status: "anexado",
-          });
-        if (insertError) {
-          console.error("DB insert error:", insertError);
-          throw insertError;
-        }
+      const { error: upsertError } = await supabase
+        .from("admissao_documentos")
+        .upsert(documentoPayload, { onConflict: "vaga_id,tipo_documento" });
 
-        await logAction({
-          modulo: "Dep. Pessoal", pagina: "Admissão", acao: "anexo_documento",
-          descricao: `Anexou documento: ${DOCUMENTOS_OBRIGATORIOS.find(d => d.tipo === tipo)?.label} para ${vaga.nome_candidato}`,
-          registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
-        });
+      if (upsertError) {
+        await supabase.storage.from("admissao-documentos").remove([filePath]);
+        console.error("DB upsert error:", upsertError);
+        throw upsertError;
       }
+
+      if (existing?.arquivo_path && existing.arquivo_path !== filePath) {
+        const { error: removeOldError } = await supabase.storage
+          .from("admissao-documentos")
+          .remove([existing.arquivo_path]);
+
+        if (removeOldError) {
+          console.warn("Erro ao remover arquivo anterior:", removeOldError);
+        }
+      }
+
+      await logAction({
+        modulo: "Dep. Pessoal",
+        pagina: "Admissão",
+        acao: existing ? "substituicao_documento" : "anexo_documento",
+        descricao: `${existing ? "Substituiu" : "Anexou"} documento: ${DOCUMENTOS_OBRIGATORIOS.find((d) => d.tipo === tipo)?.label} para ${vaga.nome_candidato}`,
+        registro_id: vaga.id,
+        registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
+      });
 
       toast.success("Documento anexado com sucesso!");
       invalidate(vaga.id);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = formatUploadError(err);
       console.error("Erro completo ao anexar:", err);
-      toast.error(`Erro ao anexar documento: ${err?.message || "erro desconhecido"}`);
+      toast.error(`Erro ao anexar documento: ${message}`);
     } finally {
       setUploading(null);
       input.value = "";
