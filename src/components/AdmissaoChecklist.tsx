@@ -58,7 +58,10 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
       const { error: uploadError } = await supabase.storage
         .from("admissao-documentos")
         .upload(filePath, file);
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        throw uploadError;
+      }
 
       // Check if record exists
       const existing = getDocStatus(tipo);
@@ -67,7 +70,8 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
         if (existing.arquivo_path) {
           await supabase.storage.from("admissao-documentos").remove([existing.arquivo_path]);
         }
-        await (supabase.from("admissao_documentos" as any) as any)
+        const { error: updateError } = await supabase
+          .from("admissao_documentos")
           .update({
             arquivo_nome: file.name,
             arquivo_path: filePath,
@@ -77,6 +81,10 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
             status: "anexado",
           })
           .eq("id", existing.id);
+        if (updateError) {
+          console.error("DB update error:", updateError);
+          throw updateError;
+        }
 
         await logAction({
           modulo: "Dep. Pessoal", pagina: "Admissão", acao: "substituicao_documento",
@@ -84,16 +92,22 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
           registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}`,
         });
       } else {
-        await (supabase.from("admissao_documentos" as any) as any).insert({
-          vaga_id: vaga.id,
-          tipo_documento: tipo,
-          arquivo_nome: file.name,
-          arquivo_path: filePath,
-          anexado_por: profile?.nome || "Sistema",
-          anexado_por_id: user?.id || null,
-          anexado_em: new Date().toISOString(),
-          status: "anexado",
-        });
+        const { error: insertError } = await supabase
+          .from("admissao_documentos")
+          .insert({
+            vaga_id: vaga.id,
+            tipo_documento: tipo,
+            arquivo_nome: file.name,
+            arquivo_path: filePath,
+            anexado_por: profile?.nome || "Sistema",
+            anexado_por_id: user?.id || null,
+            anexado_em: new Date().toISOString(),
+            status: "anexado",
+          });
+        if (insertError) {
+          console.error("DB insert error:", insertError);
+          throw insertError;
+        }
 
         await logAction({
           modulo: "Dep. Pessoal", pagina: "Admissão", acao: "anexo_documento",
@@ -104,9 +118,9 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
 
       toast.success("Documento anexado com sucesso!");
       invalidate(vaga.id);
-    } catch (err) {
-      console.error(err);
-      toast.error("Erro ao anexar documento.");
+    } catch (err: any) {
+      console.error("Erro completo ao anexar:", err);
+      toast.error(`Erro ao anexar documento: ${err?.message || "erro desconhecido"}`);
     } finally {
       setUploading(null);
       input.value = "";
@@ -121,7 +135,8 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
       if (doc.arquivo_path) {
         await supabase.storage.from("admissao-documentos").remove([doc.arquivo_path]);
       }
-      await (supabase.from("admissao_documentos" as any) as any)
+      const { error: updateError } = await supabase
+        .from("admissao_documentos")
         .update({
           arquivo_nome: null,
           arquivo_path: null,
@@ -131,6 +146,7 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
           status: "pendente",
         })
         .eq("id", doc.id);
+      if (updateError) throw updateError;
 
       await logAction({
         modulo: "Dep. Pessoal", pagina: "Admissão", acao: "exclusao_documento",

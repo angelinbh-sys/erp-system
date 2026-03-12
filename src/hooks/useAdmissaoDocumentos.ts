@@ -35,12 +35,13 @@ export function useAdmissaoDocumentos(vagaId: string | null) {
     queryKey: ["admissao_documentos", vagaId],
     enabled: !!vagaId,
     queryFn: async () => {
-      const { data, error } = await (supabase.from("admissao_documentos" as any) as any)
+      const { data, error } = await supabase
+        .from("admissao_documentos")
         .select("*")
         .eq("vaga_id", vagaId!)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data || []) as unknown as AdmissaoDocumento[];
+      return (data || []) as AdmissaoDocumento[];
     },
   });
 }
