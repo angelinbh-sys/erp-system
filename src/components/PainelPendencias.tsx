@@ -252,19 +252,28 @@ export default function PainelPendencias({ profile, vagas }: Props) {
                   <TableCell className="text-xs">{formatDate(v.created_at)}</TableCell>
                   <TableCell>{statusBadge(v.status_processo)}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const target = selectedCard?.id === "devolvidas"
-                          ? `${selectedCard.link}?vaga=${v.id}&acao=editar`
-                          : selectedCard!.link;
-                        setSelectedCard(null);
-                        navigate(target);
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-1" /> Ver
-                    </Button>
+                    {selectedCard?.id === "devolvidas" ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingVaga(v);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" /> Editar
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedCard(null);
+                          navigate(selectedCard!.link);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" /> Ver
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
