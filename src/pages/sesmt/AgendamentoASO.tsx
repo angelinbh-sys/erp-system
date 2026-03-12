@@ -20,6 +20,7 @@ import { CriadoPorInfo } from "@/components/CriadoPorInfo";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 import { STATUS_PROCESSO } from "@/utils/statusProcesso";
+import { formatFirstLastName } from "@/utils/formatName";
 
 function VagaTimelineSection({ vagaId, vaga }: { vagaId: string; vaga: any }) {
   const { data: historico = [] } = useVagaHistorico(vagaId);
