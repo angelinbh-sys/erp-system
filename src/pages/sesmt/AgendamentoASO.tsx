@@ -122,7 +122,7 @@ const AgendamentoASO = () => {
       } as any).eq("id", devolverVaga.id);
       if (error) throw error;
 
-      await supabase.from("vagas_historico" as any).insert({ vaga_id: devolverVaga.id, acao: "Devolvida pelo SESMT para RH", usuario_nome: profile?.nome || "Sistema", motivo: motivoDevolucao.trim() } as any);
+      await supabase.from("vagas_historico" as any).insert({ vaga_id: devolverVaga.id, acao: "Devolvida pelo SESMT para RH", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema", motivo: motivoDevolucao.trim() } as any);
       await supabase.from("notificacoes").insert({ titulo: "Vaga devolvida pelo SESMT", mensagem: `A vaga ${devolverVaga.cargo} (${devolverVaga.nome_candidato}) foi devolvida pelo SESMT. Motivo: ${motivoDevolucao.trim()}`, tipo: "warning", link: "/rh/aprovacao-vaga", vaga_id: devolverVaga.id, destinatario_grupo: "RH" } as any);
       await logAction({ modulo: "SESMT", pagina: "Agendamento de ASO", acao: "devolucao", descricao: `Devolveu vaga para RH: ${devolverVaga.cargo} — ${devolverVaga.nome_candidato}`, registro_id: devolverVaga.id, registro_ref: `${devolverVaga.cargo} - ${devolverVaga.nome_candidato}`, motivo: motivoDevolucao.trim() });
 
