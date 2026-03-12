@@ -31,7 +31,7 @@ export const DOCUMENTOS_OBRIGATORIOS = [
 
 export function getDocumentosObrigatorios(sexo?: string | null) {
   return DOCUMENTOS_OBRIGATORIOS.filter((doc) => {
-    if (doc.condicional === "masculino" && sexo && sexo.toLowerCase() !== "masculino") return false;
+    if ("condicional" in doc && doc.condicional === "masculino" && sexo && sexo.toLowerCase() !== "masculino") return false;
     return true;
   });
 }
