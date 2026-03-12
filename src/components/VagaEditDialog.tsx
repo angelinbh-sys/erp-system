@@ -141,7 +141,7 @@ export default function VagaEditDialog({ vaga, onClose, onSaved }: Props) {
 
   return (
     <Dialog open={!!vaga} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden p-6 pb-8">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Editar Dados da Vaga</DialogTitle>
         </DialogHeader>
