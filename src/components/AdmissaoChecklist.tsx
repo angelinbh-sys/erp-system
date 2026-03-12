@@ -121,7 +121,8 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
       if (doc.arquivo_path) {
         await supabase.storage.from("admissao-documentos").remove([doc.arquivo_path]);
       }
-      await (supabase.from("admissao_documentos" as any) as any)
+      const { error: updateError } = await supabase
+        .from("admissao_documentos")
         .update({
           arquivo_nome: null,
           arquivo_path: null,
@@ -131,6 +132,7 @@ export function AdmissaoChecklist({ vaga, canEdit }: AdmissaoChecklistProps) {
           status: "pendente",
         })
         .eq("id", doc.id);
+      if (updateError) throw updateError;
 
       await logAction({
         modulo: "Dep. Pessoal", pagina: "Admissão", acao: "exclusao_documento",
