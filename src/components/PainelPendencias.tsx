@@ -174,7 +174,7 @@ export default function PainelPendencias({ profile, vagas }: Props) {
         icon: RotateCcw,
         color: items.length > 0 ? "red" : "green",
         count: items.length,
-        link: "/rh/solicitacao-de-vaga",
+        link: "/rh/aprovacao-vaga",
         vagas: items,
       });
     }
