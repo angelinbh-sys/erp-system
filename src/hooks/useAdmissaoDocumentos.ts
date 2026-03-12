@@ -23,7 +23,6 @@ export const DOCUMENTOS_OBRIGATORIOS = [
   { tipo: "foto_3x4", label: "Foto 3x4", formatos: [".jpeg", ".jpg", ".jfif"], formatoLabel: "JPEG" },
   { tipo: "titulo_eleitor", label: "Título de Eleitor", formatos: [".pdf"], formatoLabel: "PDF" },
   { tipo: "certidao_quitacao_eleitoral", label: "Certidão de Quitação Eleitoral", formatos: [".pdf"], formatoLabel: "PDF" },
-  { tipo: "pis", label: "PIS", formatos: [".pdf", ".jpeg", ".jpg", ".jfif"], formatoLabel: "PDF ou JPEG" },
   { tipo: "certificado_reservista", label: "Certificado de Reservista", formatos: [".pdf", ".jpeg", ".jpg", ".jfif"], formatoLabel: "PDF ou JPEG" },
   { tipo: "comprovante_residencia", label: "Comprovante de Residência", formatos: [".pdf", ".jpeg", ".jpg", ".jfif"], formatoLabel: "PDF ou JPEG" },
   { tipo: "comprovante_escolaridade", label: "Comprovante de Escolaridade", formatos: [".pdf", ".jpeg", ".jpg", ".jfif"], formatoLabel: "PDF ou JPEG" },
