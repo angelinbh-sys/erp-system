@@ -215,53 +215,52 @@ const Dashboard = () => {
       </div>
 
       {/* ── Aniversariantes ───────────────────────────────────────── */}
-      {(aniversariantesDoDia.length > 0 || aniversariantesDoMes.length > 0) && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Cake className="h-5 w-5 text-muted-foreground" />
-              Aniversariantes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Aniversariantes do dia */}
-              <div>
-                <h4 className="text-sm font-semibold text-foreground mb-2">🎂 Aniversariante(s) do Dia</h4>
-                {aniversariantesDoDia.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Nenhum aniversariante hoje.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {aniversariantesDoDia.map((c) => (
-                      <div key={c.id} className="p-3 rounded-md bg-primary/5 border border-primary/10">
-                        <p className="text-sm font-medium text-foreground">{c.nome}</p>
-                        <p className="text-xs text-muted-foreground">{c.cargo}</p>
-                      </div>
-                    ))}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            🎉 Aniversariantes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Aniversariantes do dia */}
+          <div>
+            <h4 className="text-sm font-semibold text-foreground mb-3">🎉 Aniversariantes de Hoje</h4>
+            {aniversariantesDoDia.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Hoje não há aniversariantes.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {aniversariantesDoDia.map((c) => (
+                  <div key={c.id} className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                    <p className="text-sm font-semibold text-foreground">{c.nome}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Cargo: {c.cargo}</p>
+                    <p className="text-xs text-muted-foreground">Contrato: {c.centro_custo}</p>
+                    <p className="text-xs text-muted-foreground">Site: {c.site_contrato}</p>
                   </div>
-                )}
+                ))}
               </div>
+            )}
+          </div>
 
-              {/* Aniversariantes do mês */}
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-2">Aniversariantes do Mês</h4>
-                {aniversariantesDoMes.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Nenhum outro aniversariante este mês.</p>
-                ) : (
-                  <div className="space-y-1">
-                    {aniversariantesDoMes.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between text-sm py-1">
-                        <span className="text-muted-foreground">{c.nome}</span>
-                        <span className="text-xs text-muted-foreground">{c.data_nascimento ? formatBirthdayDate(c.data_nascimento) : ""}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          {/* Aniversariantes do mês */}
+          {aniversariantesDoMes.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Aniversariantes do Mês</h4>
+              <div className="space-y-1">
+                {aniversariantesDoMes.map((c) => {
+                  const day = c.data_nascimento
+                    ? String(new Date(c.data_nascimento + "T00:00:00").getDate()).padStart(2, "0")
+                    : "--";
+                  return (
+                    <p key={c.id} className="text-sm text-muted-foreground">
+                      {day} – {c.nome} – {c.cargo}
+                    </p>
+                  );
+                })}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* ── Minhas Pendências ─────────────────────────────────────── */}
       <PainelPendencias profile={profile} vagas={vagas} />
