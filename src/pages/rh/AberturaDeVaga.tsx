@@ -627,6 +627,49 @@ const AberturaDeVaga = () => {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="cpf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="000.000.000-00"
+                          value={field.value}
+                          onChange={(e) => field.onChange(formatCPF(e.target.value))}
+                          onPaste={(e) => {
+                            e.preventDefault();
+                            field.onChange(formatCPF(e.clipboardData.getData("text")));
+                          }}
+                          maxLength={14}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="sexo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sexo *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Masculino">Masculino</SelectItem>
+                          <SelectItem value="Feminino">Feminino</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {/* CNH ou RG */}
                 <div className="md:col-span-2 mt-4">
