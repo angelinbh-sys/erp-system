@@ -105,7 +105,7 @@ const AgendamentoASO = () => {
     if (error) { toast.error("Erro ao enviar para admissão."); return; }
 
     await supabase.from("notificacoes").insert({ titulo: "Candidato liberado para Admissão", mensagem: `O candidato ${vaga.nome_candidato} (${vaga.cargo}) foi liberado pelo SESMT para admissão.`, tipo: "success", link: "/departamento-pessoal/admissao", vaga_id: vaga.id, destinatario_grupo: "Dep. Pessoal" } as any);
-    await supabase.from("vagas_historico" as any).insert({ vaga_id: vaga.id, acao: "Enviado para Admissão", usuario_nome: profile?.nome || "Sistema" } as any);
+    await supabase.from("vagas_historico" as any).insert({ vaga_id: vaga.id, acao: "Enviado para Admissão", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema" } as any);
     await logAction({ modulo: "SESMT", pagina: "Agendamento de ASO", acao: "envio_etapa", descricao: `Enviou para Admissão: ${vaga.nome_candidato} (${vaga.cargo})`, registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}` });
 
     toast.success("Candidato enviado para Admissão com sucesso!");
