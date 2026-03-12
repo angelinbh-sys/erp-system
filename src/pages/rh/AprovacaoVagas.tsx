@@ -52,6 +52,11 @@ const AprovacaoVagas = () => {
   const [showReprovar, setShowReprovar] = useState(false);
   const [observacao, setObservacao] = useState("");
 
+  // Edit devolvida
+  const [editVaga, setEditVaga] = useState<Vaga | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [editSaving, setEditSaving] = useState(false);
+
   const [deleteVaga, setDeleteVaga] = useState<Vaga | null>(null);
   const [deleteMotivo, setDeleteMotivo] = useState("");
   const [deleting, setDeleting] = useState(false);
