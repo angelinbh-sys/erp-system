@@ -15,6 +15,7 @@ import AlteracaoFuncao from "@/pages/dp/AlteracaoFuncao";
 import SolicitacaoFerias from "@/pages/dp/SolicitacaoFerias";
 import Admissao from "@/pages/dp/Admissao";
 import Efetivo from "@/pages/dp/Efetivo";
+import ColaboradorDetalhes from "@/pages/dp/ColaboradorDetalhes";
 import AdminUsuarios from "@/pages/admin/Usuarios";
 import AdminPermissoes from "@/pages/admin/Permissoes";
 import AuditLog from "@/pages/admin/AuditLog";
