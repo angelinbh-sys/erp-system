@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "@/lib/toast";
 import { Check, X, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil, Ban } from "lucide-react";
 import { formatFirstLastName, capitalizeName } from "@/utils/formatName";
@@ -43,6 +44,7 @@ const AprovacaoVagas = () => {
   const createNotificacao = useCreateNotificacao();
   const { profile, user } = useAuthContext();
   const { logAction } = useAuditLog();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const isSuperAdmin = profile?.super_admin;
   const grupoLower = profile?.grupo_permissao?.toLowerCase() || "";
@@ -79,12 +81,31 @@ const AprovacaoVagas = () => {
 
   const isCreator = (vaga: Vaga) => {
     const criadoPor = (vaga as any).criado_por;
-    return criadoPor && user && criadoPor === user.id;
+    const creatorCandidates = [user?.id, profile?.user_id, profile?.id].filter(Boolean);
+    return !!criadoPor && creatorCandidates.includes(criadoPor);
   };
 
   const canEditVaga = (vaga: Vaga) => {
     const sp = (vaga as any).status_processo;
     return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.DEVOLVIDO_RH || sp === STATUS_PROCESSO.REPROVADO_DIRETORIA);
+  };
+
+  const getEditFormFromVaga = (vaga: Vaga): Record<string, string> => ({
+    nome_candidato: vaga.nome_candidato || "",
+    cargo: vaga.cargo || "",
+    salario: vaga.salario || "",
+    telefone: vaga.telefone || "",
+    cpf: (vaga as any).cpf || "",
+    sexo: (vaga as any).sexo || "",
+    centro_custo_nome: vaga.centro_custo_nome || "",
+    site_contrato: vaga.site_contrato || "",
+    local_trabalho: (vaga as any).local_trabalho || "",
+    data_nascimento: (vaga as any).data_nascimento || "",
+  });
+
+  const openEditDialog = (vaga: Vaga) => {
+    setEditVaga(vaga);
+    setEditForm(getEditFormFromVaga(vaga));
   };
 
   const canDeleteVaga = (vaga: Vaga) => {
@@ -456,21 +477,7 @@ const AprovacaoVagas = () => {
                         )}
                         {canEditVaga(vaga) && (
                           <>
-                            <Button size="sm" variant="outline" onClick={() => {
-                              setEditVaga(vaga);
-                              setEditForm({
-                                nome_candidato: vaga.nome_candidato || "",
-                                cargo: vaga.cargo || "",
-                                salario: vaga.salario || "",
-                                telefone: vaga.telefone || "",
-                                cpf: (vaga as any).cpf || "",
-                                sexo: (vaga as any).sexo || "",
-                                centro_custo_nome: vaga.centro_custo_nome || "",
-                                site_contrato: vaga.site_contrato || "",
-                                local_trabalho: (vaga as any).local_trabalho || "",
-                                data_nascimento: (vaga as any).data_nascimento || "",
-                              });
-                            }}>
+                            <Button size="sm" variant="outline" onClick={() => openEditDialog(vaga)}>
                               <Pencil className="h-4 w-4 mr-1" /> Editar dados
                             </Button>
                             <Button size="sm" onClick={() => handleReenviar(vaga)}>
@@ -503,6 +510,22 @@ const AprovacaoVagas = () => {
       </>
     );
   };
+
+  useEffect(() => {
+    const vagaId = searchParams.get("vaga");
+    const acao = searchParams.get("acao");
+    if (acao !== "editar" || !vagaId || editVaga) return;
+
+    const vagaAlvo = [...devolvidasVagas, ...reprovadasVagas].find((vaga) => vaga.id === vagaId);
+    if (!vagaAlvo || !canEditVaga(vagaAlvo)) return;
+
+    openEditDialog(vagaAlvo);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("vaga");
+    nextParams.delete("acao");
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, editVaga, devolvidasVagas, reprovadasVagas, setSearchParams]);
 
   return (
     <div className="max-w-6xl mx-auto">

@@ -257,8 +257,11 @@ export default function PainelPendencias({ profile, vagas }: Props) {
                       size="sm"
                       variant="ghost"
                       onClick={() => {
+                        const target = selectedCard?.id === "devolvidas"
+                          ? `${selectedCard.link}?vaga=${v.id}&acao=editar`
+                          : selectedCard!.link;
                         setSelectedCard(null);
-                        navigate(selectedCard!.link);
+                        navigate(target);
                       }}
                     >
                       <Eye className="h-4 w-4 mr-1" /> Ver
@@ -274,9 +277,11 @@ export default function PainelPendencias({ profile, vagas }: Props) {
               variant="outline"
               size="sm"
               onClick={() => {
-                const link = selectedCard?.link;
+                const target = selectedCard?.id === "devolvidas" && selectedCard.vagas.length === 1
+                  ? `${selectedCard.link}?vaga=${selectedCard.vagas[0].id}&acao=editar`
+                  : selectedCard?.link;
                 setSelectedCard(null);
-                if (link) navigate(link);
+                if (target) navigate(target);
               }}
             >
               Abrir página completa <ChevronRight className="h-4 w-4 ml-1" />
