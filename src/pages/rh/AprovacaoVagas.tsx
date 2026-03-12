@@ -216,7 +216,7 @@ const AprovacaoVagas = () => {
         status_processo: STATUS_PROCESSO.DEVOLVIDO_RH,
         responsavel_etapa: "RH",
         observacao_reprovacao: devolverMotivo.trim(),
-        atualizado_por: profile?.nome || "Sistema",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
       } as any).eq("id", devolverVaga.id);
       if (error) throw error;
 
