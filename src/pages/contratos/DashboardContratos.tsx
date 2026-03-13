@@ -184,7 +184,7 @@ export default function DashboardContratos() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{percentualAvanco.toFixed(1)}%</div>
+            <div className="text-2xl font-bold text-foreground">{(Math.floor(percentualAvanco * 100) / 100).toFixed(2)}%</div>
           </CardContent>
         </Card>
         <Card>
