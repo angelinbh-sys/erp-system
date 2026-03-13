@@ -95,8 +95,16 @@ export function UserAreaHeader() {
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0 overflow-hidden" align="end">
-          <div className="p-3 border-b border-border">
+          <div className="p-3 border-b border-border flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Notificações</p>
+            {naoLidas.length > 0 && (
+              <button
+                onClick={() => marcarTodasLidas.mutate()}
+                className="text-xs text-primary hover:underline font-medium"
+              >
+                Marcar todas como lidas
+              </button>
+            )}
           </div>
           <div className="max-h-80 overflow-y-scroll [scrollbar-gutter:stable]">
             {recentNotifs.length === 0 ? (

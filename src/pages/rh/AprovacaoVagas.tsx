@@ -492,13 +492,6 @@ const AprovacaoVagas = () => {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
-                        {canCancelVaga(vaga) && (
-                          <Button variant="ghost" size="icon" title="Cancelar vaga"
-                            onClick={() => { setCancelVaga(vaga); setCancelMotivo(""); }}
-                            className="text-orange-600 hover:text-orange-600">
-                            <Ban className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>

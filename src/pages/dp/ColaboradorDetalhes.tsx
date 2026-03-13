@@ -299,10 +299,17 @@ const ColaboradorDetalhes = () => {
         </CardContent>
       </Card>
 
-      {/* Lotação */}
+      {/* Local de Trabalho */}
       <Card className="mb-6">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">🏢 Lotação</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold">🏢 Local de Trabalho</CardTitle>
+            {!editing && (
+              <Button variant="outline" size="sm" onClick={startTransfer}>
+                <ArrowRightLeft className="h-4 w-4 mr-1" /> Transferir Colaborador
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -312,6 +319,31 @@ const ColaboradorDetalhes = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Transfer Dialog */}
+      {showTransfer && (
+        <Card className="mb-6 border-primary/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <ArrowRightLeft className="h-4 w-4" /> Transferir Colaborador
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><Label>Centro de Custo</Label><Input value={transferForm.centro_custo} onChange={e => setTransferForm(p => ({ ...p, centro_custo: e.target.value }))} /></div>
+              <div><Label>Site / Contrato</Label><Input value={transferForm.site_contrato} onChange={e => setTransferForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
+            </div>
+            <div>
+              <Label>Motivo da Transferência *</Label>
+              <Textarea placeholder="Descreva o motivo da transferência" value={transferMotivo} onChange={e => setTransferMotivo(e.target.value)} />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setShowTransfer(false)}><X className="h-4 w-4 mr-1" /> Cancelar</Button>
+              <Button size="sm" onClick={handleSaveTransfer} disabled={updateColaborador.isPending}><Save className="h-4 w-4 mr-1" /> Confirmar Transferência</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Endereço */}
       {vaga && (vaga.cep || vaga.logradouro || vaga.cidade) && (

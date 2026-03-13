@@ -80,3 +80,16 @@ export function useMarcarLida() {
     },
   });
 }
+
+export function useMarcarTodasLidas() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("notificacoes").update({ lida: true }).eq("lida", false);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notificacoes"] });
+    },
+  });
+}
