@@ -82,6 +82,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
   };
 
   return (
+    <>
     <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Detalhes do Candidato</DialogTitle></DialogHeader>
