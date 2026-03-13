@@ -34,11 +34,11 @@ export default function Medicoes() {
   const [form, setForm] = useState(emptyForm);
   const [activeTab, setActiveTab] = useState("todos");
   const [filters, setFilters] = useState({
-    periodo: "",
-    projeto: "",
-    descricao: "",
-    valor: "",
-    observacao: "",
+    periodo: "todos",
+    projeto: "todos",
+    descricao: "todos",
+    valor: "todos",
+    observacao: "todos",
   });
 
   // Group projects that have measurements or are active
