@@ -33,6 +33,13 @@ export default function Medicoes() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [activeTab, setActiveTab] = useState("todos");
+  const [filters, setFilters] = useState({
+    periodo: "",
+    projeto: "",
+    descricao: "",
+    valor: "",
+    observacao: "",
+  });
 
   // Group projects that have measurements or are active
   const projetosComMedicoes = useMemo(() => {
@@ -41,9 +48,29 @@ export default function Medicoes() {
   }, [contratos, medicoes]);
 
   const filteredMedicoes = useMemo(() => {
-    if (activeTab === "todos") return medicoes;
-    return medicoes.filter((m) => m.contrato_id === activeTab);
-  }, [medicoes, activeTab]);
+    let result = activeTab === "todos" ? medicoes : medicoes.filter((m) => m.contrato_id === activeTab);
+    if (filters.periodo) {
+      const q = filters.periodo.toLowerCase();
+      result = result.filter((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}`.toLowerCase().includes(q));
+    }
+    if (filters.projeto) {
+      const q = filters.projeto.toLowerCase();
+      result = result.filter((m) => getContratoProjeto(m.contrato_id).toLowerCase().includes(q));
+    }
+    if (filters.descricao) {
+      const q = filters.descricao.toLowerCase();
+      result = result.filter((m) => m.descricao.toLowerCase().includes(q));
+    }
+    if (filters.valor) {
+      const q = filters.valor.toLowerCase();
+      result = result.filter((m) => fmt(Number(m.valor_medido)).toLowerCase().includes(q));
+    }
+    if (filters.observacao) {
+      const q = filters.observacao.toLowerCase();
+      result = result.filter((m) => (m.observacao ?? "").toLowerCase().includes(q));
+    }
+    return result;
+  }, [medicoes, activeTab, filters]);
 
   const openEdit = (m: any) => {
     setEditingId(m.id);
@@ -121,8 +148,12 @@ export default function Medicoes() {
     return digits ? parseInt(digits, 10) / 100 : 0;
   };
 
+  const updateFilter = (key: keyof typeof filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
   const renderTable = (items: typeof medicoes, showProjeto: boolean) => (
-    items.length === 0 ? (
+    items.length === 0 && !Object.values(filters).some(Boolean) ? (
       <p className="text-muted-foreground text-center py-8">Nenhuma medição registrada.</p>
     ) : (
       <Table>
@@ -134,6 +165,26 @@ export default function Medicoes() {
             <TableHead>Valor Medido</TableHead>
             <TableHead>Observação</TableHead>
             <TableHead className="w-24">Ações</TableHead>
+          </TableRow>
+          <TableRow>
+            <TableHead className="p-1">
+              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.periodo} onChange={(e) => updateFilter("periodo", e.target.value)} />
+            </TableHead>
+            {showProjeto && (
+              <TableHead className="p-1">
+                <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.projeto} onChange={(e) => updateFilter("projeto", e.target.value)} />
+              </TableHead>
+            )}
+            <TableHead className="p-1">
+              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.descricao} onChange={(e) => updateFilter("descricao", e.target.value)} />
+            </TableHead>
+            <TableHead className="p-1">
+              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.valor} onChange={(e) => updateFilter("valor", e.target.value)} />
+            </TableHead>
+            <TableHead className="p-1">
+              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.observacao} onChange={(e) => updateFilter("observacao", e.target.value)} />
+            </TableHead>
+            <TableHead className="w-24" />
           </TableRow>
         </TableHeader>
         <TableBody>
