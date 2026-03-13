@@ -427,7 +427,7 @@ const ColaboradorDetalhes = () => {
                   <div><Label>Cidade</Label><Input value={editForm.cidade} onChange={e => setEditForm(p => ({ ...p, cidade: e.target.value }))} /></div>
                   <div><Label>Estado</Label><Input value={editForm.estado} onChange={e => setEditForm(p => ({ ...p, estado: e.target.value }))} /></div>
                 </div>
-                <EditBlockFooter />
+                {editBlockFooter}
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
