@@ -1,19 +1,20 @@
+import { useMemo } from "react";
+
 interface GaugeChartProps {
   value: number; // 0-100
   size?: number;
 }
 
-export default function GaugeChart({ value, size = 200 }: GaugeChartProps) {
+export default function GaugeChart({ value, size = 180 }: GaugeChartProps) {
   const clampedValue = Math.min(Math.max(value, 0), 100);
   const cx = size / 2;
-  const cy = size * 0.52;
-  const r = size * 0.36;
-  const trackWidth = size * 0.06;
-  const valueWidth = size * 0.08;
+  const cy = size * 0.5;
+  const r = size * 0.34;
+  const trackWidth = size * 0.045;
 
-  const startAngle = 210;
-  const endAngle = -30;
-  const sweepAngle = startAngle - endAngle; // 240°
+  const startAngle = 220;
+  const endAngle = -40;
+  const sweepAngle = startAngle - endAngle; // 260°
   const valueAngle = startAngle - (clampedValue / 100) * sweepAngle;
 
   const polarToCartesian = (angle: number, radius: number = r) => {
@@ -29,120 +30,151 @@ export default function GaugeChart({ value, size = 200 }: GaugeChartProps) {
     return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 0 ${end.x} ${end.y}`;
   };
 
-  // Gradient ID
-  const gradId = `gauge-grad-${size}`;
+  const uid = useMemo(() => Math.random().toString(36).substring(2, 8), []);
+  const gradId = `gauge-g-${uid}`;
 
-  // Needle
-  const needleLen = r - valueWidth * 0.2;
-  const needleTip = polarToCartesian(valueAngle, needleLen);
-  const baseR = size * 0.022;
-  const nb1Angle = valueAngle + 90;
-  const nb2Angle = valueAngle - 90;
-  const nb1 = {
-    x: cx + baseR * Math.cos((nb1Angle * Math.PI) / 180),
-    y: cy - baseR * Math.sin((nb1Angle * Math.PI) / 180),
-  };
-  const nb2 = {
-    x: cx + baseR * Math.cos((nb2Angle * Math.PI) / 180),
-    y: cy - baseR * Math.sin((nb2Angle * Math.PI) / 180),
-  };
+  // Segment colors — red → amber → blue → green
+  const segments = [
+    { from: 0, to: 25, color: "hsl(5, 50%, 52%)" },
+    { from: 25, to: 50, color: "hsl(38, 55%, 50%)" },
+    { from: 50, to: 75, color: "hsl(210, 35%, 48%)" },
+    { from: 75, to: 100, color: "hsl(155, 40%, 40%)" },
+  ];
 
-  // Tick marks (small lines on the arc)
-  const ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  // Needle geometry — tapered
+  const needleLen = r * 0.88;
+  const needleTailLen = r * 0.18;
+  const tipWidth = size * 0.008;
+  const baseWidth = size * 0.028;
+  const nRad = (valueAngle * Math.PI) / 180;
+  const perpRad = nRad + Math.PI / 2;
+
+  const tip = { x: cx + needleLen * Math.cos(nRad), y: cy - needleLen * Math.sin(nRad) };
+  const tail = { x: cx - needleTailLen * Math.cos(nRad), y: cy + needleTailLen * Math.sin(nRad) };
+  const tipL = { x: tip.x + tipWidth * Math.cos(perpRad), y: tip.y - tipWidth * Math.sin(perpRad) };
+  const tipR = { x: tip.x - tipWidth * Math.cos(perpRad), y: tip.y + tipWidth * Math.sin(perpRad) };
+  const baseL = { x: cx + baseWidth * Math.cos(perpRad), y: cy - baseWidth * Math.sin(perpRad) };
+  const baseR2 = { x: cx - baseWidth * Math.cos(perpRad), y: cy + baseWidth * Math.sin(perpRad) };
+
   const majorTicks = [0, 25, 50, 75, 100];
+  const minorTicks = [10, 20, 30, 40, 60, 70, 80, 90];
 
   return (
-    <svg width={size} height={size * 0.62} viewBox={`0 0 ${size} ${size * 0.62}`}>
+    <svg
+      width={size}
+      height={size * 0.58}
+      viewBox={`0 0 ${size} ${size * 0.58}`}
+    >
       <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="hsl(0, 45%, 55%)" />
-          <stop offset="35%" stopColor="hsl(35, 55%, 50%)" />
-          <stop offset="65%" stopColor="hsl(200, 35%, 45%)" />
-          <stop offset="100%" stopColor="hsl(150, 40%, 40%)" />
-        </linearGradient>
-        <filter id="gauge-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.15" />
-        </filter>
-        <filter id="needle-shadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.25" />
+        <filter id={`ns-${uid}`} x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="0.5" stdDeviation="1" floodOpacity="0.2" />
         </filter>
       </defs>
 
-      {/* Background track */}
-      <path
-        d={arcPath(startAngle, endAngle)}
-        fill="none"
-        stroke="hsl(225, 12%, 92%)"
-        strokeWidth={trackWidth}
-        strokeLinecap="round"
-      />
+      {/* Track segments (colored background) */}
+      {segments.map((seg, i) => {
+        const fromA = startAngle - (seg.from / 100) * sweepAngle;
+        const toA = startAngle - (seg.to / 100) * sweepAngle;
+        return (
+          <path
+            key={i}
+            d={arcPath(fromA, toA)}
+            fill="none"
+            stroke={seg.color}
+            strokeWidth={trackWidth}
+            opacity={0.18}
+            strokeLinecap={i === 0 || i === segments.length - 1 ? "round" : "butt"}
+          />
+        );
+      })}
 
-      {/* Colored value arc with gradient */}
+      {/* Active value arc */}
       {clampedValue > 0.5 && (
-        <path
-          d={arcPath(startAngle, valueAngle)}
-          fill="none"
-          stroke={`url(#${gradId})`}
-          strokeWidth={valueWidth}
-          strokeLinecap="round"
-          filter="url(#gauge-shadow)"
-        />
+        <>
+          {segments.map((seg, i) => {
+            const segStart = startAngle - (seg.from / 100) * sweepAngle;
+            const segEnd = startAngle - (seg.to / 100) * sweepAngle;
+            // Clamp to the filled portion
+            if (valueAngle >= segStart) return null; // value hasn't reached this segment
+            const fromA = segStart;
+            const toA = Math.max(valueAngle, segEnd);
+            if (fromA <= toA) return null;
+            return (
+              <path
+                key={`active-${i}`}
+                d={arcPath(fromA, toA)}
+                fill="none"
+                stroke={seg.color}
+                strokeWidth={trackWidth * 1.4}
+                strokeLinecap={
+                  (i === 0 && fromA === segStart) || toA === valueAngle
+                    ? "round"
+                    : "butt"
+                }
+              />
+            );
+          })}
+        </>
       )}
 
-      {/* Tick marks */}
-      {ticks.map((tick) => {
+      {/* Minor ticks */}
+      {minorTicks.map((tick) => {
         const angle = startAngle - (tick / 100) * sweepAngle;
-        const isMajor = majorTicks.includes(tick);
-        const innerR = r - (isMajor ? trackWidth * 1.1 : trackWidth * 0.7);
-        const outerR = r + (isMajor ? trackWidth * 0.6 : trackWidth * 0.3);
-        const p1 = polarToCartesian(angle, innerR);
-        const p2 = polarToCartesian(angle, outerR);
+        const p1 = polarToCartesian(angle, r + trackWidth * 0.9);
+        const p2 = polarToCartesian(angle, r + trackWidth * 0.9 + size * 0.018);
         return (
           <line
             key={tick}
-            x1={p1.x}
-            y1={p1.y}
-            x2={p2.x}
-            y2={p2.y}
-            stroke={isMajor ? "hsl(225, 20%, 55%)" : "hsl(225, 12%, 82%)"}
-            strokeWidth={isMajor ? 1.5 : 0.8}
+            x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+            stroke="hsl(225, 10%, 78%)"
+            strokeWidth={0.8}
             strokeLinecap="round"
           />
         );
       })}
 
-      {/* Major tick labels */}
+      {/* Major ticks + labels */}
       {majorTicks.map((tick) => {
         const angle = startAngle - (tick / 100) * sweepAngle;
-        const labelR = r + trackWidth * 0.6 + size * 0.06;
-        const pos = polarToCartesian(angle, labelR);
+        const p1 = polarToCartesian(angle, r + trackWidth * 0.9);
+        const p2 = polarToCartesian(angle, r + trackWidth * 0.9 + size * 0.03);
+        const labelPos = polarToCartesian(angle, r + trackWidth + size * 0.065);
         return (
-          <text
-            key={tick}
-            x={pos.x}
-            y={pos.y}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="fill-muted-foreground"
-            fontSize={size * 0.058}
-            fontWeight={tick === 0 || tick === 100 ? 600 : 400}
-          >
-            {tick}
-          </text>
+          <g key={tick}>
+            <line
+              x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+              stroke="hsl(225, 15%, 55%)"
+              strokeWidth={1.2}
+              strokeLinecap="round"
+            />
+            <text
+              x={labelPos.x}
+              y={labelPos.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-muted-foreground"
+              fontSize={size * 0.056}
+              fontWeight={500}
+              fontFamily="Inter, system-ui, sans-serif"
+            >
+              {tick}
+            </text>
+          </g>
         );
       })}
 
       {/* Needle */}
-      <g filter="url(#needle-shadow)">
-        <polygon
-          points={`${needleTip.x},${needleTip.y} ${nb1.x},${nb1.y} ${nb2.x},${nb2.y}`}
-          fill="hsl(225, 30%, 22%)"
+      <g filter={`url(#ns-${uid})`}>
+        <path
+          d={`M ${tipL.x},${tipL.y} L ${baseL.x},${baseL.y} L ${tail.x},${tail.y} L ${baseR2.x},${baseR2.y} L ${tipR.x},${tipR.y} Z`}
+          fill="hsl(225, 30%, 20%)"
         />
       </g>
 
-      {/* Center cap */}
-      <circle cx={cx} cy={cy} r={size * 0.035} fill="hsl(225, 28%, 20%)" />
-      <circle cx={cx} cy={cy} r={size * 0.018} fill="hsl(225, 15%, 40%)" />
+      {/* Center hub */}
+      <circle cx={cx} cy={cy} r={size * 0.04} fill="hsl(225, 25%, 25%)" />
+      <circle cx={cx} cy={cy} r={size * 0.022} fill="hsl(225, 20%, 40%)" />
+      <circle cx={cx} cy={cy} r={size * 0.008} fill="hsl(225, 15%, 60%)" />
     </svg>
   );
 }
