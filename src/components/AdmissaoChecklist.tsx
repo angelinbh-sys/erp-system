@@ -320,6 +320,9 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
       {/* Bank Data Fields */}
       <BankDataFields vaga={vaga} canEdit={canEdit} onSaved={onBankDataSaved} />
 
+      {/* Address Fields */}
+      <AddressFields vaga={vaga} canEdit={canEdit} onSaved={onBankDataSaved} />
+
       {/* Process Documents */}
       <Card>
         <CardHeader className="pb-3">
