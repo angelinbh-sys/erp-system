@@ -12,7 +12,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const chartConfig: ChartConfig = {
   valor: {
@@ -50,8 +50,8 @@ export default function DashboardContratos() {
   const medicoesFiltradas = useMemo(() => {
     return medicoes.filter((m) => {
       if (!contratoIds.has(m.contrato_id)) return false;
-      if (filtroPeriodoDe && m.data < filtroPeriodoDe) return false;
-      if (filtroPeriodoAte && m.data > filtroPeriodoAte) return false;
+      if (filtroPeriodoDe && m.data_inicio < filtroPeriodoDe) return false;
+      if (filtroPeriodoAte && m.data_fim > filtroPeriodoAte) return false;
       return true;
     });
   }, [medicoes, contratoIds, filtroPeriodoDe, filtroPeriodoAte]);
@@ -64,7 +64,7 @@ export default function DashboardContratos() {
   const dadosGrafico = useMemo(() => {
     const mapa: Record<string, number> = {};
     medicoesFiltradas.forEach((m) => {
-      const mes = m.data.substring(0, 7); // YYYY-MM
+      const mes = m.data_inicio.substring(0, 7);
       mapa[mes] = (mapa[mes] || 0) + Number(m.valor_medido);
     });
     return Object.entries(mapa)
@@ -82,7 +82,6 @@ export default function DashboardContratos() {
     <div className="space-y-6">
       <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard de Contratos</h1>
 
-      {/* Filtros */}
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -134,7 +133,6 @@ export default function DashboardContratos() {
         </CardContent>
       </Card>
 
-      {/* Cards de indicadores */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -174,7 +172,6 @@ export default function DashboardContratos() {
         </Card>
       </div>
 
-      {/* Gráfico de avanço mensal */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Avanço Financeiro Mensal</CardTitle>

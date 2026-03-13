@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -39,20 +39,15 @@ export default function RelatoriosContratos() {
 
   const exportCSV = () => {
     let csv = "";
-    if (tipoRelatorio === "medicoes") {
-      csv = "Data,Contrato,Descrição,Valor Medido,Observação\n";
+    if (tipoRelatorio === "medicoes" || tipoRelatorio === "historico") {
+      csv = "Período Início,Período Fim,Contrato,Descrição,Valor Medido,Observação\n";
       medicoesFiltradas.forEach((m) => {
-        csv += `${m.data},${getContratoNumero(m.contrato_id)},"${m.descricao}",${m.valor_medido},"${m.observacao || ""}"\n`;
+        csv += `${m.data_inicio},${m.data_fim},${getContratoNumero(m.contrato_id)},"${m.descricao}",${m.valor_medido},"${m.observacao || ""}"\n`;
       });
-    } else if (tipoRelatorio === "avanco") {
+    } else {
       csv = "Contrato,Cliente,Valor Contratado,Total Medido,Avanço %\n";
       avancoData.forEach((c) => {
         csv += `${c.numero_contrato},"${c.cliente}",${c.valor_contrato},${c.totalMedido},${c.percentual.toFixed(1)}\n`;
-      });
-    } else {
-      csv = "Data,Contrato,Descrição,Valor Medido,Observação\n";
-      medicoesFiltradas.forEach((m) => {
-        csv += `${m.data},${getContratoNumero(m.contrato_id)},"${m.descricao}",${m.valor_medido},"${m.observacao || ""}"\n`;
       });
     }
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -138,7 +133,7 @@ export default function RelatoriosContratos() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Data</TableHead>
+                  <TableHead>Período</TableHead>
                   <TableHead>Contrato</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead>Valor Medido</TableHead>
@@ -150,7 +145,7 @@ export default function RelatoriosContratos() {
                   <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma medição encontrada.</TableCell></TableRow>
                 ) : medicoesFiltradas.map((m) => (
                   <TableRow key={m.id}>
-                    <TableCell>{fmtDate(m.data)}</TableCell>
+                    <TableCell>{fmtDate(m.data_inicio)} — {fmtDate(m.data_fim)}</TableCell>
                     <TableCell className="font-medium">{getContratoNumero(m.contrato_id)}</TableCell>
                     <TableCell>{m.descricao}</TableCell>
                     <TableCell>{fmt(Number(m.valor_medido))}</TableCell>

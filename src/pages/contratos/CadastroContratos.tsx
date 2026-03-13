@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useContratos, type Contrato } from "@/hooks/useContratos";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrencyBRL, parseCurrencyBRL } from "@/utils/currency";
 
 const emptyForm = {
   numero_contrato: "",
   cliente: "",
   projeto_obra: "",
-  valor_contrato: 0,
+  valor_contrato_display: "",
   data_inicio: "",
   data_termino: "",
   responsavel: "",
@@ -36,11 +37,12 @@ export default function CadastroContratos() {
 
   const openEdit = (c: Contrato) => {
     setEditingId(c.id);
+    const centavos = Math.round(Number(c.valor_contrato) * 100).toString();
     setForm({
       numero_contrato: c.numero_contrato,
       cliente: c.cliente,
       projeto_obra: c.projeto_obra,
-      valor_contrato: Number(c.valor_contrato),
+      valor_contrato_display: formatCurrencyBRL(centavos),
       data_inicio: c.data_inicio,
       data_termino: c.data_termino,
       responsavel: c.responsavel,
@@ -49,17 +51,46 @@ export default function CadastroContratos() {
     setDialogOpen(true);
   };
 
+  const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    setForm({ ...form, valor_contrato_display: raw ? formatCurrencyBRL(raw) : "" });
+  };
+
+  const handleValorPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
+    if (pasted) {
+      setForm({ ...form, valor_contrato_display: formatCurrencyBRL(pasted) });
+    }
+  };
+
+  const getValorNumber = (): number => {
+    const digits = parseCurrencyBRL(form.valor_contrato_display);
+    return digits ? parseInt(digits, 10) / 100 : 0;
+  };
+
   const handleSave = async () => {
+    const valor = getValorNumber();
     if (!form.numero_contrato || !form.cliente || !form.projeto_obra || !form.data_inicio || !form.data_termino || !form.responsavel) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
     try {
+      const payload = {
+        numero_contrato: form.numero_contrato,
+        cliente: form.cliente,
+        projeto_obra: form.projeto_obra,
+        valor_contrato: valor,
+        data_inicio: form.data_inicio,
+        data_termino: form.data_termino,
+        responsavel: form.responsavel,
+        status: form.status,
+      };
       if (editingId) {
-        await updateContrato.mutateAsync({ id: editingId, ...form });
+        await updateContrato.mutateAsync({ id: editingId, ...payload });
         toast.success("Contrato atualizado com sucesso!");
       } else {
-        await createContrato.mutateAsync(form);
+        await createContrato.mutateAsync(payload);
         toast.success("Contrato cadastrado com sucesso!");
       }
       setDialogOpen(false);
@@ -159,7 +190,13 @@ export default function CadastroContratos() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Valor do Contrato *</Label>
-                <Input type="number" step="0.01" min="0" value={form.valor_contrato || ""} onChange={(e) => setForm({ ...form, valor_contrato: parseFloat(e.target.value) || 0 })} />
+                <Input
+                  value={form.valor_contrato_display}
+                  onChange={handleValorChange}
+                  onPaste={handleValorPaste}
+                  placeholder="R$ 0,00"
+                  inputMode="numeric"
+                />
               </div>
               <div>
                 <Label>Responsável *</Label>
