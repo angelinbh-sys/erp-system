@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Bell, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { useNotificacoesNaoLidas, useNotificacoes, useMarcarLida } from "@/hooks/useNotificacoes";
+import { useNotificacoesNaoLidas, useNotificacoes, useMarcarLida, useMarcarTodasLidas } from "@/hooks/useNotificacoes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -30,6 +30,7 @@ export function UserAreaHeader() {
   const { data: naoLidas = [] } = useNotificacoesNaoLidas();
   const { data: todasNotificacoes = [] } = useNotificacoes();
   const marcarLida = useMarcarLida();
+  const marcarTodasLidas = useMarcarTodasLidas();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
@@ -94,8 +95,16 @@ export function UserAreaHeader() {
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0 overflow-hidden" align="end">
-          <div className="p-3 border-b border-border">
+          <div className="p-3 border-b border-border flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Notificações</p>
+            {naoLidas.length > 0 && (
+              <button
+                onClick={() => marcarTodasLidas.mutate()}
+                className="text-xs text-primary hover:underline font-medium"
+              >
+                Marcar todas como lidas
+              </button>
+            )}
           </div>
           <div className="max-h-80 overflow-y-scroll [scrollbar-gutter:stable]">
             {recentNotifs.length === 0 ? (

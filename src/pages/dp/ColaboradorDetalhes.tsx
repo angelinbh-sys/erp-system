@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Download, User as UserIcon, FileText, History, Pencil, Save, X } from "lucide-react";
+import { ArrowLeft, Download, User as UserIcon, FileText, History, Pencil, Save, X, ArrowRightLeft } from "lucide-react";
 import { formatFirstLastName } from "@/utils/formatName";
 import { useColaboradorHistorico, useUpdateColaborador, type Colaborador } from "@/hooks/useColaboradores";
 import { useAdmissaoDocumentos, DOCUMENTOS_OBRIGATORIOS } from "@/hooks/useAdmissaoDocumentos";
@@ -29,8 +29,11 @@ const ColaboradorDetalhes = () => {
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ nome: "", cargo: "", centro_custo: "", site_contrato: "", status: "", telefone: "" });
+  const [editForm, setEditForm] = useState({ nome: "", cargo: "", status: "", telefone: "" });
   const [motivo, setMotivo] = useState("");
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferForm, setTransferForm] = useState({ centro_custo: "", site_contrato: "" });
+  const [transferMotivo, setTransferMotivo] = useState("");
   const updateColaborador = useUpdateColaborador();
 
   const { data: historico = [] } = useColaboradorHistorico(id || null);
@@ -77,13 +80,54 @@ const ColaboradorDetalhes = () => {
     setEditForm({
       nome: colaborador.nome,
       cargo: colaborador.cargo,
-      centro_custo: colaborador.centro_custo,
-      site_contrato: colaborador.site_contrato,
       status: colaborador.status,
       telefone: colaborador.telefone || "",
     });
     setMotivo("");
     setEditing(true);
+  };
+
+  const startTransfer = () => {
+    if (!colaborador) return;
+    setTransferForm({
+      centro_custo: colaborador.centro_custo,
+      site_contrato: colaborador.site_contrato,
+    });
+    setTransferMotivo("");
+    setShowTransfer(true);
+  };
+
+  const handleSaveTransfer = async () => {
+    if (!colaborador || !transferMotivo.trim()) {
+      toast.error("O motivo da transferência é obrigatório.");
+      return;
+    }
+    const alteradoPor = formatFirstLastName(profile?.nome) || "Sistema";
+    const changes: Array<{ colaborador_id: string; campo_alterado: string; valor_anterior: string | null; valor_novo: string | null; motivo: string; alterado_por: string }> = [];
+    const updates: Record<string, unknown> = {};
+
+    const fields = [
+      { key: "centro_custo", label: "Centro de Custo" },
+      { key: "site_contrato", label: "Site / Contrato" },
+    ] as const;
+
+    for (const f of fields) {
+      const oldVal = colaborador[f.key as keyof Colaborador] as string | null;
+      const newVal = transferForm[f.key as keyof typeof transferForm];
+      if ((oldVal || "") !== newVal) {
+        updates[f.key] = newVal || null;
+        changes.push({ colaborador_id: colaborador.id, campo_alterado: f.label, valor_anterior: oldVal, valor_novo: newVal || null, motivo: transferMotivo.trim(), alterado_por: alteradoPor });
+      }
+    }
+
+    if (Object.keys(updates).length === 0) { toast.info("Nenhuma alteração detectada."); return; }
+
+    try {
+      await updateColaborador.mutateAsync({ id: colaborador.id, updates, historico: changes });
+      setColaborador(prev => prev ? { ...prev, ...updates } as Colaborador : prev);
+      toast.success("Transferência realizada com sucesso.");
+      setShowTransfer(false);
+    } catch { toast.error("Erro ao realizar transferência."); }
   };
 
   const handleSaveEdit = async () => {
@@ -99,8 +143,6 @@ const ColaboradorDetalhes = () => {
     const fields = [
       { key: "nome", label: "Nome" },
       { key: "cargo", label: "Cargo" },
-      { key: "centro_custo", label: "Centro de Custo" },
-      { key: "site_contrato", label: "Site / Contrato" },
       { key: "status", label: "Status" },
       { key: "telefone", label: "Telefone" },
     ] as const;
@@ -182,10 +224,10 @@ const ColaboradorDetalhes = () => {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex items-start gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={fotoUrl || undefined} />
-              <AvatarFallback className="text-2xl bg-muted">
-                {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-10 w-10" />}
+            <Avatar className="h-48 w-48">
+              <AvatarImage src={fotoUrl || undefined} className="object-cover" />
+              <AvatarFallback className="text-4xl bg-muted">
+                {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-20 w-20" />}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -211,8 +253,6 @@ const ColaboradorDetalhes = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div><Label>Nome</Label><Input value={editForm.nome} onChange={e => setEditForm(p => ({ ...p, nome: e.target.value }))} /></div>
               <div><Label>Cargo / Função</Label><Input value={editForm.cargo} onChange={e => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
-              <div><Label>Centro de Custo</Label><Input value={editForm.centro_custo} onChange={e => setEditForm(p => ({ ...p, centro_custo: e.target.value }))} /></div>
-              <div><Label>Site / Contrato</Label><Input value={editForm.site_contrato} onChange={e => setEditForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
               <div><Label>Telefone</Label><Input value={editForm.telefone} onChange={e => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
               <div>
                 <Label>Status</Label>
@@ -259,10 +299,17 @@ const ColaboradorDetalhes = () => {
         </CardContent>
       </Card>
 
-      {/* Lotação */}
+      {/* Local de Trabalho */}
       <Card className="mb-6">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">🏢 Lotação</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold">🏢 Local de Trabalho</CardTitle>
+            {!editing && (
+              <Button variant="outline" size="sm" onClick={startTransfer}>
+                <ArrowRightLeft className="h-4 w-4 mr-1" /> Transferir Colaborador
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -272,6 +319,31 @@ const ColaboradorDetalhes = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Transfer Dialog */}
+      {showTransfer && (
+        <Card className="mb-6 border-primary/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <ArrowRightLeft className="h-4 w-4" /> Transferir Colaborador
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><Label>Centro de Custo</Label><Input value={transferForm.centro_custo} onChange={e => setTransferForm(p => ({ ...p, centro_custo: e.target.value }))} /></div>
+              <div><Label>Site / Contrato</Label><Input value={transferForm.site_contrato} onChange={e => setTransferForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
+            </div>
+            <div>
+              <Label>Motivo da Transferência *</Label>
+              <Textarea placeholder="Descreva o motivo da transferência" value={transferMotivo} onChange={e => setTransferMotivo(e.target.value)} />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setShowTransfer(false)}><X className="h-4 w-4 mr-1" /> Cancelar</Button>
+              <Button size="sm" onClick={handleSaveTransfer} disabled={updateColaborador.isPending}><Save className="h-4 w-4 mr-1" /> Confirmar Transferência</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Endereço */}
       {vaga && (vaga.cep || vaga.logradouro || vaga.cidade) && (
