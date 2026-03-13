@@ -143,8 +143,6 @@ const ColaboradorDetalhes = () => {
     const fields = [
       { key: "nome", label: "Nome" },
       { key: "cargo", label: "Cargo" },
-      { key: "centro_custo", label: "Centro de Custo" },
-      { key: "site_contrato", label: "Site / Contrato" },
       { key: "status", label: "Status" },
       { key: "telefone", label: "Telefone" },
     ] as const;
