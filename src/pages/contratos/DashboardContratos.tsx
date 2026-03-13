@@ -67,24 +67,39 @@ export default function DashboardContratos() {
   const percentualAvanco = valorTotalContratado > 0 ? (valorTotalMedido / valorTotalContratado) * 100 : 0;
   const valorRestante = valorTotalContratado - valorTotalMedido;
 
+  const contratoMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    contratos.forEach((c) => { map[c.id] = c.projeto_obra; });
+    return map;
+  }, [contratos]);
+
+  const projetosFiltrados = useMemo(() => {
+    return [...new Set(contratosFiltrados.map((c) => c.projeto_obra))].sort();
+  }, [contratosFiltrados]);
+
+  const chartConfig: ChartConfig = useMemo(() => {
+    const cfg: ChartConfig = {};
+    projetosFiltrados.forEach((p, i) => {
+      cfg[p] = { label: p, color: PROJECT_COLORS[i % PROJECT_COLORS.length] };
+    });
+    return cfg;
+  }, [projetosFiltrados]);
+
   const dadosGrafico = useMemo(() => {
-    const mapa: Record<string, number> = {};
+    const mapa: Record<string, Record<string, number>> = {};
     medicoesFiltradas.forEach((m) => {
       const mes = m.data_inicio.substring(0, 7);
-      mapa[mes] = (mapa[mes] || 0) + Number(m.valor_medido);
+      const projeto = contratoMap[m.contrato_id] || "Outros";
+      if (!mapa[mes]) mapa[mes] = {};
+      mapa[mes][projeto] = (mapa[mes][projeto] || 0) + Number(m.valor_medido);
     });
     return Object.entries(mapa)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([mes, valor]) => ({
+      .map(([mes, projetos]) => ({
         mes: mes.split("-").reverse().join("/"),
-        valor,
+        ...projetos,
       }));
-  }, [medicoesFiltradas]);
-
-  const fmt = (v: number) =>
-    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-  return (
+  }, [medicoesFiltradas, contratoMap]);
     <div className="space-y-6">
       <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard de Contratos</h1>
 
