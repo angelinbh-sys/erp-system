@@ -276,7 +276,7 @@ const ColaboradorDetalhes = () => {
     </div>
   );
 
-  const EditBlockFooter = () => (
+  const editBlockFooter = (
     <div className="space-y-3 mt-4 pt-4 border-t border-border">
       <div>
         <Label>Motivo da Alteração *</Label>
@@ -289,7 +289,7 @@ const ColaboradorDetalhes = () => {
     </div>
   );
 
-  const EditButton = ({ block }: { block: EditingBlock }) => (
+  const renderEditButton = (block: EditingBlock) => (
     editingBlock === null ? (
       <Button variant="outline" size="sm" onClick={() => startEditBlock(block)}>
         <Pencil className="h-4 w-4 mr-1" /> Editar Dados
@@ -311,7 +311,7 @@ const ColaboradorDetalhes = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold">👤 Dados Pessoais</CardTitle>
-            <EditButton block="pessoais" />
+            {renderEditButton("pessoais")}
           </div>
         </CardHeader>
         <CardContent>
@@ -334,7 +334,7 @@ const ColaboradorDetalhes = () => {
                   </Select>
                 </div>
               </div>
-              <EditBlockFooter />
+              {editBlockFooter}
             </div>
           ) : (
             <div className="flex items-start gap-6">
@@ -412,7 +412,7 @@ const ColaboradorDetalhes = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold">📍 Endereço</CardTitle>
-              <EditButton block="endereco" />
+              {renderEditButton("endereco")}
             </div>
           </CardHeader>
           <CardContent>
@@ -427,7 +427,7 @@ const ColaboradorDetalhes = () => {
                   <div><Label>Cidade</Label><Input value={editForm.cidade} onChange={e => setEditForm(p => ({ ...p, cidade: e.target.value }))} /></div>
                   <div><Label>Estado</Label><Input value={editForm.estado} onChange={e => setEditForm(p => ({ ...p, estado: e.target.value }))} /></div>
                 </div>
-                <EditBlockFooter />
+                {editBlockFooter}
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -450,7 +450,7 @@ const ColaboradorDetalhes = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold">🏦 Dados Bancários</CardTitle>
-              <EditButton block="bancarios" />
+              {renderEditButton("bancarios")}
             </div>
           </CardHeader>
           <CardContent>
@@ -467,7 +467,7 @@ const ColaboradorDetalhes = () => {
                     <div className="w-16"><Label>Dígito</Label><Input value={editForm.digito_conta} onChange={e => setEditForm(p => ({ ...p, digito_conta: e.target.value }))} /></div>
                   </div>
                 </div>
-                <EditBlockFooter />
+                {editBlockFooter}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
