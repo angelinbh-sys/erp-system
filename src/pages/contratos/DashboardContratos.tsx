@@ -100,7 +100,11 @@ export default function DashboardContratos() {
         ...projetos,
       }));
   }, [medicoesFiltradas, contratoMap]);
-    <div className="space-y-6">
+
+  const fmt = (v: number) =>
+    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  return (
       <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard de Contratos</h1>
 
       <Card>
