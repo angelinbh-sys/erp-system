@@ -182,10 +182,10 @@ const ColaboradorDetalhes = () => {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex items-start gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={fotoUrl || undefined} />
-              <AvatarFallback className="text-2xl bg-muted">
-                {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-10 w-10" />}
+            <Avatar className="h-48 w-48">
+              <AvatarImage src={fotoUrl || undefined} className="object-cover" />
+              <AvatarFallback className="text-4xl bg-muted">
+                {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-20 w-20" />}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
