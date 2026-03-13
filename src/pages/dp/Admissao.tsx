@@ -22,12 +22,17 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { STATUS_PROCESSO } from "@/utils/statusProcesso";
 import { AdmissaoChecklist, useChecklistComplete } from "@/components/AdmissaoChecklist";
 import { formatFirstLastName } from "@/utils/formatName";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logAction, profile }: { detailVaga: any; setDetailVaga: Dispatch<SetStateAction<any>>; queryClient: any; logAction: any; profile: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
   const sp = detailVaga?.status_processo;
   const isAdmitido = sp === STATUS_PROCESSO.ADMITIDO || sp === STATUS_PROCESSO.EFETIVADO;
   const checklistComplete = useChecklistComplete(detailVaga);
+  const [showDevolver, setShowDevolver] = useState(false);
+  const [motivoDevolucao, setMotivoDevolucao] = useState("");
+  const [devolvendo, setDevolvendo] = useState(false);
 
   // canEdit: only when liberado and not yet admitido
   const canEditChecklist = detailVaga?.enviado_admissao && !isAdmitido;
