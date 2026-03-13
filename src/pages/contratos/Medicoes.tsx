@@ -11,13 +11,14 @@ import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrencyBRL, parseCurrencyBRL } from "@/utils/currency";
 
 const emptyForm = {
   contrato_id: "",
   data_inicio: "",
   data_fim: "",
   descricao: "",
-  valor_medido: 0,
+  valor_medido_display: "",
   observacao: "",
 };
 
@@ -31,7 +32,8 @@ export default function Medicoes() {
   const [form, setForm] = useState(emptyForm);
 
   const handleSave = async () => {
-    if (!form.contrato_id || !form.data_inicio || !form.data_fim || !form.descricao || !form.valor_medido) {
+    const valor = getValorNumber();
+    if (!form.contrato_id || !form.data_inicio || !form.data_fim || !form.descricao || !valor) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
@@ -41,7 +43,7 @@ export default function Medicoes() {
         data_inicio: form.data_inicio,
         data_fim: form.data_fim,
         descricao: form.descricao,
-        valor_medido: form.valor_medido,
+        valor_medido: valor,
         observacao: form.observacao || null,
       });
       toast.success("Medição registrada com sucesso!");
@@ -65,6 +67,24 @@ export default function Medicoes() {
   const getContratoProjeto = (id: string) => contratos.find((c) => c.id === id)?.projeto_obra ?? "—";
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
+
+  const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    setForm({ ...form, valor_medido_display: raw ? formatCurrencyBRL(raw) : "" });
+  };
+
+  const handleValorPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
+    if (pasted) {
+      setForm({ ...form, valor_medido_display: formatCurrencyBRL(pasted) });
+    }
+  };
+
+  const getValorNumber = (): number => {
+    const digits = parseCurrencyBRL(form.valor_medido_display);
+    return digits ? parseInt(digits, 10) / 100 : 0;
+  };
 
   return (
     <div className="space-y-6">
@@ -143,7 +163,13 @@ export default function Medicoes() {
             </div>
             <div>
               <Label>Valor Medido *</Label>
-              <Input type="number" step="0.01" min="0" value={form.valor_medido || ""} onChange={(e) => setForm({ ...form, valor_medido: parseFloat(e.target.value) || 0 })} />
+              <Input
+                value={form.valor_medido_display}
+                onChange={handleValorChange}
+                onPaste={handleValorPaste}
+                placeholder="R$ 0,00"
+                inputMode="numeric"
+              />
             </div>
             <div>
               <Label>Observação</Label>
