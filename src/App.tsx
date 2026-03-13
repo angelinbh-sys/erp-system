@@ -21,6 +21,10 @@ import AdminPermissoes from "@/pages/admin/Permissoes";
 import AuditLog from "@/pages/admin/AuditLog";
 import LimparDadosTeste from "@/pages/admin/LimparDadosTeste";
 import AgendamentoASO from "@/pages/sesmt/AgendamentoASO";
+import DashboardContratos from "@/pages/contratos/DashboardContratos";
+import CadastroContratos from "@/pages/contratos/CadastroContratos";
+import MedicoesPage from "@/pages/contratos/Medicoes";
+import RelatoriosContratos from "@/pages/contratos/RelatoriosContratos";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import NotFound from "./pages/NotFound";
 
