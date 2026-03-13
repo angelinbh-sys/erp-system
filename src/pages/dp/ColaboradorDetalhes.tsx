@@ -467,7 +467,7 @@ const ColaboradorDetalhes = () => {
                     <div className="w-16"><Label>Dígito</Label><Input value={editForm.digito_conta} onChange={e => setEditForm(p => ({ ...p, digito_conta: e.target.value }))} /></div>
                   </div>
                 </div>
-                <EditBlockFooter />
+                {editBlockFooter}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
