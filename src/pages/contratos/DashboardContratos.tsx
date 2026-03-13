@@ -181,12 +181,14 @@ export default function DashboardContratos() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">Avanço Financeiro</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{(Math.floor(percentualAvanco * 100) / 100).toFixed(2)}%</div>
+          <CardContent className="flex flex-col items-center pt-2 pb-3">
+            <GaugeChart value={percentualAvanco} size={160} />
+            <div className="text-xl font-bold text-foreground -mt-1">
+              {(Math.floor(percentualAvanco * 100) / 100).toFixed(2)}%
+            </div>
           </CardContent>
         </Card>
         <Card>
