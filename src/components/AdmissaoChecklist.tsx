@@ -201,7 +201,8 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
 
   const hasCV = !!vaga?.curriculo_nome;
   const hasASO = !!vaga?.resultado_aso_nome;
-  const hasBankData = !!(vaga?.agencia && vaga?.conta);
+  const hasBankData = !!(vaga?.banco && vaga?.agencia && vaga?.conta);
+  const hasAddress = !!(vaga?.cep && vaga?.numero);
 
   const checklistCount = documentosObrigatorios.length;
   const completedChecklist = documentosObrigatorios.filter((d) => getDocStatus(d.tipo)?.status === "anexado").length;
