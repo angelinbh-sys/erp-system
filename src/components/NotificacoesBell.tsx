@@ -40,7 +40,7 @@ export function NotificacoesBell() {
         <div className="p-3 border-b border-border">
           <p className="text-sm font-semibold text-foreground">Notificações</p>
         </div>
-        <div className="max-h-64 overflow-y-auto">
+        <div className="max-h-[350px] overflow-y-scroll">
           {notificacoes.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground text-center">
               Nenhuma notificação pendente.
