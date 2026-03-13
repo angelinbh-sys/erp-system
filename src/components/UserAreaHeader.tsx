@@ -93,7 +93,7 @@ export function UserAreaHeader() {
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0" align="end">
+        <PopoverContent className="w-80 p-0 overflow-hidden" align="end">
           <div className="p-3 border-b border-border">
             <p className="text-sm font-semibold text-foreground">Notificações</p>
           </div>
