@@ -1,0 +1,155 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useContratos } from "@/hooks/useContratos";
+import { useMedicoes } from "@/hooks/useMedicoes";
+import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+const emptyForm = {
+  contrato_id: "",
+  data: "",
+  descricao: "",
+  valor_medido: 0,
+  observacao: "",
+};
+
+export default function Medicoes() {
+  const { contratosQuery } = useContratos();
+  const { medicoesQuery, createMedicao, deleteMedicao } = useMedicoes();
+  const contratos = contratosQuery.data ?? [];
+  const medicoes = medicoesQuery.data ?? [];
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+
+  const handleSave = async () => {
+    if (!form.contrato_id || !form.data || !form.descricao || !form.valor_medido) {
+      toast.error("Preencha todos os campos obrigatórios.");
+      return;
+    }
+    try {
+      await createMedicao.mutateAsync({
+        contrato_id: form.contrato_id,
+        data: form.data,
+        descricao: form.descricao,
+        valor_medido: form.valor_medido,
+        observacao: form.observacao || null,
+      });
+      toast.success("Medição registrada com sucesso!");
+      setDialogOpen(false);
+      setForm(emptyForm);
+    } catch {
+      toast.error("Erro ao registrar medição.");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Deseja excluir esta medição?")) return;
+    try {
+      await deleteMedicao.mutateAsync(id);
+      toast.success("Medição excluída.");
+    } catch {
+      toast.error("Erro ao excluir medição.");
+    }
+  };
+
+  const getContratoNumero = (id: string) => contratos.find((c) => c.id === id)?.numero_contrato ?? "—";
+  const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="font-heading text-2xl font-bold text-foreground">Medições</h1>
+        <Button onClick={() => { setForm(emptyForm); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-2" />Nova Medição</Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          {medicoes.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">Nenhuma medição registrada.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Contrato</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Valor Medido</TableHead>
+                  <TableHead>Observação</TableHead>
+                  <TableHead className="w-16">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {medicoes.map((m) => (
+                  <TableRow key={m.id}>
+                    <TableCell>{fmtDate(m.data)}</TableCell>
+                    <TableCell className="font-medium">{getContratoNumero(m.contrato_id)}</TableCell>
+                    <TableCell>{m.descricao}</TableCell>
+                    <TableCell>{fmt(Number(m.valor_medido))}</TableCell>
+                    <TableCell className="text-muted-foreground">{m.observacao ?? "—"}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nova Medição</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Data *</Label>
+                <Input type="date" value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} />
+              </div>
+              <div>
+                <Label>Contrato *</Label>
+                <Select value={form.contrato_id} onValueChange={(v) => setForm({ ...form, contrato_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {contratos.filter((c) => c.status === "Ativo").map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.numero_contrato} — {c.cliente}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Descrição *</Label>
+              <Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} />
+            </div>
+            <div>
+              <Label>Valor Medido *</Label>
+              <Input type="number" step="0.01" min="0" value={form.valor_medido || ""} onChange={(e) => setForm({ ...form, valor_medido: parseFloat(e.target.value) || 0 })} />
+            </div>
+            <div>
+              <Label>Observação</Label>
+              <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} placeholder="Opcional" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={createMedicao.isPending}>Registrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
