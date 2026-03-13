@@ -47,30 +47,40 @@ export default function Medicoes() {
     return contratos.filter((c) => contratoIds.has(c.id) || c.status === "Ativo");
   }, [contratos, medicoes]);
 
+  // Data currently visible (tab-filtered only, before column filters)
+  const tabFilteredMedicoes = useMemo(() => {
+    return activeTab === "todos" ? medicoes : medicoes.filter((m) => m.contrato_id === activeTab);
+  }, [medicoes, activeTab]);
+
+  // Unique values for each column (derived from tab-filtered data)
+  const uniqueValues = useMemo(() => {
+    const periodos = [...new Set(tabFilteredMedicoes.map((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}`))];
+    const projetos = [...new Set(tabFilteredMedicoes.map((m) => getContratoProjeto(m.contrato_id)))];
+    const descricoes = [...new Set(tabFilteredMedicoes.map((m) => m.descricao))];
+    const valores = [...new Set(tabFilteredMedicoes.map((m) => fmt(Number(m.valor_medido))))];
+    const observacoes = [...new Set(tabFilteredMedicoes.map((m) => m.observacao ?? "—"))];
+    return { periodos, projetos, descricoes, valores, observacoes };
+  }, [tabFilteredMedicoes]);
+
   const filteredMedicoes = useMemo(() => {
-    let result = activeTab === "todos" ? medicoes : medicoes.filter((m) => m.contrato_id === activeTab);
-    if (filters.periodo) {
-      const q = filters.periodo.toLowerCase();
-      result = result.filter((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}`.toLowerCase().includes(q));
+    let result = tabFilteredMedicoes;
+    if (filters.periodo !== "todos") {
+      result = result.filter((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}` === filters.periodo);
     }
-    if (filters.projeto) {
-      const q = filters.projeto.toLowerCase();
-      result = result.filter((m) => getContratoProjeto(m.contrato_id).toLowerCase().includes(q));
+    if (filters.projeto !== "todos") {
+      result = result.filter((m) => getContratoProjeto(m.contrato_id) === filters.projeto);
     }
-    if (filters.descricao) {
-      const q = filters.descricao.toLowerCase();
-      result = result.filter((m) => m.descricao.toLowerCase().includes(q));
+    if (filters.descricao !== "todos") {
+      result = result.filter((m) => m.descricao === filters.descricao);
     }
-    if (filters.valor) {
-      const q = filters.valor.toLowerCase();
-      result = result.filter((m) => fmt(Number(m.valor_medido)).toLowerCase().includes(q));
+    if (filters.valor !== "todos") {
+      result = result.filter((m) => fmt(Number(m.valor_medido)) === filters.valor);
     }
-    if (filters.observacao) {
-      const q = filters.observacao.toLowerCase();
-      result = result.filter((m) => (m.observacao ?? "").toLowerCase().includes(q));
+    if (filters.observacao !== "todos") {
+      result = result.filter((m) => (m.observacao ?? "—") === filters.observacao);
     }
     return result;
-  }, [medicoes, activeTab, filters]);
+  }, [tabFilteredMedicoes, filters]);
 
   const openEdit = (m: any) => {
     setEditingId(m.id);
