@@ -29,8 +29,11 @@ const ColaboradorDetalhes = () => {
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ nome: "", cargo: "", centro_custo: "", site_contrato: "", status: "", telefone: "" });
+  const [editForm, setEditForm] = useState({ nome: "", cargo: "", status: "", telefone: "" });
   const [motivo, setMotivo] = useState("");
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferForm, setTransferForm] = useState({ centro_custo: "", site_contrato: "" });
+  const [transferMotivo, setTransferMotivo] = useState("");
   const updateColaborador = useUpdateColaborador();
 
   const { data: historico = [] } = useColaboradorHistorico(id || null);
