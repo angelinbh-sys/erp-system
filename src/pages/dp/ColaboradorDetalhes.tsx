@@ -20,6 +20,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
+type EditingBlock = null | "pessoais" | "endereco" | "bancarios";
+
 const ColaboradorDetalhes = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -28,9 +30,10 @@ const ColaboradorDetalhes = () => {
   const [vaga, setVaga] = useState<any>(null);
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ nome: "", cargo: "", status: "", telefone: "" });
+  const [editingBlock, setEditingBlock] = useState<EditingBlock>(null);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [motivo, setMotivo] = useState("");
+  const [saving, setSaving] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferForm, setTransferForm] = useState({ centro_custo: "", site_contrato: "" });
   const [transferMotivo, setTransferMotivo] = useState("");
@@ -75,16 +78,38 @@ const ColaboradorDetalhes = () => {
     return name.substring(0, 2).toUpperCase();
   };
 
-  const startEdit = () => {
+  const startEditBlock = (block: EditingBlock) => {
     if (!colaborador) return;
-    setEditForm({
-      nome: colaborador.nome,
-      cargo: colaborador.cargo,
-      status: colaborador.status,
-      telefone: colaborador.telefone || "",
-    });
+    let form: Record<string, string> = {};
+    if (block === "pessoais") {
+      form = {
+        nome: colaborador.nome,
+        cargo: colaborador.cargo,
+        status: colaborador.status,
+        telefone: colaborador.telefone || "",
+      };
+    } else if (block === "endereco" && vaga) {
+      form = {
+        cep: vaga.cep || "",
+        logradouro: vaga.logradouro || "",
+        numero: vaga.numero || "",
+        complemento: vaga.complemento || "",
+        bairro: vaga.bairro || "",
+        cidade: vaga.cidade || "",
+        estado: vaga.estado || "",
+      };
+    } else if (block === "bancarios" && vaga) {
+      form = {
+        banco: vaga.banco || "",
+        agencia: vaga.agencia || "",
+        digito_agencia: vaga.digito_agencia || "",
+        conta: vaga.conta || "",
+        digito_conta: vaga.digito_conta || "",
+      };
+    }
+    setEditForm(form);
     setMotivo("");
-    setEditing(true);
+    setEditingBlock(block);
   };
 
   const startTransfer = () => {
@@ -130,40 +155,83 @@ const ColaboradorDetalhes = () => {
     } catch { toast.error("Erro ao realizar transferência."); }
   };
 
-  const handleSaveEdit = async () => {
+  const handleSaveBlock = async () => {
     if (!colaborador || !motivo.trim()) {
       toast.error("O motivo da alteração é obrigatório.");
       return;
     }
-
+    setSaving(true);
     const alteradoPor = formatFirstLastName(profile?.nome) || "Sistema";
-    const changes: Array<{ colaborador_id: string; campo_alterado: string; valor_anterior: string | null; valor_novo: string | null; motivo: string; alterado_por: string }> = [];
-    const updates: Record<string, unknown> = {};
-
-    const fields = [
-      { key: "nome", label: "Nome" },
-      { key: "cargo", label: "Cargo" },
-      { key: "status", label: "Status" },
-      { key: "telefone", label: "Telefone" },
-    ] as const;
-
-    for (const f of fields) {
-      const oldVal = colaborador[f.key as keyof Colaborador] as string | null;
-      const newVal = editForm[f.key as keyof typeof editForm];
-      if ((oldVal || "") !== newVal) {
-        updates[f.key] = newVal || null;
-        changes.push({ colaborador_id: colaborador.id, campo_alterado: f.label, valor_anterior: oldVal, valor_novo: newVal || null, motivo: motivo.trim(), alterado_por: alteradoPor });
-      }
-    }
-
-    if (Object.keys(updates).length === 0) { toast.info("Nenhuma alteração detectada."); return; }
 
     try {
-      await updateColaborador.mutateAsync({ id: colaborador.id, updates, historico: changes });
-      setColaborador(prev => prev ? { ...prev, ...updates } as Colaborador : prev);
+      if (editingBlock === "pessoais") {
+        const changes: Array<{ colaborador_id: string; campo_alterado: string; valor_anterior: string | null; valor_novo: string | null; motivo: string; alterado_por: string }> = [];
+        const updates: Record<string, unknown> = {};
+        const fields = [
+          { key: "nome", label: "Nome" },
+          { key: "cargo", label: "Cargo" },
+          { key: "status", label: "Status" },
+          { key: "telefone", label: "Telefone" },
+        ];
+        for (const f of fields) {
+          const oldVal = colaborador[f.key as keyof Colaborador] as string | null;
+          const newVal = editForm[f.key];
+          if ((oldVal || "") !== newVal) {
+            updates[f.key] = newVal || null;
+            changes.push({ colaborador_id: colaborador.id, campo_alterado: f.label, valor_anterior: oldVal, valor_novo: newVal || null, motivo: motivo.trim(), alterado_por: alteradoPor });
+          }
+        }
+        if (Object.keys(updates).length === 0) { toast.info("Nenhuma alteração detectada."); setSaving(false); return; }
+        await updateColaborador.mutateAsync({ id: colaborador.id, updates, historico: changes });
+        setColaborador(prev => prev ? { ...prev, ...updates } as Colaborador : prev);
+      } else if ((editingBlock === "endereco" || editingBlock === "bancarios") && vaga) {
+        const vagaUpdates: Record<string, unknown> = {};
+        const fieldsMap = editingBlock === "endereco"
+          ? [
+              { key: "cep", label: "CEP" },
+              { key: "logradouro", label: "Logradouro" },
+              { key: "numero", label: "Número" },
+              { key: "complemento", label: "Complemento" },
+              { key: "bairro", label: "Bairro" },
+              { key: "cidade", label: "Cidade" },
+              { key: "estado", label: "Estado" },
+            ]
+          : [
+              { key: "banco", label: "Banco" },
+              { key: "agencia", label: "Agência" },
+              { key: "digito_agencia", label: "Dígito Agência" },
+              { key: "conta", label: "Conta" },
+              { key: "digito_conta", label: "Dígito Conta" },
+            ];
+
+        const changes: Array<{ colaborador_id: string; campo_alterado: string; valor_anterior: string | null; valor_novo: string | null; motivo: string; alterado_por: string }> = [];
+        for (const f of fieldsMap) {
+          const oldVal = vaga[f.key] as string | null;
+          const newVal = editForm[f.key];
+          if ((oldVal || "") !== (newVal || "")) {
+            vagaUpdates[f.key] = newVal || null;
+            changes.push({ colaborador_id: colaborador.id, campo_alterado: f.label, valor_anterior: oldVal || null, valor_novo: newVal || null, motivo: motivo.trim(), alterado_por: alteradoPor });
+          }
+        }
+        if (Object.keys(vagaUpdates).length === 0) { toast.info("Nenhuma alteração detectada."); setSaving(false); return; }
+
+        const { error } = await supabase.from("vagas").update(vagaUpdates as any).eq("id", vaga.id);
+        if (error) throw error;
+
+        if (changes.length > 0) {
+          await supabase.from("colaboradores_historico").insert(changes);
+        }
+
+        setVaga((prev: any) => prev ? { ...prev, ...vagaUpdates } : prev);
+      }
+
       toast.success("Dados atualizados com sucesso.");
-      setEditing(false);
-    } catch { toast.error("Erro ao atualizar dados."); }
+      setEditingBlock(null);
+    } catch {
+      toast.error("Erro ao atualizar dados.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDownloadAll = async () => {
@@ -204,20 +272,34 @@ const ColaboradorDetalhes = () => {
     </div>
   );
 
+  const EditBlockFooter = () => (
+    <div className="space-y-3 mt-4 pt-4 border-t border-border">
+      <div>
+        <Label>Motivo da Alteração *</Label>
+        <Textarea placeholder="Descreva o motivo da alteração" value={motivo} onChange={e => setMotivo(e.target.value)} />
+      </div>
+      <div className="flex gap-2 justify-end">
+        <Button variant="outline" size="sm" onClick={() => setEditingBlock(null)}><X className="h-4 w-4 mr-1" /> Cancelar</Button>
+        <Button size="sm" onClick={handleSaveBlock} disabled={saving}><Save className="h-4 w-4 mr-1" /> Salvar</Button>
+      </div>
+    </div>
+  );
+
+  const EditButton = ({ block }: { block: EditingBlock }) => (
+    editingBlock === null ? (
+      <Button variant="outline" size="sm" onClick={() => startEditBlock(block)}>
+        <Pencil className="h-4 w-4 mr-1" /> Editar Dados
+      </Button>
+    ) : null
+  );
+
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/departamento-pessoal/efetivo")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h2 className="font-heading text-2xl font-bold text-foreground">Dados do Colaborador</h2>
-        </div>
-        {!editing && (
-          <Button variant="outline" size="sm" onClick={startEdit}>
-            <Pencil className="h-4 w-4 mr-1" /> Editar Dados
-          </Button>
-        )}
+      <div className="flex items-center gap-3 mb-6">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/departamento-pessoal/efetivo")}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h2 className="font-heading text-2xl font-bold text-foreground">Dados do Colaborador</h2>
       </div>
 
       {/* Header with photo */}
@@ -241,61 +323,49 @@ const ColaboradorDetalhes = () => {
         </CardContent>
       </Card>
 
-      {/* Editing Mode */}
-      {editing && (
-        <Card className="mb-6 border-primary/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Pencil className="h-4 w-4" /> Editar Dados
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><Label>Nome</Label><Input value={editForm.nome} onChange={e => setEditForm(p => ({ ...p, nome: e.target.value }))} /></div>
-              <div><Label>Cargo / Função</Label><Input value={editForm.cargo} onChange={e => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
-              <div><Label>Telefone</Label><Input value={editForm.telefone} onChange={e => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
-              <div>
-                <Label>Status</Label>
-                <Select value={editForm.status} onValueChange={v => setEditForm(p => ({ ...p, status: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Ativo">Ativo</SelectItem>
-                    <SelectItem value="Inativo">Inativo</SelectItem>
-                    <SelectItem value="Afastado">Afastado</SelectItem>
-                    <SelectItem value="Desligado">Desligado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label>Motivo da Alteração *</Label>
-              <Textarea placeholder="Descreva o motivo da alteração" value={motivo} onChange={e => setMotivo(e.target.value)} />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={() => setEditing(false)}><X className="h-4 w-4 mr-1" /> Cancelar</Button>
-              <Button size="sm" onClick={handleSaveEdit} disabled={updateColaborador.isPending}><Save className="h-4 w-4 mr-1" /> Salvar</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Dados Pessoais */}
-      <Card className="mb-6">
+      <Card className={`mb-6 ${editingBlock === "pessoais" ? "border-primary/30" : ""}`}>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">👤 Dados Pessoais</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold">👤 Dados Pessoais</CardTitle>
+            <EditButton block="pessoais" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <InfoField label="Nome Completo" value={colaborador.nome} />
-            <InfoField label="Cargo / Função" value={colaborador.cargo} />
-            <InfoField label="Status" value={colaborador.status} />
-            <InfoField label="Data de Admissão" value={new Date(colaborador.data_admissao).toLocaleDateString("pt-BR")} />
-            {colaborador.data_nascimento && <InfoField label="Data de Nascimento" value={new Date(colaborador.data_nascimento).toLocaleDateString("pt-BR")} />}
-            {colaborador.telefone && <InfoField label="Telefone" value={colaborador.telefone} />}
-            {vaga?.cpf && <InfoField label="CPF" value={vaga.cpf} />}
-            {vaga?.sexo && <InfoField label="Sexo" value={vaga.sexo} />}
-            {vaga?.salario && <InfoField label="Salário" value={vaga.salario} />}
-          </div>
+          {editingBlock === "pessoais" ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Label>Nome</Label><Input value={editForm.nome} onChange={e => setEditForm(p => ({ ...p, nome: e.target.value }))} /></div>
+                <div><Label>Cargo / Função</Label><Input value={editForm.cargo} onChange={e => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
+                <div><Label>Telefone</Label><Input value={editForm.telefone} onChange={e => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
+                <div>
+                  <Label>Status</Label>
+                  <Select value={editForm.status} onValueChange={v => setEditForm(p => ({ ...p, status: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ativo">Ativo</SelectItem>
+                      <SelectItem value="Inativo">Inativo</SelectItem>
+                      <SelectItem value="Afastado">Afastado</SelectItem>
+                      <SelectItem value="Desligado">Desligado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <EditBlockFooter />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <InfoField label="Nome Completo" value={colaborador.nome} />
+              <InfoField label="Cargo / Função" value={colaborador.cargo} />
+              <InfoField label="Status" value={colaborador.status} />
+              <InfoField label="Data de Admissão" value={new Date(colaborador.data_admissao).toLocaleDateString("pt-BR")} />
+              {colaborador.data_nascimento && <InfoField label="Data de Nascimento" value={new Date(colaborador.data_nascimento).toLocaleDateString("pt-BR")} />}
+              {colaborador.telefone && <InfoField label="Telefone" value={colaborador.telefone} />}
+              {vaga?.cpf && <InfoField label="CPF" value={vaga.cpf} />}
+              {vaga?.sexo && <InfoField label="Sexo" value={vaga.sexo} />}
+              {vaga?.salario && <InfoField label="Salário" value={vaga.salario} />}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -304,7 +374,7 @@ const ColaboradorDetalhes = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold">🏢 Local de Trabalho</CardTitle>
-            {!editing && (
+            {editingBlock === null && (
               <Button variant="outline" size="sm" onClick={startTransfer}>
                 <ArrowRightLeft className="h-4 w-4 mr-1" /> Transferir Colaborador
               </Button>
@@ -346,37 +416,75 @@ const ColaboradorDetalhes = () => {
       )}
 
       {/* Endereço */}
-      {vaga && (vaga.cep || vaga.logradouro || vaga.cidade) && (
-        <Card className="mb-6">
+      {vaga && (vaga.cep || vaga.logradouro || vaga.cidade || editingBlock === "endereco") && (
+        <Card className={`mb-6 ${editingBlock === "endereco" ? "border-primary/30" : ""}`}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">📍 Endereço</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold">📍 Endereço</CardTitle>
+              <EditButton block="endereco" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {vaga.cep && <InfoField label="CEP" value={vaga.cep} />}
-              {vaga.logradouro && <InfoField label="Logradouro" value={vaga.logradouro} />}
-              {vaga.numero && <InfoField label="Número" value={vaga.numero} />}
-              {vaga.complemento && <InfoField label="Complemento" value={vaga.complemento} />}
-              {vaga.bairro && <InfoField label="Bairro" value={vaga.bairro} />}
-              {vaga.cidade && <InfoField label="Cidade" value={vaga.cidade} />}
-              {vaga.estado && <InfoField label="Estado" value={vaga.estado} />}
-            </div>
+            {editingBlock === "endereco" ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div><Label>CEP</Label><Input value={editForm.cep} onChange={e => setEditForm(p => ({ ...p, cep: e.target.value }))} /></div>
+                  <div className="md:col-span-2"><Label>Logradouro</Label><Input value={editForm.logradouro} onChange={e => setEditForm(p => ({ ...p, logradouro: e.target.value }))} /></div>
+                  <div><Label>Número</Label><Input value={editForm.numero} onChange={e => setEditForm(p => ({ ...p, numero: e.target.value }))} /></div>
+                  <div><Label>Complemento</Label><Input value={editForm.complemento} onChange={e => setEditForm(p => ({ ...p, complemento: e.target.value }))} /></div>
+                  <div><Label>Bairro</Label><Input value={editForm.bairro} onChange={e => setEditForm(p => ({ ...p, bairro: e.target.value }))} /></div>
+                  <div><Label>Cidade</Label><Input value={editForm.cidade} onChange={e => setEditForm(p => ({ ...p, cidade: e.target.value }))} /></div>
+                  <div><Label>Estado</Label><Input value={editForm.estado} onChange={e => setEditForm(p => ({ ...p, estado: e.target.value }))} /></div>
+                </div>
+                <EditBlockFooter />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {vaga.cep && <InfoField label="CEP" value={vaga.cep} />}
+                {vaga.logradouro && <InfoField label="Logradouro" value={vaga.logradouro} />}
+                {vaga.numero && <InfoField label="Número" value={vaga.numero} />}
+                {vaga.complemento && <InfoField label="Complemento" value={vaga.complemento} />}
+                {vaga.bairro && <InfoField label="Bairro" value={vaga.bairro} />}
+                {vaga.cidade && <InfoField label="Cidade" value={vaga.cidade} />}
+                {vaga.estado && <InfoField label="Estado" value={vaga.estado} />}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
       {/* Dados Bancários */}
-      {vaga && (vaga.banco || vaga.agencia || vaga.conta) && (
-        <Card className="mb-6">
+      {vaga && (vaga.banco || vaga.agencia || vaga.conta || editingBlock === "bancarios") && (
+        <Card className={`mb-6 ${editingBlock === "bancarios" ? "border-primary/30" : ""}`}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">🏦 Dados Bancários</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold">🏦 Dados Bancários</CardTitle>
+              <EditButton block="bancarios" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <InfoField label="Banco" value={vaga.banco || "—"} />
-              <InfoField label="Agência" value={`${vaga.agencia || "—"}${vaga.digito_agencia ? `-${vaga.digito_agencia}` : ""}`} />
-              <InfoField label="Conta" value={`${vaga.conta || "—"}${vaga.digito_conta ? `-${vaga.digito_conta}` : ""}`} />
-            </div>
+            {editingBlock === "bancarios" ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div><Label>Banco</Label><Input value={editForm.banco} onChange={e => setEditForm(p => ({ ...p, banco: e.target.value }))} /></div>
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1"><Label>Agência</Label><Input value={editForm.agencia} onChange={e => setEditForm(p => ({ ...p, agencia: e.target.value }))} /></div>
+                    <div className="w-16"><Label>Dígito</Label><Input value={editForm.digito_agencia} onChange={e => setEditForm(p => ({ ...p, digito_agencia: e.target.value }))} /></div>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1"><Label>Conta</Label><Input value={editForm.conta} onChange={e => setEditForm(p => ({ ...p, conta: e.target.value }))} /></div>
+                    <div className="w-16"><Label>Dígito</Label><Input value={editForm.digito_conta} onChange={e => setEditForm(p => ({ ...p, digito_conta: e.target.value }))} /></div>
+                  </div>
+                </div>
+                <EditBlockFooter />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <InfoField label="Banco" value={vaga.banco || "—"} />
+                <InfoField label="Agência" value={`${vaga.agencia || "—"}${vaga.digito_agencia ? `-${vaga.digito_agencia}` : ""}`} />
+                <InfoField label="Conta" value={`${vaga.conta || "—"}${vaga.digito_conta ? `-${vaga.digito_conta}` : ""}`} />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
