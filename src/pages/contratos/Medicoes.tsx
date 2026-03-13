@@ -11,13 +11,14 @@ import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrencyBRL, parseCurrencyBRL } from "@/utils/currency";
 
 const emptyForm = {
   contrato_id: "",
   data_inicio: "",
   data_fim: "",
   descricao: "",
-  valor_medido: 0,
+  valor_medido_display: "",
   observacao: "",
 };
 
