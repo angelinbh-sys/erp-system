@@ -493,8 +493,8 @@ const ColaboradorDetalhes = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             {DOCUMENTOS_OBRIGATORIOS.map((doc) => {
-              const status = documentos.find((d) => d.tipo_documento === doc.tipo);
-              const isAnexado = status?.status === "anexado";
+              const found = documentos.find((d) => d.tipo_documento === doc.tipo);
+              const isAnexado = found?.status === "anexado";
               return (
                 <div key={doc.tipo} className={`flex items-center gap-3 p-2 rounded text-sm ${isAnexado ? "bg-green-50/50" : "bg-muted/30"}`}>
                   <FileText className={`h-4 w-4 ${isAnexado ? "text-green-600" : "text-muted-foreground"}`} />
@@ -502,6 +502,11 @@ const ColaboradorDetalhes = () => {
                   <Badge variant="outline" className={isAnexado ? "bg-green-50 text-green-700 border-green-200 text-xs" : "text-xs"}>
                     {isAnexado ? "Anexado" : "Pendente"}
                   </Badge>
+                  {isAnexado && found?.arquivo_path && (
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadFile(found.arquivo_path!, found.arquivo_nome || doc.label)}>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -517,6 +522,11 @@ const ColaboradorDetalhes = () => {
                 <FileText className="h-4 w-4 text-green-600" />
                 <span className="flex-1">ASO</span>
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">Anexado</Badge>
+                {vaga.resultado_aso_path && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadFile(vaga.resultado_aso_path, vaga.resultado_aso_nome || "resultado-aso")}>
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
