@@ -118,7 +118,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <Label className="text-xs">Banco *</Label>
             <Input
@@ -128,7 +128,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
               disabled={!canEdit}
             />
           </div>
-          <div className="flex items-end gap-3">
+          <div className="flex items-end gap-2">
             <div className="flex-1">
               <Label className="text-xs">Agência *</Label>
               <Input
@@ -150,7 +150,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
               />
             </div>
           </div>
-          <div className="flex items-end gap-3">
+          <div className="flex items-end gap-2">
             <div className="flex-1">
               <Label className="text-xs">Conta *</Label>
               <Input
