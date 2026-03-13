@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrencyBRL, parseCurrencyBRL } from "@/utils/currency";
 
@@ -24,12 +24,27 @@ const emptyForm = {
 
 export default function Medicoes() {
   const { contratosQuery } = useContratos();
-  const { medicoesQuery, createMedicao, deleteMedicao } = useMedicoes();
+  const { medicoesQuery, createMedicao, updateMedicao, deleteMedicao } = useMedicoes();
   const contratos = contratosQuery.data ?? [];
   const medicoes = medicoesQuery.data ?? [];
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+
+  const openEdit = (m: any) => {
+    setEditingId(m.id);
+    const centavos = Math.round(Number(m.valor_medido) * 100).toString();
+    setForm({
+      contrato_id: m.contrato_id,
+      data_inicio: m.data_inicio,
+      data_fim: m.data_fim,
+      descricao: m.descricao,
+      valor_medido_display: formatCurrencyBRL(centavos),
+      observacao: m.observacao ?? "",
+    });
+    setDialogOpen(true);
+  };
 
   const handleSave = async () => {
     const valor = getValorNumber();
@@ -38,19 +53,26 @@ export default function Medicoes() {
       return;
     }
     try {
-      await createMedicao.mutateAsync({
+      const payload = {
         contrato_id: form.contrato_id,
         data_inicio: form.data_inicio,
         data_fim: form.data_fim,
         descricao: form.descricao,
         valor_medido: valor,
         observacao: form.observacao || null,
-      });
-      toast.success("Medição registrada com sucesso!");
+      };
+      if (editingId) {
+        await updateMedicao.mutateAsync({ id: editingId, ...payload });
+        toast.success("Medição atualizada com sucesso!");
+      } else {
+        await createMedicao.mutateAsync(payload);
+        toast.success("Medição registrada com sucesso!");
+      }
       setDialogOpen(false);
+      setEditingId(null);
       setForm(emptyForm);
     } catch {
-      toast.error("Erro ao registrar medição.");
+      toast.error("Erro ao salvar medição.");
     }
   };
 
@@ -90,7 +112,7 @@ export default function Medicoes() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold text-foreground">Medições</h1>
-        <Button onClick={() => { setForm(emptyForm); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-2" />Nova Medição</Button>
+        <Button onClick={() => { setEditingId(null); setForm(emptyForm); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-2" />Nova Medição</Button>
       </div>
 
       <Card>
@@ -106,7 +128,7 @@ export default function Medicoes() {
                   <TableHead>Descrição</TableHead>
                   <TableHead>Valor Medido</TableHead>
                   <TableHead>Observação</TableHead>
-                  <TableHead className="w-16">Ações</TableHead>
+                  <TableHead className="w-24">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -118,9 +140,14 @@ export default function Medicoes() {
                     <TableCell>{fmt(Number(m.valor_medido))}</TableCell>
                     <TableCell className="text-muted-foreground">{m.observacao ?? "—"}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(m)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -133,7 +160,7 @@ export default function Medicoes() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nova Medição</DialogTitle>
+            <DialogTitle>{editingId ? "Editar Medição" : "Nova Medição"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -178,7 +205,9 @@ export default function Medicoes() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={createMedicao.isPending}>Registrar</Button>
+            <Button onClick={handleSave} disabled={createMedicao.isPending || updateMedicao.isPending}>
+              {editingId ? "Salvar" : "Registrar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -38,6 +38,17 @@ export function useMedicoes(contratoId?: string) {
     },
   });
 
+  const updateMedicao = useMutation({
+    mutationFn: async ({ id, ...medicao }: Partial<Medicao> & { id: string }) => {
+      const { data, error } = await supabase.from("medicoes").update(medicao).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["medicoes"] });
+    },
+  });
+
   const deleteMedicao = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("medicoes").delete().eq("id", id);
@@ -48,5 +59,5 @@ export function useMedicoes(contratoId?: string) {
     },
   });
 
-  return { medicoesQuery, createMedicao, deleteMedicao };
+  return { medicoesQuery, createMedicao, updateMedicao, deleteMedicao };
 }
