@@ -160,7 +160,7 @@ export default function Medicoes() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nova Medição</DialogTitle>
+            <DialogTitle>{editingId ? "Editar Medição" : "Nova Medição"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
