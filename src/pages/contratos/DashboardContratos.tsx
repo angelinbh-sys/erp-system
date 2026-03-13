@@ -223,12 +223,15 @@ export default function DashboardContratos() {
                 <ChartTooltip
                   content={
                     <ChartTooltipContent
-                      formatter={(value) =>
-                        Number(value).toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })
-                      }
+                      formatter={(value, name) => (
+                        <span>
+                          <strong>{String(name)}</strong>:{" "}
+                          {Number(value).toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
+                        </span>
+                      )}
                     />
                   }
                 />
