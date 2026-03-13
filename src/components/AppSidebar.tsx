@@ -24,6 +24,16 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 const modules = [
   {
+    label: "Contratos",
+    icon: FolderKanban,
+    children: [
+      { title: "Dashboard de Contratos", url: "/contratos/dashboard" },
+      { title: "Cadastro de Contratos", url: "/contratos/cadastro" },
+      { title: "Medições", url: "/contratos/medicoes" },
+      { title: "Relatórios", url: "/contratos/relatorios" },
+    ],
+  },
+  {
     label: "Recursos Humanos",
     icon: Users,
     children: [

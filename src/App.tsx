@@ -42,6 +42,10 @@ const App = () => (
             <Route path="/alterar-senha" element={<AlterarSenha />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/contratos/dashboard" element={<DashboardContratos />} />
+              <Route path="/contratos/cadastro" element={<CadastroContratos />} />
+              <Route path="/contratos/medicoes" element={<MedicoesPage />} />
+              <Route path="/contratos/relatorios" element={<RelatoriosContratos />} />
               <Route path="/rh/gestao-rh" element={<GestaoRH />} />
               <Route path="/rh/solicitacao-de-vaga" element={<AberturaDeVaga />} />
               <Route path="/rh/aprovacao-vaga" element={<AprovacaoVagas />} />
