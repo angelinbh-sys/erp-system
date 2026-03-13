@@ -276,7 +276,7 @@ const ColaboradorDetalhes = () => {
     </div>
   );
 
-  const EditBlockFooter = () => (
+  const editBlockFooter = (
     <div className="space-y-3 mt-4 pt-4 border-t border-border">
       <div>
         <Label>Motivo da Alteração *</Label>
@@ -289,7 +289,7 @@ const ColaboradorDetalhes = () => {
     </div>
   );
 
-  const EditButton = ({ block }: { block: EditingBlock }) => (
+  const renderEditButton = (block: EditingBlock) => (
     editingBlock === null ? (
       <Button variant="outline" size="sm" onClick={() => startEditBlock(block)}>
         <Pencil className="h-4 w-4 mr-1" /> Editar Dados
