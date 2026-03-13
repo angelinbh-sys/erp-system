@@ -334,7 +334,7 @@ const ColaboradorDetalhes = () => {
                   </Select>
                 </div>
               </div>
-              <EditBlockFooter />
+              {editBlockFooter}
             </div>
           ) : (
             <div className="flex items-start gap-6">
