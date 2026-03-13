@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Bell, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { useNotificacoesNaoLidas, useNotificacoes, useMarcarLida } from "@/hooks/useNotificacoes";
+import { useNotificacoesNaoLidas, useNotificacoes, useMarcarLida, useMarcarTodasLidas } from "@/hooks/useNotificacoes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
