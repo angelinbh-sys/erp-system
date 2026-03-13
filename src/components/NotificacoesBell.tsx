@@ -2,13 +2,14 @@ import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useNotificacoesNaoLidas, useMarcarLida } from "@/hooks/useNotificacoes";
 import { useAuthContext } from "@/contexts/AuthContext";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export function NotificacoesBell() {
   const { profile } = useAuthContext();
@@ -25,8 +26,8 @@ export function NotificacoesBell() {
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Sheet>
+      <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {notificacoes.length > 0 && (
@@ -35,12 +36,12 @@ export function NotificacoesBell() {
             </span>
           )}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="p-3 border-b border-border">
-          <p className="text-sm font-semibold text-foreground">Notificações</p>
-        </div>
-        <div className="max-h-[350px] overflow-y-scroll">
+      </SheetTrigger>
+      <SheetContent className="w-80 sm:w-96 p-0 flex flex-col">
+        <SheetHeader className="p-4 border-b border-border">
+          <SheetTitle className="text-sm font-semibold">Notificações</SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto">
           {notificacoes.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground text-center">
               Nenhuma notificação pendente.
@@ -51,7 +52,7 @@ export function NotificacoesBell() {
                 <button
                   key={n.id}
                   onClick={() => handleClick(n)}
-                  className="w-full text-left p-3 hover:bg-muted/50 transition-colors"
+                  className="w-full text-left p-4 hover:bg-muted/50 transition-colors"
                 >
                   <p className="text-sm font-medium text-foreground">{n.titulo}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{n.mensagem}</p>
@@ -63,7 +64,7 @@ export function NotificacoesBell() {
             </div>
           )}
         </div>
-      </PopoverContent>
-    </Popover>
+      </SheetContent>
+    </Sheet>
   );
 }
