@@ -270,7 +270,7 @@ export default function PainelPendencias({ profile, vagas }: Props) {
                           navigate(selectedCard!.link);
                         }}
                       >
-                        <Eye className="h-4 w-4 mr-1" /> Ver
+                        Ver detalhes
                       </Button>
                     )}
                   </TableCell>

@@ -264,7 +264,7 @@ const Admissao = () => {
                       <TableCell>{vaga.site_contrato}</TableCell>
                       <TableCell><Badge variant="outline" className={`gap-1 ${status.className}`}>{status.icon}{status.label}</Badge></TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => setDetailVaga(vaga)} title="Ver detalhes"><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDetailVaga(vaga)} title="Preencher dados" className="text-xs text-primary hover:underline">Preencher dados</Button>
                       </TableCell>
                     </TableRow>
                   );
