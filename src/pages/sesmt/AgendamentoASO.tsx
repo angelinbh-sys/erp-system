@@ -224,9 +224,11 @@ const AgendamentoASO = () => {
                             className="mt-1"
                             disabled={!canEdit}
                             readOnly={!canEdit}
+                            min={local.dataAgendamento || vaga.data_agendamento_aso || undefined}
+                            max={today}
                           />
-                          {isDateInvalid(vaga) && (
-                            <p className="text-xs text-destructive mt-1 font-medium">A data de entrega do ASO não pode ser anterior à data de agendamento do ASO.</p>
+                          {getEntregaError(vaga) && (
+                            <p className="text-xs text-destructive mt-1 font-medium">{getEntregaError(vaga)}</p>
                           )}
                         </div>
                         <div className="flex items-end">
