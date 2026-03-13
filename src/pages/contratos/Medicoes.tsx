@@ -32,7 +32,8 @@ export default function Medicoes() {
   const [form, setForm] = useState(emptyForm);
 
   const handleSave = async () => {
-    if (!form.contrato_id || !form.data_inicio || !form.data_fim || !form.descricao || !form.valor_medido) {
+    const valor = getValorNumber();
+    if (!form.contrato_id || !form.data_inicio || !form.data_fim || !form.descricao || !valor) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
@@ -42,7 +43,7 @@ export default function Medicoes() {
         data_inicio: form.data_inicio,
         data_fim: form.data_fim,
         descricao: form.descricao,
-        valor_medido: form.valor_medido,
+        valor_medido: valor,
         observacao: form.observacao || null,
       });
       toast.success("Medição registrada com sucesso!");
