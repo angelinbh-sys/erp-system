@@ -253,8 +253,6 @@ const ColaboradorDetalhes = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div><Label>Nome</Label><Input value={editForm.nome} onChange={e => setEditForm(p => ({ ...p, nome: e.target.value }))} /></div>
               <div><Label>Cargo / Função</Label><Input value={editForm.cargo} onChange={e => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
-              <div><Label>Centro de Custo</Label><Input value={editForm.centro_custo} onChange={e => setEditForm(p => ({ ...p, centro_custo: e.target.value }))} /></div>
-              <div><Label>Site / Contrato</Label><Input value={editForm.site_contrato} onChange={e => setEditForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
               <div><Label>Telefone</Label><Input value={editForm.telefone} onChange={e => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
               <div>
                 <Label>Status</Label>
