@@ -128,7 +128,7 @@ export default function Medicoes() {
                   <TableHead>Descrição</TableHead>
                   <TableHead>Valor Medido</TableHead>
                   <TableHead>Observação</TableHead>
-                  <TableHead className="w-16">Ações</TableHead>
+                  <TableHead className="w-24">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
