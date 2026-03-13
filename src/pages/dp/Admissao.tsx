@@ -211,6 +211,8 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
       </DialogContent>
     </Dialog>
   );
+    </>
+  );
 }
 
 const Admissao = () => {
