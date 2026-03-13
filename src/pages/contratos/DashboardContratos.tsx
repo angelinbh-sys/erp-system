@@ -105,6 +105,7 @@ export default function DashboardContratos() {
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
+    <div className="space-y-6">
       <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard de Contratos</h1>
 
       <Card>
