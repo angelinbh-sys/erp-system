@@ -207,8 +207,8 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
   const checklistCount = documentosObrigatorios.length;
   const completedChecklist = documentosObrigatorios.filter((d) => getDocStatus(d.tipo)?.status === "anexado").length;
   const processDocsCount = (hasCV ? 1 : 0) + (hasASO ? 1 : 0);
-  const totalRequired = checklistCount + 2 + 1; // +CV +ASO +BankData
-  const totalCompleted = completedChecklist + processDocsCount + (hasBankData ? 1 : 0);
+  const totalRequired = checklistCount + 2 + 1 + 1; // +CV +ASO +BankData +Address
+  const totalCompleted = completedChecklist + processDocsCount + (hasBankData ? 1 : 0) + (hasAddress ? 1 : 0);
   const pendingCount = totalRequired - totalCompleted;
 
   const handleUpload = async (tipo: string, formatos: readonly string[]) => {
