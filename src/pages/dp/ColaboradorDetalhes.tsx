@@ -300,8 +300,8 @@ const ColaboradorDetalhes = () => {
             <CardTitle className="text-sm font-semibold">🏦 Dados Bancários</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              {vaga.banco && <InfoField label="Banco" value={vaga.banco} />}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <InfoField label="Banco" value={vaga.banco || "—"} />
               <InfoField label="Agência" value={`${vaga.agencia || "—"}${vaga.digito_agencia ? `-${vaga.digito_agencia}` : ""}`} />
               <InfoField label="Conta" value={`${vaga.conta || "—"}${vaga.digito_conta ? `-${vaga.digito_conta}` : ""}`} />
             </div>
