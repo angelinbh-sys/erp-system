@@ -33,6 +33,13 @@ export default function Medicoes() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [activeTab, setActiveTab] = useState("todos");
+  const [filters, setFilters] = useState({
+    periodo: "",
+    projeto: "",
+    descricao: "",
+    valor: "",
+    observacao: "",
+  });
 
   // Group projects that have measurements or are active
   const projetosComMedicoes = useMemo(() => {
