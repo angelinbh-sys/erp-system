@@ -47,6 +47,10 @@ export default function Medicoes() {
     return contratos.filter((c) => contratoIds.has(c.id) || c.status === "Ativo");
   }, [contratos, medicoes]);
 
+  const getContratoProjeto = (id: string) => contratos.find((c) => c.id === id)?.projeto_obra ?? "—";
+  const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
+
   // Data currently visible (tab-filtered only, before column filters)
   const tabFilteredMedicoes = useMemo(() => {
     return activeTab === "todos" ? medicoes : medicoes.filter((m) => m.contrato_id === activeTab);
