@@ -83,6 +83,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
     setSaving(true);
     try {
       const { error } = await supabase.from("vagas").update({
+        banco: bankData.banco,
         agencia: bankData.agencia,
         digito_agencia: bankData.digito_agencia || null,
         conta: bankData.conta,
@@ -91,6 +92,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
       if (error) throw error;
       toast.success("Dados bancários salvos com sucesso!");
       onSaved?.({
+        banco: bankData.banco,
         agencia: bankData.agencia,
         digito_agencia: bankData.digito_agencia,
         conta: bankData.conta,
