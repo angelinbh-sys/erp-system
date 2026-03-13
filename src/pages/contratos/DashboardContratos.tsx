@@ -263,6 +263,56 @@ export default function DashboardContratos() {
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Projetos Ativos — Valor Contratado</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {dadosPizza.length === 0 ? (
+            <p className="text-muted-foreground text-sm text-center py-8">Nenhum projeto ativo encontrado.</p>
+          ) : (
+            <div className="flex items-center justify-center">
+              <PieChart width={480} height={300}>
+                <Pie
+                  data={dadosPizza}
+                  cx={240}
+                  cy={140}
+                  outerRadius={110}
+                  innerRadius={50}
+                  dataKey="value"
+                  nameKey="name"
+                  paddingAngle={2}
+                  strokeWidth={0}
+                >
+                  {dadosPizza.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+                    name,
+                  ]}
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "1px solid hsl(225, 15%, 90%)",
+                    fontSize: "12px",
+                  }}
+                />
+                <Legend
+                  layout="vertical"
+                  align="right"
+                  verticalAlign="middle"
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: "12px" }}
+                />
+              </PieChart>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
