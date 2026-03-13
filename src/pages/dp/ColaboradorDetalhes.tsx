@@ -311,7 +311,7 @@ const ColaboradorDetalhes = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold">👤 Dados Pessoais</CardTitle>
-            <EditButton block="pessoais" />
+            {renderEditButton("pessoais")}
           </div>
         </CardHeader>
         <CardContent>
