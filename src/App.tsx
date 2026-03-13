@@ -21,6 +21,10 @@ import AdminPermissoes from "@/pages/admin/Permissoes";
 import AuditLog from "@/pages/admin/AuditLog";
 import LimparDadosTeste from "@/pages/admin/LimparDadosTeste";
 import AgendamentoASO from "@/pages/sesmt/AgendamentoASO";
+import DashboardContratos from "@/pages/contratos/DashboardContratos";
+import CadastroContratos from "@/pages/contratos/CadastroContratos";
+import MedicoesPage from "@/pages/contratos/Medicoes";
+import RelatoriosContratos from "@/pages/contratos/RelatoriosContratos";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import NotFound from "./pages/NotFound";
 
@@ -38,6 +42,10 @@ const App = () => (
             <Route path="/alterar-senha" element={<AlterarSenha />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/contratos/dashboard" element={<DashboardContratos />} />
+              <Route path="/contratos/cadastro" element={<CadastroContratos />} />
+              <Route path="/contratos/medicoes" element={<MedicoesPage />} />
+              <Route path="/contratos/relatorios" element={<RelatoriosContratos />} />
               <Route path="/rh/gestao-rh" element={<GestaoRH />} />
               <Route path="/rh/solicitacao-de-vaga" element={<AberturaDeVaga />} />
               <Route path="/rh/aprovacao-vaga" element={<AprovacaoVagas />} />

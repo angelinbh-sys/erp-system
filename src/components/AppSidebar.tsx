@@ -10,6 +10,7 @@ import {
   ChevronDown,
   HardHat,
   Home,
+  FolderKanban,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -22,6 +23,16 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const modules = [
+  {
+    label: "Contratos",
+    icon: FolderKanban,
+    children: [
+      { title: "Dashboard de Contratos", url: "/contratos/dashboard" },
+      { title: "Cadastro de Contratos", url: "/contratos/cadastro" },
+      { title: "Medições", url: "/contratos/medicoes" },
+      { title: "Relatórios", url: "/contratos/relatorios" },
+    ],
+  },
   {
     label: "Recursos Humanos",
     icon: Users,
