@@ -14,7 +14,8 @@ import { toast } from "sonner";
 
 const emptyForm = {
   contrato_id: "",
-  data: "",
+  data_inicio: "",
+  data_fim: "",
   descricao: "",
   valor_medido: 0,
   observacao: "",
@@ -30,14 +31,15 @@ export default function Medicoes() {
   const [form, setForm] = useState(emptyForm);
 
   const handleSave = async () => {
-    if (!form.contrato_id || !form.data || !form.descricao || !form.valor_medido) {
+    if (!form.contrato_id || !form.data_inicio || !form.data_fim || !form.descricao || !form.valor_medido) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
     try {
       await createMedicao.mutateAsync({
         contrato_id: form.contrato_id,
-        data: form.data,
+        data_inicio: form.data_inicio,
+        data_fim: form.data_fim,
         descricao: form.descricao,
         valor_medido: form.valor_medido,
         observacao: form.observacao || null,
@@ -60,7 +62,7 @@ export default function Medicoes() {
     }
   };
 
-  const getContratoNumero = (id: string) => contratos.find((c) => c.id === id)?.numero_contrato ?? "—";
+  const getContratoProjeto = (id: string) => contratos.find((c) => c.id === id)?.projeto_obra ?? "—";
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
 
@@ -79,8 +81,8 @@ export default function Medicoes() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Contrato</TableHead>
+                  <TableHead>Período</TableHead>
+                  <TableHead>Projeto</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead>Valor Medido</TableHead>
                   <TableHead>Observação</TableHead>
@@ -90,8 +92,8 @@ export default function Medicoes() {
               <TableBody>
                 {medicoes.map((m) => (
                   <TableRow key={m.id}>
-                    <TableCell>{fmtDate(m.data)}</TableCell>
-                    <TableCell className="font-medium">{getContratoNumero(m.contrato_id)}</TableCell>
+                    <TableCell>{fmtDate(m.data_inicio)} — {fmtDate(m.data_fim)}</TableCell>
+                    <TableCell className="font-medium">{getContratoProjeto(m.contrato_id)}</TableCell>
                     <TableCell>{m.descricao}</TableCell>
                     <TableCell>{fmt(Number(m.valor_medido))}</TableCell>
                     <TableCell className="text-muted-foreground">{m.observacao ?? "—"}</TableCell>
@@ -116,20 +118,24 @@ export default function Medicoes() {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Data *</Label>
-                <Input type="date" value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} />
+                <Label>Data Início *</Label>
+                <Input type="date" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} />
               </div>
               <div>
-                <Label>Contrato *</Label>
-                <Select value={form.contrato_id} onValueChange={(v) => setForm({ ...form, contrato_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {contratos.filter((c) => c.status === "Ativo").map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.numero_contrato} — {c.cliente}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Data Fim *</Label>
+                <Input type="date" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} />
               </div>
+            </div>
+            <div>
+              <Label>Contrato *</Label>
+              <Select value={form.contrato_id} onValueChange={(v) => setForm({ ...form, contrato_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {contratos.filter((c) => c.status === "Ativo").map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.projeto_obra}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Descrição *</Label>

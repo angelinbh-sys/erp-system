@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 export interface Medicao {
   id: string;
   contrato_id: string;
-  data: string;
+  data_inicio: string;
+  data_fim: string;
   descricao: string;
   valor_medido: number;
   observacao: string | null;
@@ -18,7 +19,7 @@ export function useMedicoes(contratoId?: string) {
   const medicoesQuery = useQuery({
     queryKey: ["medicoes", contratoId],
     queryFn: async () => {
-      let query = supabase.from("medicoes").select("*").order("data", { ascending: false });
+      let query = supabase.from("medicoes").select("*").order("data_inicio", { ascending: false });
       if (contratoId) query = query.eq("contrato_id", contratoId);
       const { data, error } = await query;
       if (error) throw error;
