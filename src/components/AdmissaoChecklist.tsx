@@ -77,6 +77,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
   const onlyDigits = (value: string, max: number) => value.replace(/\D/g, "").slice(0, max);
 
   const handleSave = async () => {
+    if (!bankData.banco.trim()) { toast.error("Banco é obrigatório."); return; }
     if (!bankData.agencia.trim()) { toast.error("Agência é obrigatório."); return; }
     if (!bankData.conta.trim()) { toast.error("Conta é obrigatório."); return; }
     setSaving(true);
