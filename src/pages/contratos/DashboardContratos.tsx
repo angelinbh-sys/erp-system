@@ -12,14 +12,20 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
-const chartConfig: ChartConfig = {
-  valor: {
-    label: "Valor Medido",
-    color: "hsl(var(--primary))",
-  },
-};
+const PROJECT_COLORS = [
+  "hsl(221, 83%, 53%)",
+  "hsl(142, 71%, 45%)",
+  "hsl(38, 92%, 50%)",
+  "hsl(0, 84%, 60%)",
+  "hsl(270, 70%, 60%)",
+  "hsl(190, 80%, 45%)",
+  "hsl(330, 70%, 55%)",
+  "hsl(60, 70%, 45%)",
+  "hsl(200, 60%, 50%)",
+  "hsl(15, 80%, 55%)",
+];
 
 export default function DashboardContratos() {
   const { contratosQuery } = useContratos();
