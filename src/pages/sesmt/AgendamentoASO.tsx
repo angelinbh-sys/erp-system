@@ -64,8 +64,9 @@ const AgendamentoASO = () => {
   const salvarDatas = async (vaga: any) => {
     if (!canEdit) return;
     const local = getLocal(vaga);
-    if (local.dataAgendamento && local.dataEntrega && local.dataEntrega < local.dataAgendamento) {
-      toast.error("A data de entrega do ASO não pode ser anterior à data de agendamento do ASO.");
+    const entregaError = getEntregaError(vaga);
+    if (entregaError) {
+      toast.error(entregaError);
       return;
     }
     const { error } = await supabase.from("vagas").update({ data_agendamento_aso: local.dataAgendamento || null, data_entrega_aso: local.dataEntrega || null } as any).eq("id", vaga.id);
