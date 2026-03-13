@@ -210,7 +210,6 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
     </>
   );
 }
