@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
-import { DollarSign, TrendingUp, BarChart3, Wallet } from "lucide-react";
+import { DollarSign, BarChart3, Wallet } from "lucide-react";
+import GaugeChart from "@/components/GaugeChart";
 import {
   ChartContainer,
   ChartTooltip,
@@ -14,17 +15,18 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
+// Variations of sidebar background hue (225°) with different lightness/saturation
 const PROJECT_COLORS = [
-  "hsl(215, 35%, 55%)",
-  "hsl(160, 30%, 50%)",
-  "hsl(35, 35%, 55%)",
-  "hsl(0, 30%, 55%)",
-  "hsl(260, 25%, 55%)",
-  "hsl(190, 30%, 50%)",
-  "hsl(320, 25%, 55%)",
-  "hsl(80, 25%, 50%)",
-  "hsl(200, 30%, 50%)",
-  "hsl(15, 30%, 55%)",
+  "hsl(225, 30%, 35%)",
+  "hsl(225, 25%, 48%)",
+  "hsl(210, 30%, 40%)",
+  "hsl(225, 20%, 55%)",
+  "hsl(240, 25%, 38%)",
+  "hsl(215, 28%, 45%)",
+  "hsl(225, 35%, 28%)",
+  "hsl(210, 22%, 52%)",
+  "hsl(230, 20%, 42%)",
+  "hsl(220, 30%, 30%)",
 ];
 
 export default function DashboardContratos() {
@@ -179,12 +181,14 @@ export default function DashboardContratos() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">Avanço Financeiro</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{(Math.floor(percentualAvanco * 100) / 100).toFixed(2)}%</div>
+          <CardContent className="flex flex-col items-center pt-2 pb-3">
+            <GaugeChart value={percentualAvanco} size={160} />
+            <div className="text-xl font-bold text-foreground -mt-1">
+              {(Math.floor(percentualAvanco * 100) / 100).toFixed(2)}%
+            </div>
           </CardContent>
         </Card>
         <Card>
