@@ -102,6 +102,16 @@ export default function DashboardContratos() {
       }));
   }, [medicoesFiltradas, contratoMap]);
 
+  const dadosPizza = useMemo(() => {
+    return contratosFiltrados
+      .filter((c) => c.status === "Ativo")
+      .map((c, i) => ({
+        name: c.projeto_obra,
+        value: Number(c.valor_contrato),
+        color: PROJECT_COLORS[i % PROJECT_COLORS.length],
+      }));
+  }, [contratosFiltrados]);
+
   const fmt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
