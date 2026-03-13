@@ -232,7 +232,16 @@ export default function DashboardContratos() {
                     />
                   }
                 />
-                <Bar dataKey="valor" fill="var(--color-valor)" radius={[4, 4, 0, 0]} />
+                {projetosFiltrados.map((projeto, i) => (
+                  <Bar
+                    key={projeto}
+                    dataKey={projeto}
+                    stackId="a"
+                    fill={PROJECT_COLORS[i % PROJECT_COLORS.length]}
+                    radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                  />
+                ))}
+                <Legend />
               </BarChart>
             </ChartContainer>
           )}
