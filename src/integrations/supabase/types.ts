@@ -203,6 +203,89 @@ export type Database = {
           },
         ]
       }
+      contratos: {
+        Row: {
+          cliente: string
+          created_at: string
+          data_inicio: string
+          data_termino: string
+          id: string
+          numero_contrato: string
+          projeto_obra: string
+          responsavel: string
+          status: string
+          updated_at: string
+          valor_contrato: number
+        }
+        Insert: {
+          cliente: string
+          created_at?: string
+          data_inicio: string
+          data_termino: string
+          id?: string
+          numero_contrato: string
+          projeto_obra: string
+          responsavel: string
+          status?: string
+          updated_at?: string
+          valor_contrato?: number
+        }
+        Update: {
+          cliente?: string
+          created_at?: string
+          data_inicio?: string
+          data_termino?: string
+          id?: string
+          numero_contrato?: string
+          projeto_obra?: string
+          responsavel?: string
+          status?: string
+          updated_at?: string
+          valor_contrato?: number
+        }
+        Relationships: []
+      }
+      medicoes: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          data: string
+          descricao: string
+          id: string
+          observacao: string | null
+          updated_at: string
+          valor_medido: number
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          data: string
+          descricao: string
+          id?: string
+          observacao?: string | null
+          updated_at?: string
+          valor_medido?: number
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          data?: string
+          descricao?: string
+          id?: string
+          observacao?: string | null
+          updated_at?: string
+          valor_medido?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notificacoes: {
         Row: {
           created_at: string
