@@ -97,7 +97,7 @@ export function UserAreaHeader() {
           <div className="p-3 border-b border-border">
             <p className="text-sm font-semibold text-foreground">Notificações</p>
           </div>
-          <ScrollArea className="max-h-80">
+          <div className="max-h-80 overflow-y-scroll [scrollbar-gutter:stable]">
             {recentNotifs.length === 0 ? (
               <p className="p-4 text-sm text-muted-foreground text-center">
                 Nenhuma notificação.
@@ -126,7 +126,7 @@ export function UserAreaHeader() {
                 })}
               </div>
             )}
-          </ScrollArea>
+          </div>
         </PopoverContent>
       </Popover>
 
