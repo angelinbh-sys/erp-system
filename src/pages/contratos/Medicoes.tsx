@@ -162,8 +162,24 @@ export default function Medicoes() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const hasActiveFilter = Object.values(filters).some((v) => v !== "todos");
+
+  const renderFilterSelect = (filterKey: keyof typeof filters, options: string[]) => (
+    <Select value={filters[filterKey]} onValueChange={(v) => updateFilter(filterKey, v)}>
+      <SelectTrigger className="h-7 text-xs border-dashed">
+        <SelectValue placeholder="Todos" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="todos">Todos</SelectItem>
+        {options.map((opt) => (
+          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   const renderTable = (items: typeof medicoes, showProjeto: boolean) => (
-    items.length === 0 && !Object.values(filters).some(Boolean) ? (
+    items.length === 0 && !hasActiveFilter ? (
       <p className="text-muted-foreground text-center py-8">Nenhuma medição registrada.</p>
     ) : (
       <Table>
@@ -177,23 +193,11 @@ export default function Medicoes() {
             <TableHead className="w-24">Ações</TableHead>
           </TableRow>
           <TableRow>
-            <TableHead className="p-1">
-              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.periodo} onChange={(e) => updateFilter("periodo", e.target.value)} />
-            </TableHead>
-            {showProjeto && (
-              <TableHead className="p-1">
-                <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.projeto} onChange={(e) => updateFilter("projeto", e.target.value)} />
-              </TableHead>
-            )}
-            <TableHead className="p-1">
-              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.descricao} onChange={(e) => updateFilter("descricao", e.target.value)} />
-            </TableHead>
-            <TableHead className="p-1">
-              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.valor} onChange={(e) => updateFilter("valor", e.target.value)} />
-            </TableHead>
-            <TableHead className="p-1">
-              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.observacao} onChange={(e) => updateFilter("observacao", e.target.value)} />
-            </TableHead>
+            <TableHead className="p-1">{renderFilterSelect("periodo", uniqueValues.periodos)}</TableHead>
+            {showProjeto && <TableHead className="p-1">{renderFilterSelect("projeto", uniqueValues.projetos)}</TableHead>}
+            <TableHead className="p-1">{renderFilterSelect("descricao", uniqueValues.descricoes)}</TableHead>
+            <TableHead className="p-1">{renderFilterSelect("valor", uniqueValues.valores)}</TableHead>
+            <TableHead className="p-1">{renderFilterSelect("observacao", uniqueValues.observacoes)}</TableHead>
             <TableHead className="w-24" />
           </TableRow>
         </TableHeader>
