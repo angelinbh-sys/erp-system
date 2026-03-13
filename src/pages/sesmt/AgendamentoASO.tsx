@@ -95,12 +95,19 @@ const AgendamentoASO = () => {
     setUploading((prev) => ({ ...prev, [vaga.id]: false }));
   };
 
-  const isDateInvalid = (vaga: any) => {
+  const today = new Date().toISOString().split("T")[0];
+
+  const getEntregaError = (vaga: any): string | null => {
     const local = getLocal(vaga);
     const agendamento = local.dataAgendamento || vaga.data_agendamento_aso;
     const entrega = local.dataEntrega || vaga.data_entrega_aso;
-    return !!(agendamento && entrega && entrega < agendamento);
+    if (!agendamento || !entrega) return null;
+    if (entrega < agendamento) return "A data de entrega do ASO não pode ser anterior à data de agendamento.";
+    if (entrega > today) return "A data de entrega do ASO não pode ser uma data futura.";
+    return null;
   };
+
+  const isDateInvalid = (vaga: any) => !!getEntregaError(vaga);
 
   const canSendAdmissao = (vaga: any) => {
     if (!canEdit) return false;
