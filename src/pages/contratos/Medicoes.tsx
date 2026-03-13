@@ -24,11 +24,12 @@ const emptyForm = {
 
 export default function Medicoes() {
   const { contratosQuery } = useContratos();
-  const { medicoesQuery, createMedicao, deleteMedicao } = useMedicoes();
+  const { medicoesQuery, createMedicao, updateMedicao, deleteMedicao } = useMedicoes();
   const contratos = contratosQuery.data ?? [];
   const medicoes = medicoesQuery.data ?? [];
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
 
   const handleSave = async () => {
