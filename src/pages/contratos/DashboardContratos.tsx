@@ -5,15 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
-import { DollarSign, BarChart3, Wallet } from "lucide-react";
-import GaugeChart from "@/components/GaugeChart";
+import { DollarSign, BarChart3, Wallet, TrendingUp } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, PieChart, Pie, Cell, Tooltip } from "recharts";
 
 // Variations of sidebar background hue (225°) with different lightness/saturation
 const PROJECT_COLORS = [
@@ -103,6 +102,16 @@ export default function DashboardContratos() {
       }));
   }, [medicoesFiltradas, contratoMap]);
 
+  const dadosPizza = useMemo(() => {
+    return contratosFiltrados
+      .filter((c) => c.status === "Ativo")
+      .map((c, i) => ({
+        name: c.projeto_obra,
+        value: Number(c.valor_contrato),
+        color: PROJECT_COLORS[i % PROJECT_COLORS.length],
+      }));
+  }, [contratosFiltrados]);
+
   const fmt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -181,12 +190,12 @@ export default function DashboardContratos() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-0">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Avanço Financeiro</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="flex flex-col items-center pt-2 pb-3">
-            <GaugeChart value={percentualAvanco} size={160} />
-            <div className="text-xl font-bold text-foreground -mt-1">
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
               {(Math.floor(percentualAvanco * 100) / 100).toFixed(2)}%
             </div>
           </CardContent>
@@ -251,6 +260,56 @@ export default function DashboardContratos() {
                 <Legend />
               </BarChart>
             </ChartContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Projetos Ativos — Valor Contratado</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {dadosPizza.length === 0 ? (
+            <p className="text-muted-foreground text-sm text-center py-8">Nenhum projeto ativo encontrado.</p>
+          ) : (
+            <div className="flex items-center justify-center">
+              <PieChart width={480} height={300}>
+                <Pie
+                  data={dadosPizza}
+                  cx={240}
+                  cy={140}
+                  outerRadius={110}
+                  innerRadius={50}
+                  dataKey="value"
+                  nameKey="name"
+                  paddingAngle={2}
+                  strokeWidth={0}
+                >
+                  {dadosPizza.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+                    name,
+                  ]}
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "1px solid hsl(225, 15%, 90%)",
+                    fontSize: "12px",
+                  }}
+                />
+                <Legend
+                  layout="vertical"
+                  align="right"
+                  verticalAlign="middle"
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: "12px" }}
+                />
+              </PieChart>
+            </div>
           )}
         </CardContent>
       </Card>
