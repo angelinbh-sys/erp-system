@@ -22,12 +22,17 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { STATUS_PROCESSO } from "@/utils/statusProcesso";
 import { AdmissaoChecklist, useChecklistComplete } from "@/components/AdmissaoChecklist";
 import { formatFirstLastName } from "@/utils/formatName";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logAction, profile }: { detailVaga: any; setDetailVaga: Dispatch<SetStateAction<any>>; queryClient: any; logAction: any; profile: any }) {
   const { data: historico = [] } = useVagaHistorico(detailVaga?.id || null);
   const sp = detailVaga?.status_processo;
   const isAdmitido = sp === STATUS_PROCESSO.ADMITIDO || sp === STATUS_PROCESSO.EFETIVADO;
   const checklistComplete = useChecklistComplete(detailVaga);
+  const [showDevolver, setShowDevolver] = useState(false);
+  const [motivoDevolucao, setMotivoDevolucao] = useState("");
+  const [devolvendo, setDevolvendo] = useState(false);
 
   // canEdit: only when liberado and not yet admitido
   const canEditChecklist = detailVaga?.enviado_admissao && !isAdmitido;
@@ -77,6 +82,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
   };
 
   return (
+    <>
     <Dialog open={!!detailVaga} onOpenChange={() => setDetailVaga(null)}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Detalhes do Candidato</DialogTitle></DialogHeader>
@@ -140,17 +146,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
                     <p className="text-xs text-amber-600 self-center">Existem documentos obrigatórios pendentes no checklist de admissão.</p>
                   )}
                   <Button variant="outline" size="sm"
-                    onClick={async () => {
-                      const { error } = await supabase.from("vagas").update({
-                        enviado_admissao: false, enviado_admissao_at: null,
-                        status_processo: STATUS_PROCESSO.EM_ANDAMENTO_SESMT, responsavel_etapa: "SESMT",
-                      } as any).eq("id", detailVaga.id);
-                      if (error) { toast.error("Erro ao devolver."); return; }
-                      await logAction({ modulo: "Dep. Pessoal", pagina: "Admissão", acao: "devolucao", descricao: `Devolveu para SESMT: ${detailVaga.cargo} — ${detailVaga.nome_candidato}`, registro_id: detailVaga.id, registro_ref: `${detailVaga.cargo} - ${detailVaga.nome_candidato}` });
-                      toast.success("Devolvido para o SESMT.");
-                      queryClient.invalidateQueries({ queryKey: ["vagas"] });
-                      setDetailVaga(null);
-                    }}
+                    onClick={() => { setShowDevolver(true); setMotivoDevolucao(""); }}
                   >
                     <Undo2 className="h-4 w-4 mr-1" />Devolver para SESMT
                   </Button>
@@ -167,6 +163,54 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Devolver para SESMT Dialog */}
+    <Dialog open={showDevolver} onOpenChange={() => setShowDevolver(false)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Devolver para SESMT</DialogTitle></DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Devolver o candidato <strong>{detailVaga?.nome_candidato}</strong> ({detailVaga?.cargo}) para o SESMT.
+        </p>
+        <div className="space-y-2">
+          <Label>Motivo da Devolução *</Label>
+          <Textarea placeholder="Informe o motivo da devolução" value={motivoDevolucao} onChange={(e) => setMotivoDevolucao(e.target.value)} />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowDevolver(false)}>Cancelar</Button>
+          <Button
+            onClick={async () => {
+              if (!motivoDevolucao.trim()) { toast.error("O motivo da devolução é obrigatório."); return; }
+              setDevolvendo(true);
+              try {
+                const { error } = await supabase.from("vagas").update({
+                  enviado_admissao: false, enviado_admissao_at: null,
+                  status_processo: STATUS_PROCESSO.EM_ANDAMENTO_SESMT, responsavel_etapa: "SESMT",
+                  atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
+                } as any).eq("id", detailVaga.id);
+                if (error) throw error;
+                await supabase.from("vagas_historico" as any).insert({
+                  vaga_id: detailVaga.id, acao: "Devolvido pelo Dep. Pessoal para SESMT",
+                  usuario_nome: formatFirstLastName(profile?.nome) || "Sistema", motivo: motivoDevolucao.trim(),
+                } as any);
+                await logAction({ modulo: "Dep. Pessoal", pagina: "Admissão", acao: "devolucao", descricao: `Devolveu para SESMT: ${detailVaga.cargo} — ${detailVaga.nome_candidato}`, registro_id: detailVaga.id, registro_ref: `${detailVaga.cargo} - ${detailVaga.nome_candidato}`, motivo: motivoDevolucao.trim() });
+                toast.success("Devolvido para o SESMT.");
+                queryClient.invalidateQueries({ queryKey: ["vagas"] });
+                setShowDevolver(false);
+                setDetailVaga(null);
+              } catch {
+                toast.error("Erro ao devolver.");
+              } finally {
+                setDevolvendo(false);
+              }
+            }}
+            disabled={devolvendo || !motivoDevolucao.trim()}
+          >
+            {devolvendo ? "Devolvendo..." : "Confirmar Devolução"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 

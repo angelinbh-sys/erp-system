@@ -46,6 +46,7 @@ const sanitizeFileName = (fileName: string) =>
   fileName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+/g, "_");
 
 interface BankDataState {
+  banco: string;
   agencia: string;
   digito_agencia: string;
   conta: string;
@@ -55,6 +56,7 @@ interface BankDataState {
 function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolean; onSaved?: (data: Partial<BankDataState>) => void }) {
   const queryClient = useQueryClient();
   const [bankData, setBankData] = useState<BankDataState>({
+    banco: vaga?.banco || "",
     agencia: vaga?.agencia || "",
     digito_agencia: vaga?.digito_agencia || "",
     conta: vaga?.conta || "",
@@ -64,21 +66,24 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
 
   useEffect(() => {
     setBankData({
+      banco: vaga?.banco || "",
       agencia: vaga?.agencia || "",
       digito_agencia: vaga?.digito_agencia || "",
       conta: vaga?.conta || "",
       digito_conta: vaga?.digito_conta || "",
     });
-  }, [vaga?.agencia, vaga?.digito_agencia, vaga?.conta, vaga?.digito_conta]);
+  }, [vaga?.banco, vaga?.agencia, vaga?.digito_agencia, vaga?.conta, vaga?.digito_conta]);
 
   const onlyDigits = (value: string, max: number) => value.replace(/\D/g, "").slice(0, max);
 
   const handleSave = async () => {
+    if (!bankData.banco.trim()) { toast.error("Banco é obrigatório."); return; }
     if (!bankData.agencia.trim()) { toast.error("Agência é obrigatório."); return; }
     if (!bankData.conta.trim()) { toast.error("Conta é obrigatório."); return; }
     setSaving(true);
     try {
       const { error } = await supabase.from("vagas").update({
+        banco: bankData.banco,
         agencia: bankData.agencia,
         digito_agencia: bankData.digito_agencia || null,
         conta: bankData.conta,
@@ -87,6 +92,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
       if (error) throw error;
       toast.success("Dados bancários salvos com sucesso!");
       onSaved?.({
+        banco: bankData.banco,
         agencia: bankData.agencia,
         digito_agencia: bankData.digito_agencia,
         conta: bankData.conta,
@@ -100,7 +106,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
     }
   };
 
-  const hasSavedData = vaga?.agencia && vaga?.conta;
+  const hasSavedData = vaga?.banco && vaga?.agencia && vaga?.conta;
 
   return (
     <Card className="border-primary/20">
@@ -113,6 +119,15 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
+          <div>
+            <Label className="text-xs">Banco *</Label>
+            <Input
+              placeholder="Nome do banco"
+              value={bankData.banco}
+              onChange={(e) => setBankData(prev => ({ ...prev, banco: e.target.value }))}
+              disabled={!canEdit}
+            />
+          </div>
           <div className="flex items-end gap-3">
             <div className="flex-1">
               <Label className="text-xs">Agência *</Label>
@@ -170,6 +185,202 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
   );
 }
 
+interface AddressState {
+  cep: string;
+  logradouro: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  numero: string;
+  complemento: string;
+}
+
+function AddressFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolean; onSaved?: (data: any) => void }) {
+  const queryClient = useQueryClient();
+  const [address, setAddress] = useState<AddressState>({
+    cep: vaga?.cep || "",
+    logradouro: vaga?.logradouro || "",
+    bairro: vaga?.bairro || "",
+    cidade: vaga?.cidade || "",
+    estado: vaga?.estado || "",
+    numero: vaga?.numero || "",
+    complemento: vaga?.complemento || "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [fetching, setFetching] = useState(false);
+
+  useEffect(() => {
+    setAddress({
+      cep: vaga?.cep || "",
+      logradouro: vaga?.logradouro || "",
+      bairro: vaga?.bairro || "",
+      cidade: vaga?.cidade || "",
+      estado: vaga?.estado || "",
+      numero: vaga?.numero || "",
+      complemento: vaga?.complemento || "",
+    });
+  }, [vaga?.cep, vaga?.logradouro, vaga?.bairro, vaga?.cidade, vaga?.estado, vaga?.numero, vaga?.complemento]);
+
+  const formatCep = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 8);
+    if (digits.length > 5) return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+    return digits;
+  };
+
+  const fetchCep = async (cep: string) => {
+    const digits = cep.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setFetching(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (!data.erro) {
+        setAddress(prev => ({
+          ...prev,
+          logradouro: data.logradouro || prev.logradouro,
+          bairro: data.bairro || prev.bairro,
+          cidade: data.localidade || prev.cidade,
+          estado: data.uf || prev.estado,
+        }));
+      }
+    } catch {
+      // silently fail, user can fill manually
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const handleCepChange = (value: string) => {
+    const formatted = formatCep(value);
+    setAddress(prev => ({ ...prev, cep: formatted }));
+    if (formatted.replace(/\D/g, "").length === 8) {
+      fetchCep(formatted);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!address.cep.trim()) { toast.error("CEP é obrigatório."); return; }
+    if (!address.numero.trim()) { toast.error("Número é obrigatório."); return; }
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("vagas").update({
+        cep: address.cep,
+        logradouro: address.logradouro,
+        bairro: address.bairro,
+        cidade: address.cidade,
+        estado: address.estado,
+        numero: address.numero,
+        complemento: address.complemento || null,
+      } as any).eq("id", vaga.id);
+      if (error) throw error;
+      toast.success("Endereço salvo com sucesso!");
+      onSaved?.({ ...address });
+      queryClient.invalidateQueries({ queryKey: ["vagas"] });
+    } catch {
+      toast.error("Erro ao salvar endereço.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const hasSavedData = vaga?.cep && vaga?.numero;
+
+  return (
+    <Card className="border-primary/20">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          📍 Endereço do Colaborador
+          {hasSavedData && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">Preenchido</Badge>}
+          {!hasSavedData && <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">Pendente</Badge>}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex items-end gap-3">
+            <div className="w-40">
+              <Label className="text-xs">CEP *</Label>
+              <Input
+                placeholder="00000-000"
+                value={address.cep}
+                onChange={(e) => handleCepChange(e.target.value)}
+                disabled={!canEdit}
+                maxLength={9}
+              />
+            </div>
+            {fetching && <p className="text-xs text-muted-foreground pb-2">Buscando...</p>}
+          </div>
+          <div>
+            <Label className="text-xs">Logradouro</Label>
+            <Input
+              placeholder="Rua, Avenida..."
+              value={address.logradouro}
+              onChange={(e) => setAddress(prev => ({ ...prev, logradouro: e.target.value }))}
+              disabled={!canEdit}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label className="text-xs">Número *</Label>
+              <Input
+                placeholder="Nº"
+                value={address.numero}
+                onChange={(e) => setAddress(prev => ({ ...prev, numero: e.target.value }))}
+                disabled={!canEdit}
+              />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs">Complemento</Label>
+              <Input
+                placeholder="Apto, Bloco..."
+                value={address.complemento}
+                onChange={(e) => setAddress(prev => ({ ...prev, complemento: e.target.value }))}
+                disabled={!canEdit}
+              />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs">Bairro</Label>
+            <Input
+              placeholder="Bairro"
+              value={address.bairro}
+              onChange={(e) => setAddress(prev => ({ ...prev, bairro: e.target.value }))}
+              disabled={!canEdit}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Cidade</Label>
+              <Input
+                placeholder="Cidade"
+                value={address.cidade}
+                onChange={(e) => setAddress(prev => ({ ...prev, cidade: e.target.value }))}
+                disabled={!canEdit}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Estado</Label>
+              <Input
+                placeholder="UF"
+                value={address.estado}
+                onChange={(e) => setAddress(prev => ({ ...prev, estado: e.target.value }))}
+                disabled={!canEdit}
+                maxLength={2}
+              />
+            </div>
+          </div>
+        </div>
+        {canEdit && (
+          <div className="mt-3 flex justify-end">
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar Endereço"}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoChecklistProps) {
   const { data: documentos = [], isLoading } = useAdmissaoDocumentos(vaga?.id || null);
   const invalidate = useInvalidateAdmissaoDocumentos();
@@ -186,13 +397,14 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
 
   const hasCV = !!vaga?.curriculo_nome;
   const hasASO = !!vaga?.resultado_aso_nome;
-  const hasBankData = !!(vaga?.agencia && vaga?.conta);
+  const hasBankData = !!(vaga?.banco && vaga?.agencia && vaga?.conta);
+  const hasAddress = !!(vaga?.cep && vaga?.numero);
 
   const checklistCount = documentosObrigatorios.length;
   const completedChecklist = documentosObrigatorios.filter((d) => getDocStatus(d.tipo)?.status === "anexado").length;
   const processDocsCount = (hasCV ? 1 : 0) + (hasASO ? 1 : 0);
-  const totalRequired = checklistCount + 2 + 1; // +CV +ASO +BankData
-  const totalCompleted = completedChecklist + processDocsCount + (hasBankData ? 1 : 0);
+  const totalRequired = checklistCount + 2 + 1 + 1; // +CV +ASO +BankData +Address
+  const totalCompleted = completedChecklist + processDocsCount + (hasBankData ? 1 : 0) + (hasAddress ? 1 : 0);
   const pendingCount = totalRequired - totalCompleted;
 
   const handleUpload = async (tipo: string, formatos: readonly string[]) => {
@@ -304,6 +516,9 @@ export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoCh
       {/* Bank Data Fields */}
       <BankDataFields vaga={vaga} canEdit={canEdit} onSaved={onBankDataSaved} />
 
+      {/* Address Fields */}
+      <AddressFields vaga={vaga} canEdit={canEdit} onSaved={onBankDataSaved} />
+
       {/* Process Documents */}
       <Card>
         <CardHeader className="pb-3">
@@ -391,10 +606,11 @@ export function useChecklistComplete(vaga: any) {
   
   const hasCV = !!vaga?.curriculo_nome;
   const hasASO = !!vaga?.resultado_aso_nome;
-  const hasBankData = !!(vaga?.agencia && vaga?.conta);
+  const hasBankData = !!(vaga?.banco && vaga?.agencia && vaga?.conta);
+  const hasAddress = !!(vaga?.cep && vaga?.numero);
   const checklistComplete = documentosObrigatorios.every(
     (d) => documentos.find((doc) => doc.tipo_documento === d.tipo)?.status === "anexado"
   );
 
-  return hasCV && hasASO && hasBankData && checklistComplete;
+  return hasCV && hasASO && hasBankData && hasAddress && checklistComplete;
 }

@@ -293,10 +293,15 @@ export type Database = {
         Row: {
           agencia: string | null
           atualizado_por: string | null
+          bairro: string | null
+          banco: string | null
           beneficios: Json | null
           cargo: string
           centro_custo_codigo: string | null
           centro_custo_nome: string
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
           conta: string | null
           cpf: string | null
           created_at: string
@@ -310,12 +315,15 @@ export type Database = {
           documento_nome: string | null
           enviado_admissao: boolean
           enviado_admissao_at: string | null
+          estado: string | null
           excluida: boolean
           excluida_at: string | null
           id: string
           local_trabalho: string
+          logradouro: string | null
           motivo_exclusao: string | null
           nome_candidato: string
+          numero: string | null
           numero_vaga: string | null
           observacao_reprovacao: string | null
           responsavel_etapa: string
@@ -334,10 +342,15 @@ export type Database = {
         Insert: {
           agencia?: string | null
           atualizado_por?: string | null
+          bairro?: string | null
+          banco?: string | null
           beneficios?: Json | null
           cargo: string
           centro_custo_codigo?: string | null
           centro_custo_nome: string
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           conta?: string | null
           cpf?: string | null
           created_at?: string
@@ -351,12 +364,15 @@ export type Database = {
           documento_nome?: string | null
           enviado_admissao?: boolean
           enviado_admissao_at?: string | null
+          estado?: string | null
           excluida?: boolean
           excluida_at?: string | null
           id?: string
           local_trabalho: string
+          logradouro?: string | null
           motivo_exclusao?: string | null
           nome_candidato: string
+          numero?: string | null
           numero_vaga?: string | null
           observacao_reprovacao?: string | null
           responsavel_etapa?: string
@@ -375,10 +391,15 @@ export type Database = {
         Update: {
           agencia?: string | null
           atualizado_por?: string | null
+          bairro?: string | null
+          banco?: string | null
           beneficios?: Json | null
           cargo?: string
           centro_custo_codigo?: string | null
           centro_custo_nome?: string
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           conta?: string | null
           cpf?: string | null
           created_at?: string
@@ -392,12 +413,15 @@ export type Database = {
           documento_nome?: string | null
           enviado_admissao?: boolean
           enviado_admissao_at?: string | null
+          estado?: string | null
           excluida?: boolean
           excluida_at?: string | null
           id?: string
           local_trabalho?: string
+          logradouro?: string | null
           motivo_exclusao?: string | null
           nome_candidato?: string
+          numero?: string | null
           numero_vaga?: string | null
           observacao_reprovacao?: string | null
           responsavel_etapa?: string
