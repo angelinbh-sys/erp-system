@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -31,6 +32,18 @@ export default function Medicoes() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [activeTab, setActiveTab] = useState("todos");
+
+  // Group projects that have measurements or are active
+  const projetosComMedicoes = useMemo(() => {
+    const contratoIds = new Set(medicoes.map((m) => m.contrato_id));
+    return contratos.filter((c) => contratoIds.has(c.id) || c.status === "Ativo");
+  }, [contratos, medicoes]);
+
+  const filteredMedicoes = useMemo(() => {
+    if (activeTab === "todos") return medicoes;
+    return medicoes.filter((m) => m.contrato_id === activeTab);
+  }, [medicoes, activeTab]);
 
   const openEdit = (m: any) => {
     setEditingId(m.id);
@@ -108,6 +121,46 @@ export default function Medicoes() {
     return digits ? parseInt(digits, 10) / 100 : 0;
   };
 
+  const renderTable = (items: typeof medicoes, showProjeto: boolean) => (
+    items.length === 0 ? (
+      <p className="text-muted-foreground text-center py-8">Nenhuma medição registrada.</p>
+    ) : (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Período</TableHead>
+            {showProjeto && <TableHead>Projeto</TableHead>}
+            <TableHead>Descrição</TableHead>
+            <TableHead>Valor Medido</TableHead>
+            <TableHead>Observação</TableHead>
+            <TableHead className="w-24">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.map((m) => (
+            <TableRow key={m.id}>
+              <TableCell>{fmtDate(m.data_inicio)} — {fmtDate(m.data_fim)}</TableCell>
+              {showProjeto && <TableCell className="font-medium">{getContratoProjeto(m.contrato_id)}</TableCell>}
+              <TableCell>{m.descricao}</TableCell>
+              <TableCell>{fmt(Number(m.valor_medido))}</TableCell>
+              <TableCell className="text-muted-foreground">{m.observacao ?? "—"}</TableCell>
+              <TableCell>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => openEdit(m)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -115,47 +168,20 @@ export default function Medicoes() {
         <Button onClick={() => { setEditingId(null); setForm(emptyForm); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-2" />Nova Medição</Button>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {medicoes.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">Nenhuma medição registrada.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Período</TableHead>
-                  <TableHead>Projeto</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Valor Medido</TableHead>
-                  <TableHead>Observação</TableHead>
-                  <TableHead className="w-24">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {medicoes.map((m) => (
-                  <TableRow key={m.id}>
-                    <TableCell>{fmtDate(m.data_inicio)} — {fmtDate(m.data_fim)}</TableCell>
-                    <TableCell className="font-medium">{getContratoProjeto(m.contrato_id)}</TableCell>
-                    <TableCell>{m.descricao}</TableCell>
-                    <TableCell>{fmt(Number(m.valor_medido))}</TableCell>
-                    <TableCell className="text-muted-foreground">{m.observacao ?? "—"}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(m)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="flex-wrap h-auto gap-1">
+          <TabsTrigger value="todos">Todos os Projetos</TabsTrigger>
+          {projetosComMedicoes.map((c) => (
+            <TabsTrigger key={c.id} value={c.id}>{c.projeto_obra}</TabsTrigger>
+          ))}
+        </TabsList>
+
+        <Card className="mt-4">
+          <CardContent className="pt-6">
+            {renderTable(filteredMedicoes, activeTab === "todos")}
+          </CardContent>
+        </Card>
+      </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
