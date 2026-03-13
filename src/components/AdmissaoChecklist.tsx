@@ -56,6 +56,7 @@ interface BankDataState {
 function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolean; onSaved?: (data: Partial<BankDataState>) => void }) {
   const queryClient = useQueryClient();
   const [bankData, setBankData] = useState<BankDataState>({
+    banco: vaga?.banco || "",
     agencia: vaga?.agencia || "",
     digito_agencia: vaga?.digito_agencia || "",
     conta: vaga?.conta || "",
@@ -65,12 +66,13 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
 
   useEffect(() => {
     setBankData({
+      banco: vaga?.banco || "",
       agencia: vaga?.agencia || "",
       digito_agencia: vaga?.digito_agencia || "",
       conta: vaga?.conta || "",
       digito_conta: vaga?.digito_conta || "",
     });
-  }, [vaga?.agencia, vaga?.digito_agencia, vaga?.conta, vaga?.digito_conta]);
+  }, [vaga?.banco, vaga?.agencia, vaga?.digito_agencia, vaga?.conta, vaga?.digito_conta]);
 
   const onlyDigits = (value: string, max: number) => value.replace(/\D/g, "").slice(0, max);
 
