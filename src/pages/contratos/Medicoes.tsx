@@ -163,7 +163,13 @@ export default function Medicoes() {
             </div>
             <div>
               <Label>Valor Medido *</Label>
-              <Input type="number" step="0.01" min="0" value={form.valor_medido || ""} onChange={(e) => setForm({ ...form, valor_medido: parseFloat(e.target.value) || 0 })} />
+              <Input
+                value={form.valor_medido_display}
+                onChange={handleValorChange}
+                onPaste={handleValorPaste}
+                placeholder="R$ 0,00"
+                inputMode="numeric"
+              />
             </div>
             <div>
               <Label>Observação</Label>
