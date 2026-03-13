@@ -6,7 +6,6 @@ import { useNotificacoesNaoLidas, useNotificacoes, useMarcarLida } from "@/hooks
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,11 +93,11 @@ export function UserAreaHeader() {
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0" align="end">
+        <PopoverContent className="w-80 p-0 overflow-hidden" align="end">
           <div className="p-3 border-b border-border">
             <p className="text-sm font-semibold text-foreground">Notificações</p>
           </div>
-          <ScrollArea className="max-h-80">
+          <div className="max-h-80 overflow-y-scroll [scrollbar-gutter:stable]">
             {recentNotifs.length === 0 ? (
               <p className="p-4 text-sm text-muted-foreground text-center">
                 Nenhuma notificação.
@@ -127,7 +126,7 @@ export function UserAreaHeader() {
                 })}
               </div>
             )}
-          </ScrollArea>
+          </div>
         </PopoverContent>
       </Popover>
 
