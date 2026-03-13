@@ -145,17 +145,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
                     <p className="text-xs text-amber-600 self-center">Existem documentos obrigatórios pendentes no checklist de admissão.</p>
                   )}
                   <Button variant="outline" size="sm"
-                    onClick={async () => {
-                      const { error } = await supabase.from("vagas").update({
-                        enviado_admissao: false, enviado_admissao_at: null,
-                        status_processo: STATUS_PROCESSO.EM_ANDAMENTO_SESMT, responsavel_etapa: "SESMT",
-                      } as any).eq("id", detailVaga.id);
-                      if (error) { toast.error("Erro ao devolver."); return; }
-                      await logAction({ modulo: "Dep. Pessoal", pagina: "Admissão", acao: "devolucao", descricao: `Devolveu para SESMT: ${detailVaga.cargo} — ${detailVaga.nome_candidato}`, registro_id: detailVaga.id, registro_ref: `${detailVaga.cargo} - ${detailVaga.nome_candidato}` });
-                      toast.success("Devolvido para o SESMT.");
-                      queryClient.invalidateQueries({ queryKey: ["vagas"] });
-                      setDetailVaga(null);
-                    }}
+                    onClick={() => { setShowDevolver(true); setMotivoDevolucao(""); }}
                   >
                     <Undo2 className="h-4 w-4 mr-1" />Devolver para SESMT
                   </Button>
