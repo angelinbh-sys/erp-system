@@ -217,6 +217,9 @@ const AgendamentoASO = () => {
                             disabled={!canEdit}
                             readOnly={!canEdit}
                           />
+                          {isDateInvalid(vaga) && (
+                            <p className="text-xs text-destructive mt-1 font-medium">A data de entrega do ASO não pode ser anterior à data de agendamento do ASO.</p>
+                          )}
                         </div>
                         <div className="flex items-end">
                           {canEdit && (

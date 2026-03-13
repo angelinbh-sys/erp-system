@@ -46,6 +46,7 @@ const sanitizeFileName = (fileName: string) =>
   fileName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+/g, "_");
 
 interface BankDataState {
+  banco: string;
   agencia: string;
   digito_agencia: string;
   conta: string;
