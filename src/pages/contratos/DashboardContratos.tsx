@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
-import { DollarSign, TrendingUp, BarChart3, Wallet } from "lucide-react";
+import { DollarSign, BarChart3, Wallet } from "lucide-react";
+import GaugeChart from "@/components/GaugeChart";
 import {
   ChartContainer,
   ChartTooltip,
