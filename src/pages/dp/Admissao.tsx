@@ -9,7 +9,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { ClipboardList, Eye, Lock, Unlock, Undo2, CheckCircle2 } from "lucide-react";
+import { ClipboardList, Lock, Unlock, Undo2, CheckCircle2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
@@ -264,7 +264,7 @@ const Admissao = () => {
                       <TableCell>{vaga.site_contrato}</TableCell>
                       <TableCell><Badge variant="outline" className={`gap-1 ${status.className}`}>{status.icon}{status.label}</Badge></TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => setDetailVaga(vaga)} title="Ver detalhes"><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDetailVaga(vaga)} title="Preencher dados" className="text-xs text-primary hover:underline">Preencher dados</Button>
                       </TableCell>
                     </TableRow>
                   );
