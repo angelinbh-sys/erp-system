@@ -12,14 +12,20 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
-const chartConfig: ChartConfig = {
-  valor: {
-    label: "Valor Medido",
-    color: "hsl(var(--primary))",
-  },
-};
+const PROJECT_COLORS = [
+  "hsl(221, 83%, 53%)",
+  "hsl(142, 71%, 45%)",
+  "hsl(38, 92%, 50%)",
+  "hsl(0, 84%, 60%)",
+  "hsl(270, 70%, 60%)",
+  "hsl(190, 80%, 45%)",
+  "hsl(330, 70%, 55%)",
+  "hsl(60, 70%, 45%)",
+  "hsl(200, 60%, 50%)",
+  "hsl(15, 80%, 55%)",
+];
 
 export default function DashboardContratos() {
   const { contratosQuery } = useContratos();
@@ -61,19 +67,39 @@ export default function DashboardContratos() {
   const percentualAvanco = valorTotalContratado > 0 ? (valorTotalMedido / valorTotalContratado) * 100 : 0;
   const valorRestante = valorTotalContratado - valorTotalMedido;
 
+  const contratoMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    contratos.forEach((c) => { map[c.id] = c.projeto_obra; });
+    return map;
+  }, [contratos]);
+
+  const projetosFiltrados = useMemo(() => {
+    return [...new Set(contratosFiltrados.map((c) => c.projeto_obra))].sort();
+  }, [contratosFiltrados]);
+
+  const chartConfig: ChartConfig = useMemo(() => {
+    const cfg: ChartConfig = {};
+    projetosFiltrados.forEach((p, i) => {
+      cfg[p] = { label: p, color: PROJECT_COLORS[i % PROJECT_COLORS.length] };
+    });
+    return cfg;
+  }, [projetosFiltrados]);
+
   const dadosGrafico = useMemo(() => {
-    const mapa: Record<string, number> = {};
+    const mapa: Record<string, Record<string, number>> = {};
     medicoesFiltradas.forEach((m) => {
       const mes = m.data_inicio.substring(0, 7);
-      mapa[mes] = (mapa[mes] || 0) + Number(m.valor_medido);
+      const projeto = contratoMap[m.contrato_id] || "Outros";
+      if (!mapa[mes]) mapa[mes] = {};
+      mapa[mes][projeto] = (mapa[mes][projeto] || 0) + Number(m.valor_medido);
     });
     return Object.entries(mapa)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([mes, valor]) => ({
+      .map(([mes, projetos]) => ({
         mes: mes.split("-").reverse().join("/"),
-        valor,
+        ...projetos,
       }));
-  }, [medicoesFiltradas]);
+  }, [medicoesFiltradas, contratoMap]);
 
   const fmt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -206,7 +232,16 @@ export default function DashboardContratos() {
                     />
                   }
                 />
-                <Bar dataKey="valor" fill="var(--color-valor)" radius={[4, 4, 0, 0]} />
+                {projetosFiltrados.map((projeto, i) => (
+                  <Bar
+                    key={projeto}
+                    dataKey={projeto}
+                    stackId="a"
+                    fill={PROJECT_COLORS[i % PROJECT_COLORS.length]}
+                    radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                  />
+                ))}
+                <Legend />
               </BarChart>
             </ChartContainer>
           )}
