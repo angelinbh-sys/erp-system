@@ -379,6 +379,7 @@ function AddressFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolean
       </CardContent>
     </Card>
   );
+}
 
 export function AdmissaoChecklist({ vaga, canEdit, onBankDataSaved }: AdmissaoChecklistProps) {
   const { data: documentos = [], isLoading } = useAdmissaoDocumentos(vaga?.id || null);
