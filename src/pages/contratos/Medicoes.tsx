@@ -34,11 +34,11 @@ export default function Medicoes() {
   const [form, setForm] = useState(emptyForm);
   const [activeTab, setActiveTab] = useState("todos");
   const [filters, setFilters] = useState({
-    periodo: "",
-    projeto: "",
-    descricao: "",
-    valor: "",
-    observacao: "",
+    periodo: "todos",
+    projeto: "todos",
+    descricao: "todos",
+    valor: "todos",
+    observacao: "todos",
   });
 
   // Group projects that have measurements or are active
@@ -47,30 +47,44 @@ export default function Medicoes() {
     return contratos.filter((c) => contratoIds.has(c.id) || c.status === "Ativo");
   }, [contratos, medicoes]);
 
+  const getContratoProjeto = (id: string) => contratos.find((c) => c.id === id)?.projeto_obra ?? "—";
+  const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
+
+  // Data currently visible (tab-filtered only, before column filters)
+  const tabFilteredMedicoes = useMemo(() => {
+    return activeTab === "todos" ? medicoes : medicoes.filter((m) => m.contrato_id === activeTab);
+  }, [medicoes, activeTab]);
+
+  // Unique values for each column (derived from tab-filtered data)
+  const uniqueValues = useMemo(() => {
+    const periodos = [...new Set(tabFilteredMedicoes.map((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}`))];
+    const projetos = [...new Set(tabFilteredMedicoes.map((m) => getContratoProjeto(m.contrato_id)))];
+    const descricoes = [...new Set(tabFilteredMedicoes.map((m) => m.descricao))];
+    const valores = [...new Set(tabFilteredMedicoes.map((m) => fmt(Number(m.valor_medido))))];
+    const observacoes = [...new Set(tabFilteredMedicoes.map((m) => m.observacao ?? "—"))];
+    return { periodos, projetos, descricoes, valores, observacoes };
+  }, [tabFilteredMedicoes]);
+
   const filteredMedicoes = useMemo(() => {
-    let result = activeTab === "todos" ? medicoes : medicoes.filter((m) => m.contrato_id === activeTab);
-    if (filters.periodo) {
-      const q = filters.periodo.toLowerCase();
-      result = result.filter((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}`.toLowerCase().includes(q));
+    let result = tabFilteredMedicoes;
+    if (filters.periodo !== "todos") {
+      result = result.filter((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}` === filters.periodo);
     }
-    if (filters.projeto) {
-      const q = filters.projeto.toLowerCase();
-      result = result.filter((m) => getContratoProjeto(m.contrato_id).toLowerCase().includes(q));
+    if (filters.projeto !== "todos") {
+      result = result.filter((m) => getContratoProjeto(m.contrato_id) === filters.projeto);
     }
-    if (filters.descricao) {
-      const q = filters.descricao.toLowerCase();
-      result = result.filter((m) => m.descricao.toLowerCase().includes(q));
+    if (filters.descricao !== "todos") {
+      result = result.filter((m) => m.descricao === filters.descricao);
     }
-    if (filters.valor) {
-      const q = filters.valor.toLowerCase();
-      result = result.filter((m) => fmt(Number(m.valor_medido)).toLowerCase().includes(q));
+    if (filters.valor !== "todos") {
+      result = result.filter((m) => fmt(Number(m.valor_medido)) === filters.valor);
     }
-    if (filters.observacao) {
-      const q = filters.observacao.toLowerCase();
-      result = result.filter((m) => (m.observacao ?? "").toLowerCase().includes(q));
+    if (filters.observacao !== "todos") {
+      result = result.filter((m) => (m.observacao ?? "—") === filters.observacao);
     }
     return result;
-  }, [medicoes, activeTab, filters]);
+  }, [tabFilteredMedicoes, filters]);
 
   const openEdit = (m: any) => {
     setEditingId(m.id);
@@ -126,9 +140,6 @@ export default function Medicoes() {
     }
   };
 
-  const getContratoProjeto = (id: string) => contratos.find((c) => c.id === id)?.projeto_obra ?? "—";
-  const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
 
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
@@ -152,8 +163,24 @@ export default function Medicoes() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const hasActiveFilter = Object.values(filters).some((v) => v !== "todos");
+
+  const renderFilterSelect = (filterKey: keyof typeof filters, options: string[]) => (
+    <Select value={filters[filterKey]} onValueChange={(v) => updateFilter(filterKey, v)}>
+      <SelectTrigger className="h-7 text-xs border-dashed">
+        <SelectValue placeholder="Todos" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="todos">Todos</SelectItem>
+        {options.map((opt) => (
+          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   const renderTable = (items: typeof medicoes, showProjeto: boolean) => (
-    items.length === 0 && !Object.values(filters).some(Boolean) ? (
+    items.length === 0 && !hasActiveFilter ? (
       <p className="text-muted-foreground text-center py-8">Nenhuma medição registrada.</p>
     ) : (
       <Table>
@@ -167,23 +194,11 @@ export default function Medicoes() {
             <TableHead className="w-24">Ações</TableHead>
           </TableRow>
           <TableRow>
-            <TableHead className="p-1">
-              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.periodo} onChange={(e) => updateFilter("periodo", e.target.value)} />
-            </TableHead>
-            {showProjeto && (
-              <TableHead className="p-1">
-                <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.projeto} onChange={(e) => updateFilter("projeto", e.target.value)} />
-              </TableHead>
-            )}
-            <TableHead className="p-1">
-              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.descricao} onChange={(e) => updateFilter("descricao", e.target.value)} />
-            </TableHead>
-            <TableHead className="p-1">
-              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.valor} onChange={(e) => updateFilter("valor", e.target.value)} />
-            </TableHead>
-            <TableHead className="p-1">
-              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.observacao} onChange={(e) => updateFilter("observacao", e.target.value)} />
-            </TableHead>
+            <TableHead className="p-1">{renderFilterSelect("periodo", uniqueValues.periodos)}</TableHead>
+            {showProjeto && <TableHead className="p-1">{renderFilterSelect("projeto", uniqueValues.projetos)}</TableHead>}
+            <TableHead className="p-1">{renderFilterSelect("descricao", uniqueValues.descricoes)}</TableHead>
+            <TableHead className="p-1">{renderFilterSelect("valor", uniqueValues.valores)}</TableHead>
+            <TableHead className="p-1">{renderFilterSelect("observacao", uniqueValues.observacoes)}</TableHead>
             <TableHead className="w-24" />
           </TableRow>
         </TableHeader>
