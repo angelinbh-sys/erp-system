@@ -68,6 +68,24 @@ export default function Medicoes() {
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
 
+  const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    setForm({ ...form, valor_medido_display: raw ? formatCurrencyBRL(raw) : "" });
+  };
+
+  const handleValorPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
+    if (pasted) {
+      setForm({ ...form, valor_medido_display: formatCurrencyBRL(pasted) });
+    }
+  };
+
+  const getValorNumber = (): number => {
+    const digits = parseCurrencyBRL(form.valor_medido_display);
+    return digits ? parseInt(digits, 10) / 100 : 0;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
