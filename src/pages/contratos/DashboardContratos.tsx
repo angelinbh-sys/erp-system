@@ -15,16 +15,16 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
 const PROJECT_COLORS = [
-  "hsl(221, 83%, 53%)",
-  "hsl(142, 71%, 45%)",
-  "hsl(38, 92%, 50%)",
-  "hsl(0, 84%, 60%)",
-  "hsl(270, 70%, 60%)",
-  "hsl(190, 80%, 45%)",
-  "hsl(330, 70%, 55%)",
-  "hsl(60, 70%, 45%)",
-  "hsl(200, 60%, 50%)",
-  "hsl(15, 80%, 55%)",
+  "hsl(215, 35%, 55%)",
+  "hsl(160, 30%, 50%)",
+  "hsl(35, 35%, 55%)",
+  "hsl(0, 30%, 55%)",
+  "hsl(260, 25%, 55%)",
+  "hsl(190, 30%, 50%)",
+  "hsl(320, 25%, 55%)",
+  "hsl(80, 25%, 50%)",
+  "hsl(200, 30%, 50%)",
+  "hsl(15, 30%, 55%)",
 ];
 
 export default function DashboardContratos() {
