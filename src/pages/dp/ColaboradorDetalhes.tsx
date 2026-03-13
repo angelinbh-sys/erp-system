@@ -80,13 +80,54 @@ const ColaboradorDetalhes = () => {
     setEditForm({
       nome: colaborador.nome,
       cargo: colaborador.cargo,
-      centro_custo: colaborador.centro_custo,
-      site_contrato: colaborador.site_contrato,
       status: colaborador.status,
       telefone: colaborador.telefone || "",
     });
     setMotivo("");
     setEditing(true);
+  };
+
+  const startTransfer = () => {
+    if (!colaborador) return;
+    setTransferForm({
+      centro_custo: colaborador.centro_custo,
+      site_contrato: colaborador.site_contrato,
+    });
+    setTransferMotivo("");
+    setShowTransfer(true);
+  };
+
+  const handleSaveTransfer = async () => {
+    if (!colaborador || !transferMotivo.trim()) {
+      toast.error("O motivo da transferência é obrigatório.");
+      return;
+    }
+    const alteradoPor = formatFirstLastName(profile?.nome) || "Sistema";
+    const changes: Array<{ colaborador_id: string; campo_alterado: string; valor_anterior: string | null; valor_novo: string | null; motivo: string; alterado_por: string }> = [];
+    const updates: Record<string, unknown> = {};
+
+    const fields = [
+      { key: "centro_custo", label: "Centro de Custo" },
+      { key: "site_contrato", label: "Site / Contrato" },
+    ] as const;
+
+    for (const f of fields) {
+      const oldVal = colaborador[f.key as keyof Colaborador] as string | null;
+      const newVal = transferForm[f.key as keyof typeof transferForm];
+      if ((oldVal || "") !== newVal) {
+        updates[f.key] = newVal || null;
+        changes.push({ colaborador_id: colaborador.id, campo_alterado: f.label, valor_anterior: oldVal, valor_novo: newVal || null, motivo: transferMotivo.trim(), alterado_por: alteradoPor });
+      }
+    }
+
+    if (Object.keys(updates).length === 0) { toast.info("Nenhuma alteração detectada."); return; }
+
+    try {
+      await updateColaborador.mutateAsync({ id: colaborador.id, updates, historico: changes });
+      setColaborador(prev => prev ? { ...prev, ...updates } as Colaborador : prev);
+      toast.success("Transferência realizada com sucesso.");
+      setShowTransfer(false);
+    } catch { toast.error("Erro ao realizar transferência."); }
   };
 
   const handleSaveEdit = async () => {
