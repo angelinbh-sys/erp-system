@@ -106,7 +106,7 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
     }
   };
 
-  const hasSavedData = vaga?.agencia && vaga?.conta;
+  const hasSavedData = vaga?.banco && vaga?.agencia && vaga?.conta;
 
   return (
     <Card className="border-primary/20">
