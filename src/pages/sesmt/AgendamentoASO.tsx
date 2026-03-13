@@ -96,8 +96,8 @@ const AgendamentoASO = () => {
 
   const isDateInvalid = (vaga: any) => {
     const local = getLocal(vaga);
-    const agendamento = vaga.data_agendamento_aso || local.dataAgendamento;
-    const entrega = vaga.data_entrega_aso || local.dataEntrega;
+    const agendamento = local.dataAgendamento || vaga.data_agendamento_aso;
+    const entrega = local.dataEntrega || vaga.data_entrega_aso;
     return !!(agendamento && entrega && entrega < agendamento);
   };
 
