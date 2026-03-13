@@ -234,6 +234,20 @@ const ColaboradorDetalhes = () => {
     }
   };
 
+  const downloadFile = async (path: string, name: string) => {
+    try {
+      const bucket = path.includes("resultado-aso") ? "aso-documentos" : "admissao-documentos";
+      const { data } = await supabase.storage.from(bucket).download(path);
+      if (data) {
+        const url = URL.createObjectURL(data);
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch { toast.error(`Erro ao baixar: ${name}`); }
+  };
+
   const handleDownloadAll = async () => {
     if (!vaga?.id) return;
     const filesToDownload: { path: string; name: string }[] = [];
@@ -248,17 +262,7 @@ const ColaboradorDetalhes = () => {
     if (filesToDownload.length === 0) { toast.info("Nenhum arquivo disponível para download."); return; }
     toast.info(`Iniciando download de ${filesToDownload.length} arquivo(s)...`);
     for (const file of filesToDownload) {
-      try {
-        const bucket = file.path.includes("resultado-aso") ? "aso-documentos" : "admissao-documentos";
-        const { data } = await supabase.storage.from(bucket).download(file.path);
-        if (data) {
-          const url = URL.createObjectURL(data);
-          const a = document.createElement("a");
-          a.href = url; a.download = file.name;
-          document.body.appendChild(a); a.click(); document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }
-      } catch { console.error("Erro ao baixar:", file.name); }
+      await downloadFile(file.path, file.name);
     }
   };
 
