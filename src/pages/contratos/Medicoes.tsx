@@ -48,9 +48,29 @@ export default function Medicoes() {
   }, [contratos, medicoes]);
 
   const filteredMedicoes = useMemo(() => {
-    if (activeTab === "todos") return medicoes;
-    return medicoes.filter((m) => m.contrato_id === activeTab);
-  }, [medicoes, activeTab]);
+    let result = activeTab === "todos" ? medicoes : medicoes.filter((m) => m.contrato_id === activeTab);
+    if (filters.periodo) {
+      const q = filters.periodo.toLowerCase();
+      result = result.filter((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}`.toLowerCase().includes(q));
+    }
+    if (filters.projeto) {
+      const q = filters.projeto.toLowerCase();
+      result = result.filter((m) => getContratoProjeto(m.contrato_id).toLowerCase().includes(q));
+    }
+    if (filters.descricao) {
+      const q = filters.descricao.toLowerCase();
+      result = result.filter((m) => m.descricao.toLowerCase().includes(q));
+    }
+    if (filters.valor) {
+      const q = filters.valor.toLowerCase();
+      result = result.filter((m) => fmt(Number(m.valor_medido)).toLowerCase().includes(q));
+    }
+    if (filters.observacao) {
+      const q = filters.observacao.toLowerCase();
+      result = result.filter((m) => (m.observacao ?? "").toLowerCase().includes(q));
+    }
+    return result;
+  }, [medicoes, activeTab, filters]);
 
   const openEdit = (m: any) => {
     setEditingId(m.id);
