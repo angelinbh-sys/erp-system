@@ -148,8 +148,12 @@ export default function Medicoes() {
     return digits ? parseInt(digits, 10) / 100 : 0;
   };
 
+  const updateFilter = (key: keyof typeof filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
   const renderTable = (items: typeof medicoes, showProjeto: boolean) => (
-    items.length === 0 ? (
+    items.length === 0 && !Object.values(filters).some(Boolean) ? (
       <p className="text-muted-foreground text-center py-8">Nenhuma medição registrada.</p>
     ) : (
       <Table>
@@ -161,6 +165,26 @@ export default function Medicoes() {
             <TableHead>Valor Medido</TableHead>
             <TableHead>Observação</TableHead>
             <TableHead className="w-24">Ações</TableHead>
+          </TableRow>
+          <TableRow>
+            <TableHead className="p-1">
+              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.periodo} onChange={(e) => updateFilter("periodo", e.target.value)} />
+            </TableHead>
+            {showProjeto && (
+              <TableHead className="p-1">
+                <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.projeto} onChange={(e) => updateFilter("projeto", e.target.value)} />
+              </TableHead>
+            )}
+            <TableHead className="p-1">
+              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.descricao} onChange={(e) => updateFilter("descricao", e.target.value)} />
+            </TableHead>
+            <TableHead className="p-1">
+              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.valor} onChange={(e) => updateFilter("valor", e.target.value)} />
+            </TableHead>
+            <TableHead className="p-1">
+              <Input className="h-7 text-xs" placeholder="Filtrar..." value={filters.observacao} onChange={(e) => updateFilter("observacao", e.target.value)} />
+            </TableHead>
+            <TableHead className="w-24" />
           </TableRow>
         </TableHeader>
         <TableBody>
