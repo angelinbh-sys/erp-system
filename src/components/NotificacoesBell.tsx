@@ -36,11 +36,11 @@ export function NotificacoesBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end" style={{ maxHeight: 'var(--radix-popover-content-available-height, 400px)' }}>
+      <PopoverContent className="w-80 p-0 overflow-hidden" align="end" style={{ maxHeight: '400px' }}>
         <div className="p-3 border-b border-border">
           <p className="text-sm font-semibold text-foreground">Notificações</p>
         </div>
-        <div className="overflow-y-auto" style={{ maxHeight: 'calc(var(--radix-popover-content-available-height, 400px) - 50px)' }}>
+        <div className="overflow-y-auto" style={{ maxHeight: '350px' }}>
           {notificacoes.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground text-center">
               Nenhuma notificação pendente.
