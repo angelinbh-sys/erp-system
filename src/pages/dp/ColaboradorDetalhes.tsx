@@ -234,6 +234,20 @@ const ColaboradorDetalhes = () => {
     }
   };
 
+  const downloadFile = async (path: string, name: string) => {
+    try {
+      const bucket = path.includes("resultado-aso") ? "aso-documentos" : "admissao-documentos";
+      const { data } = await supabase.storage.from(bucket).download(path);
+      if (data) {
+        const url = URL.createObjectURL(data);
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch { toast.error(`Erro ao baixar: ${name}`); }
+  };
+
   const handleDownloadAll = async () => {
     if (!vaga?.id) return;
     const filesToDownload: { path: string; name: string }[] = [];
@@ -248,17 +262,7 @@ const ColaboradorDetalhes = () => {
     if (filesToDownload.length === 0) { toast.info("Nenhum arquivo disponível para download."); return; }
     toast.info(`Iniciando download de ${filesToDownload.length} arquivo(s)...`);
     for (const file of filesToDownload) {
-      try {
-        const bucket = file.path.includes("resultado-aso") ? "aso-documentos" : "admissao-documentos";
-        const { data } = await supabase.storage.from(bucket).download(file.path);
-        if (data) {
-          const url = URL.createObjectURL(data);
-          const a = document.createElement("a");
-          a.href = url; a.download = file.name;
-          document.body.appendChild(a); a.click(); document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }
-      } catch { console.error("Erro ao baixar:", file.name); }
+      await downloadFile(file.path, file.name);
     }
   };
 
@@ -302,28 +306,7 @@ const ColaboradorDetalhes = () => {
         <h2 className="font-heading text-2xl font-bold text-foreground">Dados do Colaborador</h2>
       </div>
 
-      {/* Header with photo */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-6">
-            <Avatar className="h-48 w-48">
-              <AvatarImage src={fotoUrl || undefined} className="object-cover" />
-              <AvatarFallback className="text-4xl bg-muted">
-                {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-20 w-20" />}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-foreground">{formatFirstLastName(colaborador.nome)}</h3>
-              <p className="text-muted-foreground">{colaborador.cargo}</p>
-              <div className="mt-2">
-                <Badge variant={colaborador.status === "Ativo" ? "default" : "secondary"}>{colaborador.status}</Badge>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Dados Pessoais */}
+      {/* Dados Pessoais com Foto */}
       <Card className={`mb-6 ${editingBlock === "pessoais" ? "border-primary/30" : ""}`}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -354,16 +337,24 @@ const ColaboradorDetalhes = () => {
               <EditBlockFooter />
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <InfoField label="Nome Completo" value={colaborador.nome} />
-              <InfoField label="Cargo / Função" value={colaborador.cargo} />
-              <InfoField label="Status" value={colaborador.status} />
-              <InfoField label="Data de Admissão" value={new Date(colaborador.data_admissao).toLocaleDateString("pt-BR")} />
-              {colaborador.data_nascimento && <InfoField label="Data de Nascimento" value={new Date(colaborador.data_nascimento).toLocaleDateString("pt-BR")} />}
-              {colaborador.telefone && <InfoField label="Telefone" value={colaborador.telefone} />}
-              {vaga?.cpf && <InfoField label="CPF" value={vaga.cpf} />}
-              {vaga?.sexo && <InfoField label="Sexo" value={vaga.sexo} />}
-              {vaga?.salario && <InfoField label="Salário" value={vaga.salario} />}
+            <div className="flex items-start gap-6">
+              <Avatar className="h-48 w-48 shrink-0">
+                <AvatarImage src={fotoUrl || undefined} className="object-cover" />
+                <AvatarFallback className="text-4xl bg-muted">
+                  {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-20 w-20" />}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4">
+                <InfoField label="Nome Completo" value={colaborador.nome} />
+                <InfoField label="Cargo / Função" value={colaborador.cargo} />
+                <InfoField label="Status" value={colaborador.status} />
+                <InfoField label="Data de Admissão" value={new Date(colaborador.data_admissao).toLocaleDateString("pt-BR")} />
+                {colaborador.data_nascimento && <InfoField label="Data de Nascimento" value={new Date(colaborador.data_nascimento).toLocaleDateString("pt-BR")} />}
+                {colaborador.telefone && <InfoField label="Telefone" value={colaborador.telefone} />}
+                {vaga?.cpf && <InfoField label="CPF" value={vaga.cpf} />}
+                {vaga?.sexo && <InfoField label="Sexo" value={vaga.sexo} />}
+                {vaga?.salario && <InfoField label="Salário" value={vaga.salario} />}
+              </div>
             </div>
           )}
         </CardContent>
@@ -502,8 +493,8 @@ const ColaboradorDetalhes = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             {DOCUMENTOS_OBRIGATORIOS.map((doc) => {
-              const status = documentos.find((d) => d.tipo_documento === doc.tipo);
-              const isAnexado = status?.status === "anexado";
+              const found = documentos.find((d) => d.tipo_documento === doc.tipo);
+              const isAnexado = found?.status === "anexado";
               return (
                 <div key={doc.tipo} className={`flex items-center gap-3 p-2 rounded text-sm ${isAnexado ? "bg-green-50/50" : "bg-muted/30"}`}>
                   <FileText className={`h-4 w-4 ${isAnexado ? "text-green-600" : "text-muted-foreground"}`} />
@@ -511,6 +502,11 @@ const ColaboradorDetalhes = () => {
                   <Badge variant="outline" className={isAnexado ? "bg-green-50 text-green-700 border-green-200 text-xs" : "text-xs"}>
                     {isAnexado ? "Anexado" : "Pendente"}
                   </Badge>
+                  {isAnexado && found?.arquivo_path && (
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadFile(found.arquivo_path!, found.arquivo_nome || doc.label)}>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -526,6 +522,11 @@ const ColaboradorDetalhes = () => {
                 <FileText className="h-4 w-4 text-green-600" />
                 <span className="flex-1">ASO</span>
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">Anexado</Badge>
+                {vaga.resultado_aso_path && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadFile(vaga.resultado_aso_path, vaga.resultado_aso_nome || "resultado-aso")}>
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
