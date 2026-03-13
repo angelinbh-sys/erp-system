@@ -412,7 +412,7 @@ const ColaboradorDetalhes = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold">📍 Endereço</CardTitle>
-              <EditButton block="endereco" />
+              {renderEditButton("endereco")}
             </div>
           </CardHeader>
           <CardContent>
