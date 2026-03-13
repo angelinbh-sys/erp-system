@@ -32,6 +32,20 @@ export default function Medicoes() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
 
+  const openEdit = (m: any) => {
+    setEditingId(m.id);
+    const centavos = Math.round(Number(m.valor_medido) * 100).toString();
+    setForm({
+      contrato_id: m.contrato_id,
+      data_inicio: m.data_inicio,
+      data_fim: m.data_fim,
+      descricao: m.descricao,
+      valor_medido_display: formatCurrencyBRL(centavos),
+      observacao: m.observacao ?? "",
+    });
+    setDialogOpen(true);
+  };
+
   const handleSave = async () => {
     const valor = getValorNumber();
     if (!form.contrato_id || !form.data_inicio || !form.data_fim || !form.descricao || !valor) {
@@ -39,19 +53,26 @@ export default function Medicoes() {
       return;
     }
     try {
-      await createMedicao.mutateAsync({
+      const payload = {
         contrato_id: form.contrato_id,
         data_inicio: form.data_inicio,
         data_fim: form.data_fim,
         descricao: form.descricao,
         valor_medido: valor,
         observacao: form.observacao || null,
-      });
-      toast.success("Medição registrada com sucesso!");
+      };
+      if (editingId) {
+        await updateMedicao.mutateAsync({ id: editingId, ...payload });
+        toast.success("Medição atualizada com sucesso!");
+      } else {
+        await createMedicao.mutateAsync(payload);
+        toast.success("Medição registrada com sucesso!");
+      }
       setDialogOpen(false);
+      setEditingId(null);
       setForm(emptyForm);
     } catch {
-      toast.error("Erro ao registrar medição.");
+      toast.error("Erro ao salvar medição.");
     }
   };
 
