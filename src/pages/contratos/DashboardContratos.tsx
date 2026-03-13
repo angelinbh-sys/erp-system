@@ -15,17 +15,18 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
+// Variations of sidebar background hue (225°) with different lightness/saturation
 const PROJECT_COLORS = [
-  "hsl(215, 35%, 55%)",
-  "hsl(160, 30%, 50%)",
-  "hsl(35, 35%, 55%)",
-  "hsl(0, 30%, 55%)",
-  "hsl(260, 25%, 55%)",
-  "hsl(190, 30%, 50%)",
-  "hsl(320, 25%, 55%)",
-  "hsl(80, 25%, 50%)",
-  "hsl(200, 30%, 50%)",
-  "hsl(15, 30%, 55%)",
+  "hsl(225, 30%, 35%)",
+  "hsl(225, 25%, 48%)",
+  "hsl(210, 30%, 40%)",
+  "hsl(225, 20%, 55%)",
+  "hsl(240, 25%, 38%)",
+  "hsl(215, 28%, 45%)",
+  "hsl(225, 35%, 28%)",
+  "hsl(210, 22%, 52%)",
+  "hsl(230, 20%, 42%)",
+  "hsl(220, 30%, 30%)",
 ];
 
 export default function DashboardContratos() {
