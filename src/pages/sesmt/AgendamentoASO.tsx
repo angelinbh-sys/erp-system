@@ -94,9 +94,17 @@ const AgendamentoASO = () => {
     setUploading((prev) => ({ ...prev, [vaga.id]: false }));
   };
 
+  const isDateInvalid = (vaga: any) => {
+    const local = getLocal(vaga);
+    const agendamento = vaga.data_agendamento_aso || local.dataAgendamento;
+    const entrega = vaga.data_entrega_aso || local.dataEntrega;
+    return !!(agendamento && entrega && entrega < agendamento);
+  };
+
   const canSendAdmissao = (vaga: any) => {
     if (!canEdit) return false;
     const local = getLocal(vaga);
+    if (isDateInvalid(vaga)) return false;
     return (vaga.data_agendamento_aso || local.dataAgendamento) && (vaga.data_entrega_aso || local.dataEntrega) && vaga.resultado_aso_path && !vaga.enviado_admissao;
   };
 

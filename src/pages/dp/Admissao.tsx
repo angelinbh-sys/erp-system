@@ -162,6 +162,53 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Devolver para SESMT Dialog */}
+    <Dialog open={showDevolver} onOpenChange={() => setShowDevolver(false)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Devolver para SESMT</DialogTitle></DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Devolver o candidato <strong>{detailVaga?.nome_candidato}</strong> ({detailVaga?.cargo}) para o SESMT.
+        </p>
+        <div className="space-y-2">
+          <Label>Motivo da Devolução *</Label>
+          <Textarea placeholder="Informe o motivo da devolução" value={motivoDevolucao} onChange={(e) => setMotivoDevolucao(e.target.value)} />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowDevolver(false)}>Cancelar</Button>
+          <Button
+            onClick={async () => {
+              if (!motivoDevolucao.trim()) { toast.error("O motivo da devolução é obrigatório."); return; }
+              setDevolvendo(true);
+              try {
+                const { error } = await supabase.from("vagas").update({
+                  enviado_admissao: false, enviado_admissao_at: null,
+                  status_processo: STATUS_PROCESSO.EM_ANDAMENTO_SESMT, responsavel_etapa: "SESMT",
+                  atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
+                } as any).eq("id", detailVaga.id);
+                if (error) throw error;
+                await supabase.from("vagas_historico" as any).insert({
+                  vaga_id: detailVaga.id, acao: "Devolvido pelo Dep. Pessoal para SESMT",
+                  usuario_nome: formatFirstLastName(profile?.nome) || "Sistema", motivo: motivoDevolucao.trim(),
+                } as any);
+                await logAction({ modulo: "Dep. Pessoal", pagina: "Admissão", acao: "devolucao", descricao: `Devolveu para SESMT: ${detailVaga.cargo} — ${detailVaga.nome_candidato}`, registro_id: detailVaga.id, registro_ref: `${detailVaga.cargo} - ${detailVaga.nome_candidato}`, motivo: motivoDevolucao.trim() });
+                toast.success("Devolvido para o SESMT.");
+                queryClient.invalidateQueries({ queryKey: ["vagas"] });
+                setShowDevolver(false);
+                setDetailVaga(null);
+              } catch {
+                toast.error("Erro ao devolver.");
+              } finally {
+                setDevolvendo(false);
+              }
+            }}
+            disabled={devolvendo || !motivoDevolucao.trim()}
+          >
+            {devolvendo ? "Devolvendo..." : "Confirmar Devolução"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
