@@ -119,6 +119,15 @@ function BankDataFields({ vaga, canEdit, onSaved }: { vaga: any; canEdit: boolea
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
+          <div>
+            <Label className="text-xs">Banco *</Label>
+            <Input
+              placeholder="Nome do banco"
+              value={bankData.banco}
+              onChange={(e) => setBankData(prev => ({ ...prev, banco: e.target.value }))}
+              disabled={!canEdit}
+            />
+          </div>
           <div className="flex items-end gap-3">
             <div className="flex-1">
               <Label className="text-xs">Agência *</Label>
