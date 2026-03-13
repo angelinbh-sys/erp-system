@@ -136,9 +136,6 @@ export default function Medicoes() {
     }
   };
 
-  const getContratoProjeto = (id: string) => contratos.find((c) => c.id === id)?.projeto_obra ?? "—";
-  const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
 
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
