@@ -30,6 +30,7 @@ export function UserAreaHeader() {
   const { data: naoLidas = [] } = useNotificacoesNaoLidas();
   const { data: todasNotificacoes = [] } = useNotificacoes();
   const marcarLida = useMarcarLida();
+  const marcarTodasLidas = useMarcarTodasLidas();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
