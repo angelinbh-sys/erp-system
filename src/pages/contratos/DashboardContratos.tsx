@@ -100,17 +100,23 @@ export default function DashboardContratos() {
       }));
   }, [medicoesFiltradas, contratoMap]);
 
-  const [filtroStatusContrato, setFiltroStatusContrato] = useState<string>("todos");
-
   const dadosPizza = useMemo(() => {
-    return contratosFiltrados
-      .filter((c) => filtroStatusContrato === "todos" || c.status === filtroStatusContrato)
-      .map((c, i) => ({
-        name: c.projeto_obra,
-        value: Number(c.valor_contrato),
-        color: PROJECT_COLORS[i % PROJECT_COLORS.length],
-      }));
-  }, [contratosFiltrados, filtroStatusContrato]);
+    return contratosFiltrados.map((c, i) => ({
+      name: c.projeto_obra,
+      value: Number(c.valor_contrato),
+      color: PROJECT_COLORS[i % PROJECT_COLORS.length],
+    }));
+  }, [contratosFiltrados]);
+
+  const [modoMedido, setModoMedido] = useState<"valor" | "pct_total" | "pct_projeto">("valor");
+
+  const valorContratadoPorProjeto = useMemo(() => {
+    const map: Record<string, number> = {};
+    contratosFiltrados.forEach((c) => {
+      map[c.projeto_obra] = (map[c.projeto_obra] || 0) + Number(c.valor_contrato);
+    });
+    return map;
+  }, [contratosFiltrados]);
 
   const dadosPizzaMedido = useMemo(() => {
     const mapa: Record<string, number> = {};
@@ -269,18 +275,8 @@ export default function DashboardContratos() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Valor Contratado</CardTitle>
-            <Select value={filtroStatusContrato} onValueChange={setFiltroStatusContrato}>
-              <SelectTrigger className="w-[140px] h-8 text-xs">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="Ativo">Ativos</SelectItem>
-                <SelectItem value="Inativo">Inativos</SelectItem>
-              </SelectContent>
-            </Select>
+          <CardHeader>
+            <CardTitle className="text-lg">Valor de Contrato</CardTitle>
           </CardHeader>
           <CardContent>
             {dadosPizza.length === 0 ? (
@@ -322,8 +318,18 @@ export default function DashboardContratos() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Projetos — Valor Medido</CardTitle>
+            <Select value={modoMedido} onValueChange={(v) => setModoMedido(v as "valor" | "pct_total" | "pct_projeto")}>
+              <SelectTrigger className="w-[200px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="valor">Valor (R$)</SelectItem>
+                <SelectItem value="pct_total">% do contrato total</SelectItem>
+                <SelectItem value="pct_projeto">% do contrato do projeto</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             {dadosPizzaMedido.length === 0 ? (
@@ -340,7 +346,18 @@ export default function DashboardContratos() {
                     nameKey="name"
                     paddingAngle={2}
                     strokeWidth={0}
-                    label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
+                    label={({ name, value, percent }) => {
+                      if (modoMedido === "pct_total") {
+                        const pct = valorTotalContratado > 0 ? ((value as number) / valorTotalContratado * 100).toFixed(1) : "0.0";
+                        return `${name}\n${pct}% do total`;
+                      }
+                      if (modoMedido === "pct_projeto") {
+                        const contrato = valorContratadoPorProjeto[name] || 0;
+                        const pct = contrato > 0 ? ((value as number) / contrato * 100).toFixed(1) : "0.0";
+                        return `${name}\n${pct}% do projeto`;
+                      }
+                      return `${name}\n${((percent ?? 0) * 100).toFixed(1)}%`;
+                    }}
                     labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
                   >
                     {dadosPizzaMedido.map((entry, i) => (
@@ -348,10 +365,19 @@ export default function DashboardContratos() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number, name: string) => [
-                      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
-                      name,
-                    ]}
+                    formatter={(value: number, name: string) => {
+                      const valFmt = value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                      if (modoMedido === "pct_total") {
+                        const pct = valorTotalContratado > 0 ? (value / valorTotalContratado * 100).toFixed(1) : "0.0";
+                        return [`${valFmt} (${pct}% do total)`, name];
+                      }
+                      if (modoMedido === "pct_projeto") {
+                        const contrato = valorContratadoPorProjeto[name] || 0;
+                        const pct = contrato > 0 ? (value / contrato * 100).toFixed(1) : "0.0";
+                        return [`${valFmt} (${pct}% do projeto)`, name];
+                      }
+                      return [valFmt, name];
+                    }}
                     contentStyle={{
                       borderRadius: "8px",
                       border: "1px solid hsl(225, 15%, 90%)",
