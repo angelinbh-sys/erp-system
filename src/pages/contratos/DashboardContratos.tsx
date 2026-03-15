@@ -275,18 +275,8 @@ export default function DashboardContratos() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Valor Contratado</CardTitle>
-            <Select value={filtroStatusContrato} onValueChange={setFiltroStatusContrato}>
-              <SelectTrigger className="w-[140px] h-8 text-xs">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="Ativo">Ativos</SelectItem>
-                <SelectItem value="Inativo">Inativos</SelectItem>
-              </SelectContent>
-            </Select>
+          <CardHeader>
+            <CardTitle className="text-lg">Valor de Contrato</CardTitle>
           </CardHeader>
           <CardContent>
             {dadosPizza.length === 0 ? (
