@@ -245,20 +245,17 @@ export default function DashboardContratos() {
                     tick={{ fontSize: 11 }}
                     width={50}
                   />
-                  <ChartTooltip
-                    content={
-                      <ChartTooltipContent
-                        formatter={(value, name) => (
-                          <span>
-                            <strong>{String(name)}</strong>:{" "}
-                            {Number(value).toLocaleString("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            })}
-                          </span>
-                        )}
-                      />
-                    }
+                  <Tooltip
+                    formatter={(value: number, name: string) => [
+                      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+                      name,
+                    ]}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "hsl(var(--background))",
+                      fontSize: "12px",
+                    }}
                   />
                   {projetosFiltrados.map((projeto, i) => (
                     <Bar
