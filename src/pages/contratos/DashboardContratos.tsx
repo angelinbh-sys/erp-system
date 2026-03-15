@@ -287,36 +287,38 @@ export default function DashboardContratos() {
             {dadosPizza.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-8">Nenhum projeto encontrado.</p>
             ) : (
-              <div className="flex items-center justify-center">
-                <PieChart width={500} height={350}>
-                  <Pie
-                    data={dadosPizza}
-                    cx={250}
-                    cy={175}
-                    outerRadius={120}
-                    dataKey="value"
-                    nameKey="name"
-                    paddingAngle={2}
-                    strokeWidth={0}
-                    label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
-                    labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
-                  >
-                    {dadosPizza.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number, name: string) => [
-                      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
-                      name,
-                    ]}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "1px solid hsl(225, 15%, 90%)",
-                      fontSize: "12px",
-                    }}
-                  />
-                </PieChart>
+              <div className="w-full h-[300px] lg:h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={dadosPizza}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius="75%"
+                      dataKey="value"
+                      nameKey="name"
+                      paddingAngle={2}
+                      strokeWidth={0}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+                      labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                    >
+                      {dadosPizza.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number, name: string) => [
+                        value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+                        name,
+                      ]}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "1px solid hsl(var(--border))",
+                        fontSize: "12px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             )}
           </CardContent>
