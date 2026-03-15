@@ -110,6 +110,21 @@ export default function DashboardContratos() {
       }));
   }, [contratosFiltrados]);
 
+  const dadosPizzaMedido = useMemo(() => {
+    const mapa: Record<string, number> = {};
+    medicoesFiltradas.forEach((m) => {
+      const projeto = contratoMap[m.contrato_id] || "Outros";
+      mapa[projeto] = (mapa[projeto] || 0) + Number(m.valor_medido);
+    });
+    return Object.entries(mapa)
+      .map(([name, value], i) => ({
+        name,
+        value,
+        color: PROJECT_COLORS[i % PROJECT_COLORS.length],
+      }))
+      .filter((d) => d.value > 0);
+  }, [medicoesFiltradas, contratoMap]);
+
   const fmt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
