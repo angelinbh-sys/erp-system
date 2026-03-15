@@ -100,15 +100,17 @@ export default function DashboardContratos() {
       }));
   }, [medicoesFiltradas, contratoMap]);
 
+  const [filtroStatusContrato, setFiltroStatusContrato] = useState<string>("todos");
+
   const dadosPizza = useMemo(() => {
     return contratosFiltrados
-      .filter((c) => c.status === "Ativo")
+      .filter((c) => filtroStatusContrato === "todos" || c.status === filtroStatusContrato)
       .map((c, i) => ({
         name: c.projeto_obra,
         value: Number(c.valor_contrato),
         color: PROJECT_COLORS[i % PROJECT_COLORS.length],
       }));
-  }, [contratosFiltrados]);
+  }, [contratosFiltrados, filtroStatusContrato]);
 
   const dadosPizzaMedido = useMemo(() => {
     const mapa: Record<string, number> = {};
