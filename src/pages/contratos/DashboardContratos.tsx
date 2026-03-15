@@ -159,7 +159,7 @@ export default function DashboardContratos() {
               <Label>Projeto / Obra</Label>
               <Select value={filtroProjeto} onValueChange={setFiltroProjeto}>
                 <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="max-h-60">
                   <SelectItem value="todos">Todos</SelectItem>
                   {projetos.map((p) => (
                     <SelectItem key={p} value={p}>{p}</SelectItem>
