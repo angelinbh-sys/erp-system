@@ -267,7 +267,6 @@ export default function DashboardContratos() {
                   ))}
                   <Legend wrapperStyle={{ fontSize: "12px" }} />
                 </BarChart>
-              </ResponsiveContainer>
             </ChartContainer>
           )}
         </CardContent>
