@@ -12,7 +12,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 // Distinct colors for better differentiation in charts
 const PROJECT_COLORS = [
@@ -228,46 +228,50 @@ export default function DashboardContratos() {
           {dadosGrafico.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-8">Nenhuma medição registrada para o período.</p>
           ) : (
-            <ChartContainer config={chartConfig} className="h-[350px] w-full">
-              <BarChart data={dadosGrafico}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="mes" className="text-xs" />
-                <YAxis
-                  tickFormatter={(v) =>
-                    v >= 1000000
-                      ? `${(v / 1000000).toFixed(1)}M`
-                      : v >= 1000
-                      ? `${(v / 1000).toFixed(0)}k`
-                      : v.toString()
-                  }
-                  className="text-xs"
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value, name) => (
-                        <span>
-                          <strong>{String(name)}</strong>:{" "}
-                          {Number(value).toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          })}
-                        </span>
-                      )}
-                    />
-                  }
-                />
-                {projetosFiltrados.map((projeto, i) => (
-                  <Bar
-                    key={projeto}
-                    dataKey={projeto}
-                    stackId="a"
-                    fill={PROJECT_COLORS[i % PROJECT_COLORS.length]}
-                    radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+            <ChartContainer config={chartConfig} className="h-[300px] lg:h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dadosGrafico}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="mes" className="text-xs" tick={{ fontSize: 11 }} />
+                  <YAxis
+                    tickFormatter={(v) =>
+                      v >= 1000000
+                        ? `${(v / 1000000).toFixed(1)}M`
+                        : v >= 1000
+                        ? `${(v / 1000).toFixed(0)}k`
+                        : v.toString()
+                    }
+                    className="text-xs"
+                    tick={{ fontSize: 11 }}
+                    width={50}
                   />
-                ))}
-                <Legend />
-              </BarChart>
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value, name) => (
+                          <span>
+                            <strong>{String(name)}</strong>:{" "}
+                            {Number(value).toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })}
+                          </span>
+                        )}
+                      />
+                    }
+                  />
+                  {projetosFiltrados.map((projeto, i) => (
+                    <Bar
+                      key={projeto}
+                      dataKey={projeto}
+                      stackId="a"
+                      fill={PROJECT_COLORS[i % PROJECT_COLORS.length]}
+                      radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                    />
+                  ))}
+                  <Legend wrapperStyle={{ fontSize: "12px" }} />
+                </BarChart>
+              </ResponsiveContainer>
             </ChartContainer>
           )}
         </CardContent>
@@ -282,44 +286,46 @@ export default function DashboardContratos() {
             {dadosPizza.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-8">Nenhum projeto encontrado.</p>
             ) : (
-              <div className="flex items-center justify-center">
-                <PieChart width={500} height={350}>
-                  <Pie
-                    data={dadosPizza}
-                    cx={250}
-                    cy={175}
-                    outerRadius={120}
-                    dataKey="value"
-                    nameKey="name"
-                    paddingAngle={2}
-                    strokeWidth={0}
-                    label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
-                    labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
-                  >
-                    {dadosPizza.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number, name: string) => [
-                      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
-                      name,
-                    ]}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "1px solid hsl(225, 15%, 90%)",
-                      fontSize: "12px",
-                    }}
-                  />
-                </PieChart>
+              <div className="w-full h-[300px] lg:h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={dadosPizza}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius="75%"
+                      dataKey="value"
+                      nameKey="name"
+                      paddingAngle={2}
+                      strokeWidth={0}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+                      labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                    >
+                      {dadosPizza.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number, name: string) => [
+                        value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+                        name,
+                      ]}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "1px solid hsl(var(--border))",
+                        fontSize: "12px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Projetos — Valor Medido</CardTitle>
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <CardTitle className="text-lg whitespace-nowrap">Projetos — Valor Medido</CardTitle>
             <Select value={modoMedido} onValueChange={(v) => setModoMedido(v as "valor" | "pct_total" | "pct_projeto")}>
               <SelectTrigger className="w-[200px] h-8 text-xs">
                 <SelectValue />
@@ -335,56 +341,58 @@ export default function DashboardContratos() {
             {dadosPizzaMedido.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-8">Nenhuma medição encontrada.</p>
             ) : (
-              <div className="flex items-center justify-center">
-                <PieChart width={500} height={350}>
-                  <Pie
-                    data={dadosPizzaMedido}
-                    cx={250}
-                    cy={175}
-                    outerRadius={120}
-                    dataKey="value"
-                    nameKey="name"
-                    paddingAngle={2}
-                    strokeWidth={0}
-                    label={({ name, value, percent }) => {
-                      if (modoMedido === "pct_total") {
-                        const pct = valorTotalContratado > 0 ? ((value as number) / valorTotalContratado * 100).toFixed(1) : "0.0";
-                        return `${name}\n${pct}% do total`;
-                      }
-                      if (modoMedido === "pct_projeto") {
-                        const contrato = valorContratadoPorProjeto[name] || 0;
-                        const pct = contrato > 0 ? ((value as number) / contrato * 100).toFixed(1) : "0.0";
-                        return `${name}\n${pct}% do projeto`;
-                      }
-                      return `${name}\n${((percent ?? 0) * 100).toFixed(1)}%`;
-                    }}
-                    labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
-                  >
-                    {dadosPizzaMedido.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number, name: string) => {
-                      const valFmt = value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-                      if (modoMedido === "pct_total") {
-                        const pct = valorTotalContratado > 0 ? (value / valorTotalContratado * 100).toFixed(1) : "0.0";
-                        return [`${valFmt} (${pct}% do total)`, name];
-                      }
-                      if (modoMedido === "pct_projeto") {
-                        const contrato = valorContratadoPorProjeto[name] || 0;
-                        const pct = contrato > 0 ? (value / contrato * 100).toFixed(1) : "0.0";
-                        return [`${valFmt} (${pct}% do projeto)`, name];
-                      }
-                      return [valFmt, name];
-                    }}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "1px solid hsl(225, 15%, 90%)",
-                      fontSize: "12px",
-                    }}
-                  />
-                </PieChart>
+              <div className="w-full h-[300px] lg:h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={dadosPizzaMedido}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius="75%"
+                      dataKey="value"
+                      nameKey="name"
+                      paddingAngle={2}
+                      strokeWidth={0}
+                      label={({ name, value, percent }) => {
+                        if (modoMedido === "pct_total") {
+                          const pct = valorTotalContratado > 0 ? ((value as number) / valorTotalContratado * 100).toFixed(1) : "0.0";
+                          return `${name} ${pct}%`;
+                        }
+                        if (modoMedido === "pct_projeto") {
+                          const contrato = valorContratadoPorProjeto[name] || 0;
+                          const pct = contrato > 0 ? ((value as number) / contrato * 100).toFixed(1) : "0.0";
+                          return `${name} ${pct}%`;
+                        }
+                        return `${name} ${((percent ?? 0) * 100).toFixed(1)}%`;
+                      }}
+                      labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                    >
+                      {dadosPizzaMedido.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number, name: string) => {
+                        const valFmt = value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                        if (modoMedido === "pct_total") {
+                          const pct = valorTotalContratado > 0 ? (value / valorTotalContratado * 100).toFixed(1) : "0.0";
+                          return [`${valFmt} (${pct}% do total)`, name];
+                        }
+                        if (modoMedido === "pct_projeto") {
+                          const contrato = valorContratadoPorProjeto[name] || 0;
+                          const pct = contrato > 0 ? (value / contrato * 100).toFixed(1) : "0.0";
+                          return [`${valFmt} (${pct}% do projeto)`, name];
+                        }
+                        return [valFmt, name];
+                      }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "1px solid hsl(var(--border))",
+                        fontSize: "12px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             )}
           </CardContent>
