@@ -14,18 +14,18 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, PieChart, Pie, Cell, Tooltip } from "recharts";
 
-// Variations of sidebar background hue (225°) with different lightness/saturation
+// Distinct colors for better differentiation in charts
 const PROJECT_COLORS = [
-  "hsl(225, 30%, 35%)",
-  "hsl(225, 25%, 48%)",
-  "hsl(210, 30%, 40%)",
-  "hsl(225, 20%, 55%)",
-  "hsl(240, 25%, 38%)",
-  "hsl(215, 28%, 45%)",
-  "hsl(225, 35%, 28%)",
-  "hsl(210, 22%, 52%)",
-  "hsl(230, 20%, 42%)",
-  "hsl(220, 30%, 30%)",
+  "hsl(220, 70%, 50%)",  // azul
+  "hsl(340, 65%, 50%)",  // rosa/vermelho
+  "hsl(160, 60%, 40%)",  // verde
+  "hsl(35, 85%, 55%)",   // laranja
+  "hsl(270, 55%, 55%)",  // roxo
+  "hsl(185, 65%, 42%)",  // ciano/teal
+  "hsl(50, 80%, 48%)",   // amarelo
+  "hsl(0, 65%, 50%)",    // vermelho
+  "hsl(140, 50%, 35%)",  // verde escuro
+  "hsl(300, 45%, 50%)",  // magenta
 ];
 
 export default function DashboardContratos() {
