@@ -342,56 +342,58 @@ export default function DashboardContratos() {
             {dadosPizzaMedido.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-8">Nenhuma medição encontrada.</p>
             ) : (
-              <div className="flex items-center justify-center">
-                <PieChart width={500} height={350}>
-                  <Pie
-                    data={dadosPizzaMedido}
-                    cx={250}
-                    cy={175}
-                    outerRadius={120}
-                    dataKey="value"
-                    nameKey="name"
-                    paddingAngle={2}
-                    strokeWidth={0}
-                    label={({ name, value, percent }) => {
-                      if (modoMedido === "pct_total") {
-                        const pct = valorTotalContratado > 0 ? ((value as number) / valorTotalContratado * 100).toFixed(1) : "0.0";
-                        return `${name}\n${pct}% do total`;
-                      }
-                      if (modoMedido === "pct_projeto") {
-                        const contrato = valorContratadoPorProjeto[name] || 0;
-                        const pct = contrato > 0 ? ((value as number) / contrato * 100).toFixed(1) : "0.0";
-                        return `${name}\n${pct}% do projeto`;
-                      }
-                      return `${name}\n${((percent ?? 0) * 100).toFixed(1)}%`;
-                    }}
-                    labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
-                  >
-                    {dadosPizzaMedido.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number, name: string) => {
-                      const valFmt = value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-                      if (modoMedido === "pct_total") {
-                        const pct = valorTotalContratado > 0 ? (value / valorTotalContratado * 100).toFixed(1) : "0.0";
-                        return [`${valFmt} (${pct}% do total)`, name];
-                      }
-                      if (modoMedido === "pct_projeto") {
-                        const contrato = valorContratadoPorProjeto[name] || 0;
-                        const pct = contrato > 0 ? (value / contrato * 100).toFixed(1) : "0.0";
-                        return [`${valFmt} (${pct}% do projeto)`, name];
-                      }
-                      return [valFmt, name];
-                    }}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "1px solid hsl(225, 15%, 90%)",
-                      fontSize: "12px",
-                    }}
-                  />
-                </PieChart>
+              <div className="w-full h-[300px] lg:h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={dadosPizzaMedido}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius="75%"
+                      dataKey="value"
+                      nameKey="name"
+                      paddingAngle={2}
+                      strokeWidth={0}
+                      label={({ name, value, percent }) => {
+                        if (modoMedido === "pct_total") {
+                          const pct = valorTotalContratado > 0 ? ((value as number) / valorTotalContratado * 100).toFixed(1) : "0.0";
+                          return `${name} ${pct}%`;
+                        }
+                        if (modoMedido === "pct_projeto") {
+                          const contrato = valorContratadoPorProjeto[name] || 0;
+                          const pct = contrato > 0 ? ((value as number) / contrato * 100).toFixed(1) : "0.0";
+                          return `${name} ${pct}%`;
+                        }
+                        return `${name} ${((percent ?? 0) * 100).toFixed(1)}%`;
+                      }}
+                      labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                    >
+                      {dadosPizzaMedido.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number, name: string) => {
+                        const valFmt = value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                        if (modoMedido === "pct_total") {
+                          const pct = valorTotalContratado > 0 ? (value / valorTotalContratado * 100).toFixed(1) : "0.0";
+                          return [`${valFmt} (${pct}% do total)`, name];
+                        }
+                        if (modoMedido === "pct_projeto") {
+                          const contrato = valorContratadoPorProjeto[name] || 0;
+                          const pct = contrato > 0 ? (value / contrato * 100).toFixed(1) : "0.0";
+                          return [`${valFmt} (${pct}% do projeto)`, name];
+                        }
+                        return [valFmt, name];
+                      }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "1px solid hsl(var(--border))",
+                        fontSize: "12px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             )}
           </CardContent>
