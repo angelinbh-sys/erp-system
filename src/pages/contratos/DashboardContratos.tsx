@@ -119,19 +119,7 @@ export default function DashboardContratos() {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <Label>Contrato</Label>
-              <Select value={filtroContrato} onValueChange={setFiltroContrato}>
-                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {contratos.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.numero_contrato}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label>Cliente</Label>
               <Select value={filtroCliente} onValueChange={setFiltroCliente}>
