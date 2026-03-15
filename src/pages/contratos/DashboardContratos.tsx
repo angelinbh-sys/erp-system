@@ -259,17 +259,18 @@ export default function DashboardContratos() {
             <p className="text-muted-foreground text-sm text-center py-8">Nenhum projeto ativo encontrado.</p>
           ) : (
             <div className="flex items-center justify-center">
-              <PieChart width={480} height={300}>
+              <PieChart width={600} height={400}>
                 <Pie
                   data={dadosPizza}
-                  cx={240}
-                  cy={140}
-                  outerRadius={110}
-                  innerRadius={50}
+                  cx={300}
+                  cy={200}
+                  outerRadius={140}
                   dataKey="value"
                   nameKey="name"
                   paddingAngle={2}
                   strokeWidth={0}
+                  label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
+                  labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
                 >
                   {dadosPizza.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
@@ -285,14 +286,6 @@ export default function DashboardContratos() {
                     border: "1px solid hsl(225, 15%, 90%)",
                     fontSize: "12px",
                   }}
-                />
-                <Legend
-                  layout="vertical"
-                  align="right"
-                  verticalAlign="middle"
-                  iconType="circle"
-                  iconSize={8}
-                  wrapperStyle={{ fontSize: "12px" }}
                 />
               </PieChart>
             </div>
