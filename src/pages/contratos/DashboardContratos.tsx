@@ -110,6 +110,21 @@ export default function DashboardContratos() {
       }));
   }, [contratosFiltrados]);
 
+  const dadosPizzaMedido = useMemo(() => {
+    const mapa: Record<string, number> = {};
+    medicoesFiltradas.forEach((m) => {
+      const projeto = contratoMap[m.contrato_id] || "Outros";
+      mapa[projeto] = (mapa[projeto] || 0) + Number(m.valor_medido);
+    });
+    return Object.entries(mapa)
+      .map(([name, value], i) => ({
+        name,
+        value,
+        color: PROJECT_COLORS[i % PROJECT_COLORS.length],
+      }))
+      .filter((d) => d.value > 0);
+  }, [medicoesFiltradas, contratoMap]);
+
   const fmt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -250,48 +265,93 @@ export default function DashboardContratos() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Projetos Ativos — Valor Contratado</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {dadosPizza.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-8">Nenhum projeto ativo encontrado.</p>
-          ) : (
-            <div className="flex items-center justify-center">
-              <PieChart width={600} height={400}>
-                <Pie
-                  data={dadosPizza}
-                  cx={300}
-                  cy={200}
-                  outerRadius={140}
-                  dataKey="value"
-                  nameKey="name"
-                  paddingAngle={2}
-                  strokeWidth={0}
-                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
-                  labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
-                >
-                  {dadosPizza.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
-                    name,
-                  ]}
-                  contentStyle={{
-                    borderRadius: "8px",
-                    border: "1px solid hsl(225, 15%, 90%)",
-                    fontSize: "12px",
-                  }}
-                />
-              </PieChart>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Projetos Ativos — Valor Contratado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {dadosPizza.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-8">Nenhum projeto ativo encontrado.</p>
+            ) : (
+              <div className="flex items-center justify-center">
+                <PieChart width={500} height={350}>
+                  <Pie
+                    data={dadosPizza}
+                    cx={250}
+                    cy={175}
+                    outerRadius={120}
+                    dataKey="value"
+                    nameKey="name"
+                    paddingAngle={2}
+                    strokeWidth={0}
+                    label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
+                    labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                  >
+                    {dadosPizza.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [
+                      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+                      name,
+                    ]}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "1px solid hsl(225, 15%, 90%)",
+                      fontSize: "12px",
+                    }}
+                  />
+                </PieChart>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Projetos — Valor Medido</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {dadosPizzaMedido.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-8">Nenhuma medição encontrada.</p>
+            ) : (
+              <div className="flex items-center justify-center">
+                <PieChart width={500} height={350}>
+                  <Pie
+                    data={dadosPizzaMedido}
+                    cx={250}
+                    cy={175}
+                    outerRadius={120}
+                    dataKey="value"
+                    nameKey="name"
+                    paddingAngle={2}
+                    strokeWidth={0}
+                    label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
+                    labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                  >
+                    {dadosPizzaMedido.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [
+                      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+                      name,
+                    ]}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "1px solid hsl(225, 15%, 90%)",
+                      fontSize: "12px",
+                    }}
+                  />
+                </PieChart>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
