@@ -34,7 +34,6 @@ export default function DashboardContratos() {
   const contratos = contratosQuery.data ?? [];
   const medicoes = medicoesQuery.data ?? [];
 
-  const [filtroContrato, setFiltroContrato] = useState<string>("todos");
   const [filtroCliente, setFiltroCliente] = useState<string>("todos");
   const [filtroProjeto, setFiltroProjeto] = useState<string>("todos");
   const [filtroPeriodoDe, setFiltroPeriodoDe] = useState("");
@@ -45,12 +44,11 @@ export default function DashboardContratos() {
 
   const contratosFiltrados = useMemo(() => {
     return contratos.filter((c) => {
-      if (filtroContrato !== "todos" && c.id !== filtroContrato) return false;
       if (filtroCliente !== "todos" && c.cliente !== filtroCliente) return false;
       if (filtroProjeto !== "todos" && c.projeto_obra !== filtroProjeto) return false;
       return true;
     });
-  }, [contratos, filtroContrato, filtroCliente, filtroProjeto]);
+  }, [contratos, filtroCliente, filtroProjeto]);
 
   const contratoIds = useMemo(() => new Set(contratosFiltrados.map((c) => c.id)), [contratosFiltrados]);
 
@@ -121,19 +119,7 @@ export default function DashboardContratos() {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <Label>Contrato</Label>
-              <Select value={filtroContrato} onValueChange={setFiltroContrato}>
-                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {contratos.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.numero_contrato}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label>Cliente</Label>
               <Select value={filtroCliente} onValueChange={setFiltroCliente}>
