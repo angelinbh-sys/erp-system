@@ -147,7 +147,7 @@ export default function DashboardContratos() {
               <Label>Cliente</Label>
               <Select value={filtroCliente} onValueChange={setFiltroCliente}>
                 <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="max-h-60">
                   <SelectItem value="todos">Todos</SelectItem>
                   {clientes.map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -159,7 +159,7 @@ export default function DashboardContratos() {
               <Label>Projeto / Obra</Label>
               <Select value={filtroProjeto} onValueChange={setFiltroProjeto}>
                 <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="max-h-60">
                   <SelectItem value="todos">Todos</SelectItem>
                   {projetos.map((p) => (
                     <SelectItem key={p} value={p}>{p}</SelectItem>
@@ -229,7 +229,6 @@ export default function DashboardContratos() {
             <p className="text-muted-foreground text-sm text-center py-8">Nenhuma medição registrada para o período.</p>
           ) : (
             <ChartContainer config={chartConfig} className="h-[300px] lg:h-[400px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dadosGrafico}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="mes" className="text-xs" tick={{ fontSize: 11 }} />
@@ -268,7 +267,6 @@ export default function DashboardContratos() {
                   ))}
                   <Legend wrapperStyle={{ fontSize: "12px" }} />
                 </BarChart>
-              </ResponsiveContainer>
             </ChartContainer>
           )}
         </CardContent>
@@ -327,7 +325,7 @@ export default function DashboardContratos() {
               <SelectTrigger className="w-[200px] h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="max-h-60">
                 <SelectItem value="valor">Valor (R$)</SelectItem>
                 <SelectItem value="pct_total">% do contrato total</SelectItem>
                 <SelectItem value="pct_projeto">% do contrato do projeto</SelectItem>
