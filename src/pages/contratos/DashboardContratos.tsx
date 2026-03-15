@@ -44,12 +44,11 @@ export default function DashboardContratos() {
 
   const contratosFiltrados = useMemo(() => {
     return contratos.filter((c) => {
-      if (filtroContrato !== "todos" && c.id !== filtroContrato) return false;
       if (filtroCliente !== "todos" && c.cliente !== filtroCliente) return false;
       if (filtroProjeto !== "todos" && c.projeto_obra !== filtroProjeto) return false;
       return true;
     });
-  }, [contratos, filtroContrato, filtroCliente, filtroProjeto]);
+  }, [contratos, filtroCliente, filtroProjeto]);
 
   const contratoIds = useMemo(() => new Set(contratosFiltrados.map((c) => c.id)), [contratosFiltrados]);
 
