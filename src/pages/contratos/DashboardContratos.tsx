@@ -269,7 +269,7 @@ export default function DashboardContratos() {
                   nameKey="name"
                   paddingAngle={2}
                   strokeWidth={0}
-                  label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
+                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
                   labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
                 >
                   {dadosPizza.map((entry, i) => (
