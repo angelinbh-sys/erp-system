@@ -34,7 +34,6 @@ export default function DashboardContratos() {
   const contratos = contratosQuery.data ?? [];
   const medicoes = medicoesQuery.data ?? [];
 
-  const [filtroContrato, setFiltroContrato] = useState<string>("todos");
   const [filtroCliente, setFiltroCliente] = useState<string>("todos");
   const [filtroProjeto, setFiltroProjeto] = useState<string>("todos");
   const [filtroPeriodoDe, setFiltroPeriodoDe] = useState("");
