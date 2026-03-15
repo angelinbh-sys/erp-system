@@ -147,7 +147,7 @@ export default function DashboardContratos() {
               <Label>Cliente</Label>
               <Select value={filtroCliente} onValueChange={setFiltroCliente}>
                 <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="max-h-60">
                   <SelectItem value="todos">Todos</SelectItem>
                   {clientes.map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
