@@ -269,12 +269,22 @@ export default function DashboardContratos() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Projetos Ativos — Valor Contratado</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg">Valor Contratado</CardTitle>
+            <Select value={filtroStatusContrato} onValueChange={setFiltroStatusContrato}>
+              <SelectTrigger className="w-[140px] h-8 text-xs">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="Ativo">Ativos</SelectItem>
+                <SelectItem value="Inativo">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             {dadosPizza.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-8">Nenhum projeto ativo encontrado.</p>
+              <p className="text-muted-foreground text-sm text-center py-8">Nenhum projeto encontrado.</p>
             ) : (
               <div className="flex items-center justify-center">
                 <PieChart width={500} height={350}>
