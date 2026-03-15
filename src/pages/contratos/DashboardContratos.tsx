@@ -228,45 +228,50 @@ export default function DashboardContratos() {
           {dadosGrafico.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-8">Nenhuma medição registrada para o período.</p>
           ) : (
-            <ChartContainer config={chartConfig} className="h-[350px] w-full">
-              <BarChart data={dadosGrafico}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="mes" className="text-xs" />
-                <YAxis
-                  tickFormatter={(v) =>
-                    v >= 1000000
-                      ? `${(v / 1000000).toFixed(1)}M`
-                      : v >= 1000
-                      ? `${(v / 1000).toFixed(0)}k`
-                      : v.toString()
-                  }
-                  className="text-xs"
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value, name) => (
-                        <span>
-                          <strong>{String(name)}</strong>:{" "}
-                          {Number(value).toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          })}
-                        </span>
-                      )}
-                    />
-                  }
-                />
-                {projetosFiltrados.map((projeto, i) => (
-                  <Bar
-                    key={projeto}
-                    dataKey={projeto}
-                    stackId="a"
-                    fill={PROJECT_COLORS[i % PROJECT_COLORS.length]}
-                    radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+            <ChartContainer config={chartConfig} className="h-[300px] lg:h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dadosGrafico}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="mes" className="text-xs" tick={{ fontSize: 11 }} />
+                  <YAxis
+                    tickFormatter={(v) =>
+                      v >= 1000000
+                        ? `${(v / 1000000).toFixed(1)}M`
+                        : v >= 1000
+                        ? `${(v / 1000).toFixed(0)}k`
+                        : v.toString()
+                    }
+                    className="text-xs"
+                    tick={{ fontSize: 11 }}
+                    width={50}
                   />
-                ))}
-                <Legend />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value, name) => (
+                          <span>
+                            <strong>{String(name)}</strong>:{" "}
+                            {Number(value).toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })}
+                          </span>
+                        )}
+                      />
+                    }
+                  />
+                  {projetosFiltrados.map((projeto, i) => (
+                    <Bar
+                      key={projeto}
+                      dataKey={projeto}
+                      stackId="a"
+                      fill={PROJECT_COLORS[i % PROJECT_COLORS.length]}
+                      radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                    />
+                  ))}
+                  <Legend wrapperStyle={{ fontSize: "12px" }} />
+                </BarChart>
+              </ResponsiveContainer>
               </BarChart>
             </ChartContainer>
           )}
