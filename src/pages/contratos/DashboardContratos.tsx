@@ -325,8 +325,8 @@ export default function DashboardContratos() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Projetos — Valor Medido</CardTitle>
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <CardTitle className="text-lg whitespace-nowrap">Projetos — Valor Medido</CardTitle>
             <Select value={modoMedido} onValueChange={(v) => setModoMedido(v as "valor" | "pct_total" | "pct_projeto")}>
               <SelectTrigger className="w-[200px] h-8 text-xs">
                 <SelectValue />
