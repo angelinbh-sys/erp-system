@@ -325,7 +325,7 @@ export default function DashboardContratos() {
               <SelectTrigger className="w-[200px] h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="max-h-60">
                 <SelectItem value="valor">Valor (R$)</SelectItem>
                 <SelectItem value="pct_total">% do contrato total</SelectItem>
                 <SelectItem value="pct_projeto">% do contrato do projeto</SelectItem>
