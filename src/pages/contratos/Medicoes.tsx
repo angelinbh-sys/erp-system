@@ -33,6 +33,7 @@ export default function Medicoes() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [activeTab, setActiveTab] = useState("todos");
+  const [periodoError, setPeriodoError] = useState("");
   const [filters, setFilters] = useState({
     periodo: "todos",
     projeto: "todos",
