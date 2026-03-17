@@ -34,6 +34,7 @@ export default function Medicoes() {
   const [form, setForm] = useState(emptyForm);
   const [activeTab, setActiveTab] = useState("todos");
   const [periodoError, setPeriodoError] = useState("");
+  const [selectedCliente, setSelectedCliente] = useState("");
   const [filters, setFilters] = useState({
     periodo: "todos",
     projeto: "todos",
@@ -87,8 +88,19 @@ export default function Medicoes() {
     return result;
   }, [tabFilteredMedicoes, filters]);
 
+  const clientesUnicos = useMemo(() => {
+    const ativos = contratos.filter((c) => c.status === "Ativo");
+    return [...new Set(ativos.map((c) => c.cliente))].sort();
+  }, [contratos]);
+
+  const contratosFiltrados = useMemo(() => {
+    return contratos.filter((c) => c.status === "Ativo" && (selectedCliente ? c.cliente === selectedCliente : true));
+  }, [contratos, selectedCliente]);
+
   const openEdit = (m: any) => {
     setEditingId(m.id);
+    const contrato = contratos.find((c) => c.id === m.contrato_id);
+    setSelectedCliente(contrato?.cliente ?? "");
     const centavos = Math.round(Number(m.valor_medido) * 100).toString();
     setForm({
       contrato_id: m.contrato_id,
@@ -252,7 +264,7 @@ export default function Medicoes() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold text-foreground">Medições</h1>
-        <Button onClick={() => { setEditingId(null); setForm(emptyForm); setPeriodoError(""); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-2" />Nova Medição</Button>
+        <Button onClick={() => { setEditingId(null); setForm(emptyForm); setSelectedCliente(""); setPeriodoError(""); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-2" />Nova Medição</Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -296,11 +308,22 @@ export default function Medicoes() {
               </div>
             </div>
             <div>
+              <Label>Cliente *</Label>
+              <Select value={selectedCliente} onValueChange={(v) => { setSelectedCliente(v); setForm({ ...form, contrato_id: "" }); }}>
+                <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
+                <SelectContent position="popper" className="max-h-60">
+                  {clientesUnicos.map((cli) => (
+                    <SelectItem key={cli} value={cli}>{cli}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label>Contrato *</Label>
-              <Select value={form.contrato_id} onValueChange={(v) => setForm({ ...form, contrato_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {contratos.filter((c) => c.status === "Ativo").map((c) => (
+              <Select value={form.contrato_id} onValueChange={(v) => setForm({ ...form, contrato_id: v })} disabled={!selectedCliente}>
+                <SelectTrigger><SelectValue placeholder={selectedCliente ? "Selecione o contrato" : "Selecione o cliente primeiro"} /></SelectTrigger>
+                <SelectContent position="popper" className="max-h-60">
+                  {contratosFiltrados.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.projeto_obra}</SelectItem>
                   ))}
                 </SelectContent>
