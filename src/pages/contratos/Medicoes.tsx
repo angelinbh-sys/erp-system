@@ -98,6 +98,7 @@ export default function Medicoes() {
       valor_medido_display: formatCurrencyBRL(centavos),
       observacao: m.observacao ?? "",
     });
+    setPeriodoError("");
     setDialogOpen(true);
   };
 
