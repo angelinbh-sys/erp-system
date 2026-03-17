@@ -34,6 +34,7 @@ export default function Medicoes() {
   const [form, setForm] = useState(emptyForm);
   const [activeTab, setActiveTab] = useState("todos");
   const [periodoError, setPeriodoError] = useState("");
+  const [selectedCliente, setSelectedCliente] = useState("");
   const [filters, setFilters] = useState({
     periodo: "todos",
     projeto: "todos",
