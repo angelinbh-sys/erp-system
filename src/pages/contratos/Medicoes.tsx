@@ -112,7 +112,7 @@ export default function Medicoes() {
     const fim = new Date(form.data_fim + "T00:00:00");
     const diffDays = Math.round((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays < 30) {
-      toast.error("O período deve ter no mínimo 30 dias entre a data inicial e a data final.");
+      setPeriodoError("O período deve ter no mínimo 30 dias.");
       return;
     }
     try {
