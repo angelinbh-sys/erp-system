@@ -88,8 +88,19 @@ export default function Medicoes() {
     return result;
   }, [tabFilteredMedicoes, filters]);
 
+  const clientesUnicos = useMemo(() => {
+    const ativos = contratos.filter((c) => c.status === "Ativo");
+    return [...new Set(ativos.map((c) => c.cliente))].sort();
+  }, [contratos]);
+
+  const contratosFiltrados = useMemo(() => {
+    return contratos.filter((c) => c.status === "Ativo" && (selectedCliente ? c.cliente === selectedCliente : true));
+  }, [contratos, selectedCliente]);
+
   const openEdit = (m: any) => {
     setEditingId(m.id);
+    const contrato = contratos.find((c) => c.id === m.contrato_id);
+    setSelectedCliente(contrato?.cliente ?? "");
     const centavos = Math.round(Number(m.valor_medido) * 100).toString();
     setForm({
       contrato_id: m.contrato_id,
