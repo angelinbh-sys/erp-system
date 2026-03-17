@@ -266,11 +266,20 @@ export default function Medicoes() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Data Início *</Label>
-                <Input type="date" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} />
+                <Input type="date" value={form.data_inicio} onChange={(e) => {
+                  const newInicio = e.target.value;
+                  setForm({ ...form, data_inicio: newInicio });
+                  validatePeriodo(newInicio, form.data_fim);
+                }} />
               </div>
               <div>
                 <Label>Data Fim *</Label>
-                <Input type="date" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} />
+                <Input type="date" value={form.data_fim} onChange={(e) => {
+                  const newFim = e.target.value;
+                  setForm({ ...form, data_fim: newFim });
+                  validatePeriodo(form.data_inicio, newFim);
+                }} />
+                {periodoError && <p className="text-sm text-destructive mt-1">{periodoError}</p>}
               </div>
             </div>
             <div>
