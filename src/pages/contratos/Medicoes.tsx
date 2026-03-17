@@ -308,11 +308,22 @@ export default function Medicoes() {
               </div>
             </div>
             <div>
+              <Label>Cliente *</Label>
+              <Select value={selectedCliente} onValueChange={(v) => { setSelectedCliente(v); setForm({ ...form, contrato_id: "" }); }}>
+                <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
+                <SelectContent position="popper" className="max-h-60">
+                  {clientesUnicos.map((cli) => (
+                    <SelectItem key={cli} value={cli}>{cli}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label>Contrato *</Label>
-              <Select value={form.contrato_id} onValueChange={(v) => setForm({ ...form, contrato_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {contratos.filter((c) => c.status === "Ativo").map((c) => (
+              <Select value={form.contrato_id} onValueChange={(v) => setForm({ ...form, contrato_id: v })} disabled={!selectedCliente}>
+                <SelectTrigger><SelectValue placeholder={selectedCliente ? "Selecione o contrato" : "Selecione o cliente primeiro"} /></SelectTrigger>
+                <SelectContent position="popper" className="max-h-60">
+                  {contratosFiltrados.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.projeto_obra}</SelectItem>
                   ))}
                 </SelectContent>
