@@ -33,6 +33,7 @@ export default function Medicoes() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [activeTab, setActiveTab] = useState("todos");
+  const [periodoError, setPeriodoError] = useState("");
   const [filters, setFilters] = useState({
     periodo: "todos",
     projeto: "todos",
@@ -97,6 +98,7 @@ export default function Medicoes() {
       valor_medido_display: formatCurrencyBRL(centavos),
       observacao: m.observacao ?? "",
     });
+    setPeriodoError("");
     setDialogOpen(true);
   };
 
@@ -110,7 +112,7 @@ export default function Medicoes() {
     const fim = new Date(form.data_fim + "T00:00:00");
     const diffDays = Math.round((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays < 30) {
-      toast.error("O período deve ter no mínimo 30 dias entre a data inicial e a data final.");
+      setPeriodoError("O período deve ter no mínimo 30 dias.");
       return;
     }
     try {
@@ -147,6 +149,18 @@ export default function Medicoes() {
     }
   };
 
+  const validatePeriodo = (inicio: string, fim: string) => {
+    if (inicio && fim) {
+      const d1 = new Date(inicio + "T00:00:00");
+      const d2 = new Date(fim + "T00:00:00");
+      const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+      if (diff < 30) {
+        setPeriodoError("O período deve ter no mínimo 30 dias.");
+        return;
+      }
+    }
+    setPeriodoError("");
+  };
 
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
@@ -238,7 +252,7 @@ export default function Medicoes() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold text-foreground">Medições</h1>
-        <Button onClick={() => { setEditingId(null); setForm(emptyForm); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-2" />Nova Medição</Button>
+        <Button onClick={() => { setEditingId(null); setForm(emptyForm); setPeriodoError(""); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-2" />Nova Medição</Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -265,11 +279,20 @@ export default function Medicoes() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Data Início *</Label>
-                <Input type="date" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} />
+                <Input type="date" value={form.data_inicio} onChange={(e) => {
+                  const newInicio = e.target.value;
+                  setForm({ ...form, data_inicio: newInicio });
+                  validatePeriodo(newInicio, form.data_fim);
+                }} />
               </div>
               <div>
                 <Label>Data Fim *</Label>
-                <Input type="date" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} />
+                <Input type="date" value={form.data_fim} onChange={(e) => {
+                  const newFim = e.target.value;
+                  setForm({ ...form, data_fim: newFim });
+                  validatePeriodo(form.data_inicio, newFim);
+                }} />
+                {periodoError && <p className="text-sm text-destructive mt-1">{periodoError}</p>}
               </div>
             </div>
             <div>
