@@ -148,6 +148,18 @@ export default function Medicoes() {
     }
   };
 
+  const validatePeriodo = (inicio: string, fim: string) => {
+    if (inicio && fim) {
+      const d1 = new Date(inicio + "T00:00:00");
+      const d2 = new Date(fim + "T00:00:00");
+      const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+      if (diff < 30) {
+        setPeriodoError("O período deve ter no mínimo 30 dias.");
+        return;
+      }
+    }
+    setPeriodoError("");
+  };
 
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
