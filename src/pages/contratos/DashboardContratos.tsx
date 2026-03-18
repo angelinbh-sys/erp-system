@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, Component, type ReactNode, type ErrorInfo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -12,18 +12,42 @@ import {
 } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Professional color palette — consistent across charts
+// Error boundary to prevent blank pages
+class ChartErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("Chart render error:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+          Erro ao renderizar o gráfico. Tente recarregar a página.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Professional color palette
 const CHART_PALETTE = [
-  "hsl(225, 55%, 48%)",  // azul principal
-  "hsl(35, 85%, 52%)",   // laranja/amarelo
-  "hsl(160, 55%, 40%)",  // verde
-  "hsl(340, 55%, 50%)",  // rosa
-  "hsl(270, 50%, 55%)",  // roxo
-  "hsl(185, 60%, 42%)",  // teal
-  "hsl(50, 75%, 50%)",   // dourado
-  "hsl(5, 60%, 50%)",    // vermelho
-  "hsl(140, 45%, 35%)",  // verde escuro
-  "hsl(300, 40%, 50%)",  // magenta
+  "hsl(225, 55%, 48%)",
+  "hsl(35, 85%, 52%)",
+  "hsl(160, 55%, 40%)",
+  "hsl(340, 55%, 50%)",
+  "hsl(270, 50%, 55%)",
+  "hsl(185, 60%, 42%)",
+  "hsl(50, 75%, 50%)",
+  "hsl(5, 60%, 50%)",
+  "hsl(140, 45%, 35%)",
+  "hsl(300, 40%, 50%)",
 ];
 
 const fmt = (v: number) =>
@@ -36,53 +60,50 @@ const fmtCompact = (v: number) =>
     ? `${(v / 1_000).toFixed(0)}k`
     : v.toString();
 
-// Truncate name for pie label
-const truncateName = (name: string, max: number) =>
-  name.length > max ? name.slice(0, max - 1) + "…" : name;
-
-// Custom tooltip for pie charts
-interface PieTooltipProps {
+// Safe custom tooltip for pie charts
+function PieTooltipCustom({ active, payload, totalContratado = 0, contratadoPorProjeto = {}, modo = "valor" }: {
   active?: boolean;
-  payload?: Array<{ name: string; value: number; payload: { color: string; percent?: number } }>;
+  payload?: any[];
   totalContratado?: number;
   contratadoPorProjeto?: Record<string, number>;
   modo?: string;
-}
+}) {
+  try {
+    if (!active || !payload || payload.length === 0) return null;
+    const item = payload[0];
+    if (!item) return null;
 
-function PieTooltipCustom({ active, payload, totalContratado = 0, contratadoPorProjeto = {}, modo = "valor" }: PieTooltipProps) {
-  if (!active || !payload?.length) return null;
-  const item = payload[0];
-  const valor = item.value;
-  const nome = item.name;
-  const cor = item.payload.color;
+    const valor = Number(item.value) || 0;
+    const nome = String(item.name || "");
+    const cor = item?.payload?.color || item?.color || CHART_PALETTE[0];
+    const percent = item?.percent;
 
-  let pctLabel = "";
-  if (modo === "pct_total" && totalContratado > 0) {
-    pctLabel = `${(valor / totalContratado * 100).toFixed(1)}% do total`;
-  } else if (modo === "pct_projeto") {
-    const contrato = contratadoPorProjeto[nome] || 0;
-    pctLabel = contrato > 0 ? `${(valor / contrato * 100).toFixed(1)}% do projeto` : "—";
-  } else {
-    // Default: show share percentage
-    const total = payload.reduce ? 0 : 0; // We'll compute from item
-    pctLabel = item.payload.percent != null
-      ? `${(item.payload.percent * 100).toFixed(1)}%`
-      : "";
-  }
+    let pctLabel = "";
+    if (modo === "pct_total" && totalContratado > 0) {
+      pctLabel = `${(valor / totalContratado * 100).toFixed(1)}% do total`;
+    } else if (modo === "pct_projeto") {
+      const contrato = contratadoPorProjeto[nome] || 0;
+      pctLabel = contrato > 0 ? `${(valor / contrato * 100).toFixed(1)}% do projeto` : "—";
+    } else if (typeof percent === "number") {
+      pctLabel = `${(percent * 100).toFixed(1)}%`;
+    }
 
-  return (
-    <div className="rounded-xl border border-border/60 bg-background px-4 py-3 shadow-lg text-sm min-w-[200px]">
-      <div className="flex items-center gap-2 mb-1.5">
-        <span className="inline-block h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: cor }} />
-        <span className="font-semibold text-foreground leading-tight">{nome}</span>
+    return (
+      <div className="rounded-xl border border-border/60 bg-background px-4 py-3 shadow-lg text-sm min-w-[200px]">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: cor }} />
+          <span className="font-semibold text-foreground leading-tight">{nome}</span>
+        </div>
+        <div className="text-foreground font-medium">{fmt(valor)}</div>
+        {pctLabel && <div className="text-muted-foreground text-xs mt-0.5">{pctLabel}</div>}
       </div>
-      <div className="text-foreground font-medium">{fmt(valor)}</div>
-      {pctLabel && <div className="text-muted-foreground text-xs mt-0.5">{pctLabel}</div>}
-    </div>
-  );
+    );
+  } catch {
+    return null;
+  }
 }
 
-// Custom legend for pie charts
+// Custom legend
 interface LegendItemData {
   name: string;
   value: number;
@@ -113,7 +134,7 @@ function PieLegend({ data, total }: { data: LegendItemData[]; total: number }) {
   );
 }
 
-// Stat card component
+// Stat card
 function StatCard({ title, value, icon: Icon }: { title: string; value: string; icon: React.ElementType }) {
   return (
     <Card className="shadow-md border-border/40 hover:shadow-lg transition-shadow">
@@ -128,6 +149,17 @@ function StatCard({ title, value, icon: Icon }: { title: string; value: string; 
       </CardContent>
     </Card>
   );
+}
+
+// Safe pie label renderer — returns string for recharts
+function renderPieLabelFn(props: any): string {
+  try {
+    const percent = props?.percent;
+    if (typeof percent !== "number" || percent < 0.03) return "";
+    return `${(percent * 100).toFixed(1)}%`;
+  } catch {
+    return "";
+  }
 }
 
 export default function DashboardContratos() {
@@ -179,7 +211,7 @@ export default function DashboardContratos() {
     return [...new Set(contratosFiltrados.map((c) => c.projeto_obra))].sort();
   }, [contratosFiltrados]);
 
-  // Consistent color mapping: project name -> color
+  // Consistent color mapping
   const projetoColorMap = useMemo(() => {
     const map: Record<string, string> = {};
     const allProjetos = [...new Set(contratos.map((c) => c.projeto_obra))].sort();
@@ -241,25 +273,6 @@ export default function DashboardContratos() {
   const totalPizzaContrato = dadosPizza.reduce((s, d) => s + d.value, 0);
   const totalPizzaMedido = dadosPizzaMedido.reduce((s, d) => s + d.value, 0);
 
-  // Custom pie label: show only % inside/near the slice
-  const renderPieLabel = useCallback(({ percent, cx, x, y }: any) => {
-    if (!percent || percent < 0.03) return null; // hide if < 3%
-    const pct = (percent * 100).toFixed(1);
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="hsl(var(--foreground))"
-        fontSize={11}
-        fontWeight={600}
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-      >
-        {pct}%
-      </text>
-    );
-  }, []);
-
   return (
     <div className="space-y-6">
       <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard de Contratos</h1>
@@ -270,9 +283,9 @@ export default function DashboardContratos() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">Cliente</Label>
-              <Select value={filtroCliente} onValueChange={setFiltroCliente}>
+              <Select value={filtroCliente} onValueChange={(v) => setFiltroCliente(v)}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent position="popper" className="max-h-60">
+                <SelectContent position="popper" className="max-h-60 z-[9999]">
                   <SelectItem value="todos">Todos</SelectItem>
                   {clientes.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
@@ -280,9 +293,9 @@ export default function DashboardContratos() {
             </div>
             <div>
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">Projeto / Obra</Label>
-              <Select value={filtroProjeto} onValueChange={setFiltroProjeto}>
+              <Select value={filtroProjeto} onValueChange={(v) => setFiltroProjeto(v)}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent position="popper" className="max-h-60">
+                <SelectContent position="popper" className="max-h-60 z-[9999]">
                   <SelectItem value="todos">Todos</SelectItem>
                   {projetos.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
@@ -313,187 +326,190 @@ export default function DashboardContratos() {
       </div>
 
       {/* Stacked Bar Chart */}
-      <Card className="shadow-md border-border/40">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-heading font-bold text-foreground">
-            Avanço Financeiro Mensal
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {dadosGrafico.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-12">Nenhuma medição registrada para o período.</p>
-          ) : (
-            <div className="w-full h-[320px] lg:h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dadosGrafico} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                  <XAxis
-                    dataKey="mes"
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tickFormatter={fmtCompact}
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={55}
-                  />
-                  <Tooltip
-                    formatter={(value: number, name: string) => [fmt(value), name]}
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "1px solid hsl(var(--border))",
-                      backgroundColor: "hsl(var(--background))",
-                      fontSize: "12px",
-                      boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)",
-                    }}
-                    cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
-                  />
-                  {projetosFiltrados.map((projeto, i) => (
-                    <Bar
-                      key={projeto}
-                      dataKey={projeto}
-                      stackId="a"
-                      fill={projetoColorMap[projeto] || CHART_PALETTE[i % CHART_PALETTE.length]}
-                      radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+      <ChartErrorBoundary>
+        <Card className="shadow-md border-border/40">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-heading font-bold text-foreground">
+              Avanço Financeiro Mensal
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {dadosGrafico.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-12">Nenhuma medição registrada para o período.</p>
+            ) : (
+              <div className="w-full h-[320px] lg:h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dadosGrafico} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                    <XAxis
+                      dataKey="mes"
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      axisLine={{ stroke: "hsl(var(--border))" }}
+                      tickLine={false}
                     />
-                  ))}
-                  <RechartsLegend
-                    wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
-                    iconType="square"
-                    iconSize={10}
-                    formatter={(value: string) => (
-                      <span style={{ color: "hsl(var(--foreground))", fontSize: "12px" }}>{value}</span>
-                    )}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    <YAxis
+                      tickFormatter={fmtCompact}
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={55}
+                    />
+                    <Tooltip
+                      formatter={(value: number, name: string) => [fmt(value), name]}
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "hsl(var(--background))",
+                        fontSize: "12px",
+                        boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)",
+                      }}
+                      cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                    />
+                    {projetosFiltrados.map((projeto, i) => (
+                      <Bar
+                        key={projeto}
+                        dataKey={projeto}
+                        stackId="a"
+                        fill={projetoColorMap[projeto] || CHART_PALETTE[i % CHART_PALETTE.length]}
+                        radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                      />
+                    ))}
+                    <RechartsLegend
+                      wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
+                      iconType="square"
+                      iconSize={10}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </ChartErrorBoundary>
 
       {/* Pie Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie: Valor de Contrato */}
-        <Card className="shadow-md border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-heading font-bold text-foreground">
-              Valor de Contrato
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {dadosPizza.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-12">Nenhum projeto encontrado.</p>
-            ) : (
-              <div className={`flex ${isMobile ? "flex-col" : "flex-row"} gap-4 items-start`}>
-                <div className={`${isMobile ? "w-full" : "flex-1"} min-h-[280px] h-[320px]`}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={dadosPizza}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={isMobile ? "70%" : "78%"}
-                        innerRadius="0%"
-                        dataKey="value"
-                        nameKey="name"
-                        paddingAngle={2}
-                        strokeWidth={2}
-                        stroke="hsl(var(--background))"
-                        label={renderPieLabel}
-                        labelLine={{
-                          stroke: "hsl(var(--muted-foreground))",
-                          strokeWidth: 1,
-                          strokeOpacity: 0.5,
-                        }}
-                      >
-                        {dadosPizza.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        content={<PieTooltipCustom totalContratado={totalPizzaContrato} />}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+        <ChartErrorBoundary>
+          <Card className="shadow-md border-border/40">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-heading font-bold text-foreground">
+                Valor de Contrato
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {dadosPizza.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-12">Nenhum projeto encontrado.</p>
+              ) : (
+                <div className={`flex ${isMobile ? "flex-col" : "flex-row"} gap-4 items-start`}>
+                  <div className={`${isMobile ? "w-full" : "flex-1"} min-h-[280px] h-[320px]`}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={dadosPizza}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={isMobile ? "70%" : "78%"}
+                          innerRadius="0%"
+                          dataKey="value"
+                          nameKey="name"
+                          paddingAngle={2}
+                          strokeWidth={2}
+                          stroke="hsl(var(--background))"
+                          label={renderPieLabelFn}
+                          labelLine={{
+                            stroke: "hsl(var(--muted-foreground))",
+                            strokeWidth: 1,
+                            strokeOpacity: 0.5,
+                          }}
+                        >
+                          {dadosPizza.map((entry, i) => (
+                            <Cell key={i} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={<PieTooltipCustom totalContratado={totalPizzaContrato} />}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className={`${isMobile ? "w-full" : "w-[220px] shrink-0"}`}>
+                    <PieLegend data={dadosPizza} total={totalPizzaContrato} />
+                  </div>
                 </div>
-                <div className={`${isMobile ? "w-full" : "w-[220px] shrink-0"}`}>
-                  <PieLegend data={dadosPizza} total={totalPizzaContrato} />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </ChartErrorBoundary>
 
         {/* Pie: Valor Medido */}
-        <Card className="shadow-md border-border/40">
-          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2">
-            <CardTitle className="text-lg font-heading font-bold text-foreground whitespace-nowrap">
-              Projetos — Valor Medido
-            </CardTitle>
-            <Select value={modoMedido} onValueChange={(v) => setModoMedido(v as "valor" | "pct_total" | "pct_projeto")}>
-              <SelectTrigger className="w-[200px] h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" className="max-h-60">
-                <SelectItem value="valor">Valor (R$)</SelectItem>
-                <SelectItem value="pct_total">% do contrato total</SelectItem>
-                <SelectItem value="pct_projeto">% do contrato do projeto</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent>
-            {dadosPizzaMedido.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-12">Nenhuma medição encontrada.</p>
-            ) : (
-              <div className={`flex ${isMobile ? "flex-col" : "flex-row"} gap-4 items-start`}>
-                <div className={`${isMobile ? "w-full" : "flex-1"} min-h-[280px] h-[320px]`}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={dadosPizzaMedido}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={isMobile ? "70%" : "78%"}
-                        innerRadius="0%"
-                        dataKey="value"
-                        nameKey="name"
-                        paddingAngle={2}
-                        strokeWidth={2}
-                        stroke="hsl(var(--background))"
-                        label={renderPieLabel}
-                        labelLine={{
-                          stroke: "hsl(var(--muted-foreground))",
-                          strokeWidth: 1,
-                          strokeOpacity: 0.5,
-                        }}
-                      >
-                        {dadosPizzaMedido.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        content={
-                          <PieTooltipCustom
-                            totalContratado={valorTotalContratado}
-                            contratadoPorProjeto={valorContratadoPorProjeto}
-                            modo={modoMedido}
-                          />
-                        }
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+        <ChartErrorBoundary>
+          <Card className="shadow-md border-border/40">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2">
+              <CardTitle className="text-lg font-heading font-bold text-foreground whitespace-nowrap">
+                Projetos — Valor Medido
+              </CardTitle>
+              <Select value={modoMedido} onValueChange={(v) => setModoMedido(v as "valor" | "pct_total" | "pct_projeto")}>
+                <SelectTrigger className="w-[200px] h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-60 z-[9999]">
+                  <SelectItem value="valor">Valor (R$)</SelectItem>
+                  <SelectItem value="pct_total">% do contrato total</SelectItem>
+                  <SelectItem value="pct_projeto">% do contrato do projeto</SelectItem>
+                </SelectContent>
+              </Select>
+            </CardHeader>
+            <CardContent>
+              {dadosPizzaMedido.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-12">Nenhuma medição encontrada.</p>
+              ) : (
+                <div className={`flex ${isMobile ? "flex-col" : "flex-row"} gap-4 items-start`}>
+                  <div className={`${isMobile ? "w-full" : "flex-1"} min-h-[280px] h-[320px]`}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={dadosPizzaMedido}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={isMobile ? "70%" : "78%"}
+                          innerRadius="0%"
+                          dataKey="value"
+                          nameKey="name"
+                          paddingAngle={2}
+                          strokeWidth={2}
+                          stroke="hsl(var(--background))"
+                          label={renderPieLabelFn}
+                          labelLine={{
+                            stroke: "hsl(var(--muted-foreground))",
+                            strokeWidth: 1,
+                            strokeOpacity: 0.5,
+                          }}
+                        >
+                          {dadosPizzaMedido.map((entry, i) => (
+                            <Cell key={i} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={
+                            <PieTooltipCustom
+                              totalContratado={valorTotalContratado}
+                              contratadoPorProjeto={valorContratadoPorProjeto}
+                              modo={modoMedido}
+                            />
+                          }
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className={`${isMobile ? "w-full" : "w-[220px] shrink-0"}`}>
+                    <PieLegend data={dadosPizzaMedido} total={totalPizzaMedido} />
+                  </div>
                 </div>
-                <div className={`${isMobile ? "w-full" : "w-[220px] shrink-0"}`}>
-                  <PieLegend data={dadosPizzaMedido} total={totalPizzaMedido} />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </ChartErrorBoundary>
       </div>
     </div>
   );
