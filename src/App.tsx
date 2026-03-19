@@ -27,6 +27,7 @@ import CadastroContratos from "@/pages/contratos/CadastroContratos";
 import MedicoesPage from "@/pages/contratos/Medicoes";
 import RelatoriosContratos from "@/pages/contratos/RelatoriosContratos";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
+import Organograma from "@/pages/planejamento/Organograma";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
