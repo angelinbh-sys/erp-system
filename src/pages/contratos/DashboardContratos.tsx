@@ -331,10 +331,10 @@ export default function DashboardContratos() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Valor Total Contratado" value={fmt(valorTotalContratado)} icon={DollarSign} />
         <StatCard title="Valor Já Medido" value={fmt(valorTotalMedido)} icon={Wallet} />
-        <StatCard
-          title="Avanço Financeiro"
-          value={`${(Math.floor(percentualAvanco * 100) / 100).toFixed(2)}%`}
-          icon={TrendingUp}
+        <ProgressCard
+          valorMedido={valorTotalMedido}
+          valorTotal={valorTotalContratado}
+          percentual={percentualAvanco}
         />
         <StatCard title="Valor Restante" value={fmt(valorRestante)} icon={BarChart3} />
       </div>
@@ -347,12 +347,12 @@ export default function DashboardContratos() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {dadosGrafico.length === 0 ? (
+            {dadosLinhas.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-12">Nenhuma medição registrada para o período.</p>
             ) : (
               <div className="w-full h-[320px] lg:h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dadosGrafico} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+                  <LineChart data={dadosLinhas} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                     <XAxis
                       dataKey="mes"
@@ -376,23 +376,39 @@ export default function DashboardContratos() {
                         fontSize: "12px",
                         boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)",
                       }}
-                      cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                      cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "4 4" }}
                     />
-                    {projetosFiltrados.map((projeto, i) => (
-                      <Bar
-                        key={projeto}
-                        dataKey={projeto}
-                        stackId="a"
-                        fill={projetoColorMap[projeto] || CHART_PALETTE[i % CHART_PALETTE.length]}
-                        radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-                      />
-                    ))}
+                    <Line
+                      type="monotone"
+                      dataKey="Previsto"
+                      stroke={CHART_PALETTE[0]}
+                      strokeWidth={2.5}
+                      dot={{ r: 4, fill: CHART_PALETTE[0], strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Realizado"
+                      stroke={CHART_PALETTE[1]}
+                      strokeWidth={2.5}
+                      dot={{ r: 4, fill: CHART_PALETTE[1], strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Acumulado"
+                      stroke={CHART_PALETTE[2]}
+                      strokeWidth={2}
+                      strokeDasharray="6 3"
+                      dot={{ r: 3, fill: CHART_PALETTE[2], strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                      activeDot={{ r: 5 }}
+                    />
                     <RechartsLegend
                       wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
-                      iconType="square"
-                      iconSize={10}
+                      iconType="line"
+                      iconSize={14}
                     />
-                  </BarChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             )}
