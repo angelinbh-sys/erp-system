@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, History, User as UserIcon } from "lucide-react";
+import { Pencil, History, User as UserIcon, Upload, Download, FileDown } from "lucide-react";
 import { toast } from "@/lib/toast";
 
 import { Button } from "@/components/ui/button";
