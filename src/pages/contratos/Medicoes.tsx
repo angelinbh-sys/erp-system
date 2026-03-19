@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -22,6 +22,13 @@ const emptyForm = {
   valor_medido_display: "",
   observacao: "",
 };
+
+const normalizeSelectOptions = (values: Array<string | null | undefined>) =>
+  [...new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value) && value !== "todos"))].sort((a, b) =>
+    a.localeCompare(b, "pt-BR"),
+  );
+
+const getObservacaoOptionLabel = (value: string | null | undefined) => value?.trim() || "Sem observação";
 
 export default function Medicoes() {
   const { contratosQuery } = useContratos();
@@ -43,7 +50,6 @@ export default function Medicoes() {
     observacao: "todos",
   });
 
-  // Group projects that have measurements or are active
   const projetosComMedicoes = useMemo(() => {
     const contratoIds = new Set(medicoes.map((m) => m.contrato_id));
     return contratos.filter((c) => contratoIds.has(c.id) || c.status === "Ativo");
@@ -51,22 +57,20 @@ export default function Medicoes() {
 
   const getContratoProjeto = (id: string) => contratos.find((c) => c.id === id)?.projeto_obra ?? "—";
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
+  const fmtDate = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "");
 
-  // Data currently visible (tab-filtered only, before column filters)
   const tabFilteredMedicoes = useMemo(() => {
     return activeTab === "todos" ? medicoes : medicoes.filter((m) => m.contrato_id === activeTab);
   }, [medicoes, activeTab]);
 
-  // Unique values for each column (derived from tab-filtered data)
   const uniqueValues = useMemo(() => {
-    const periodos = [...new Set(tabFilteredMedicoes.map((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}`))];
-    const projetos = [...new Set(tabFilteredMedicoes.map((m) => getContratoProjeto(m.contrato_id)))];
-    const descricoes = [...new Set(tabFilteredMedicoes.map((m) => m.descricao))];
-    const valores = [...new Set(tabFilteredMedicoes.map((m) => fmt(Number(m.valor_medido))))];
-    const observacoes = [...new Set(tabFilteredMedicoes.map((m) => m.observacao ?? "—"))];
+    const periodos = normalizeSelectOptions(tabFilteredMedicoes.map((m) => `${fmtDate(m.data_inicio)} — ${fmtDate(m.data_fim)}`));
+    const projetos = normalizeSelectOptions(tabFilteredMedicoes.map((m) => getContratoProjeto(m.contrato_id)));
+    const descricoes = normalizeSelectOptions(tabFilteredMedicoes.map((m) => m.descricao));
+    const valores = normalizeSelectOptions(tabFilteredMedicoes.map((m) => fmt(Number(m.valor_medido))));
+    const observacoes = normalizeSelectOptions(tabFilteredMedicoes.map((m) => getObservacaoOptionLabel(m.observacao)));
     return { periodos, projetos, descricoes, valores, observacoes };
-  }, [tabFilteredMedicoes]);
+  }, [tabFilteredMedicoes, contratos]);
 
   const filteredMedicoes = useMemo(() => {
     let result = tabFilteredMedicoes;
@@ -83,14 +87,14 @@ export default function Medicoes() {
       result = result.filter((m) => fmt(Number(m.valor_medido)) === filters.valor);
     }
     if (filters.observacao !== "todos") {
-      result = result.filter((m) => (m.observacao ?? "—") === filters.observacao);
+      result = result.filter((m) => getObservacaoOptionLabel(m.observacao) === filters.observacao);
     }
     return result;
-  }, [tabFilteredMedicoes, filters]);
+  }, [tabFilteredMedicoes, filters, contratos]);
 
   const clientesUnicos = useMemo(() => {
     const ativos = contratos.filter((c) => c.status === "Ativo");
-    return [...new Set(ativos.map((c) => c.cliente))].sort();
+    return normalizeSelectOptions(ativos.map((c) => c.cliente));
   }, [contratos]);
 
   const contratosFiltrados = useMemo(() => {
@@ -198,21 +202,34 @@ export default function Medicoes() {
 
   const hasActiveFilter = Object.values(filters).some((v) => v !== "todos");
 
-  const renderFilterSelect = (filterKey: keyof typeof filters, options: string[]) => (
-    <Select value={filters[filterKey]} onValueChange={(v) => updateFilter(filterKey, v)}>
-      <SelectTrigger className="h-7 text-xs border-dashed">
-        <SelectValue placeholder="Todos" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="todos">Todos</SelectItem>
-        {options.map((opt) => (
-          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
+  const renderFilterSelect = (filterKey: keyof typeof filters, options: string[]) => {
+    const safeOptions = normalizeSelectOptions(options);
 
-  const renderTable = (items: typeof medicoes, showProjeto: boolean) => (
+    return (
+      <Select
+        key={`${filterKey}-${filters[filterKey] || "todos"}`}
+        value={filters[filterKey]}
+        onValueChange={(value) => {
+          if (!value) return;
+          updateFilter(filterKey, value);
+        }}
+      >
+        <SelectTrigger className="h-7 text-xs border-dashed">
+          <SelectValue placeholder="Todos" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          {safeOptions.map((opt) => (
+            <SelectItem key={`${filterKey}-${opt}`} value={opt}>
+              {opt}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  };
+
+  const renderTable = (items: typeof medicoes, showProjeto: boolean) =>
     items.length === 0 && !hasActiveFilter ? (
       <p className="text-muted-foreground text-center py-8">Nenhuma medição registrada.</p>
     ) : (
@@ -238,11 +255,13 @@ export default function Medicoes() {
         <TableBody>
           {items.map((m) => (
             <TableRow key={m.id}>
-              <TableCell>{fmtDate(m.data_inicio)} — {fmtDate(m.data_fim)}</TableCell>
+              <TableCell>
+                {fmtDate(m.data_inicio)} — {fmtDate(m.data_fim)}
+              </TableCell>
               {showProjeto && <TableCell className="font-medium">{getContratoProjeto(m.contrato_id)}</TableCell>}
               <TableCell>{m.descricao}</TableCell>
               <TableCell>{fmt(Number(m.valor_medido))}</TableCell>
-              <TableCell className="text-muted-foreground">{m.observacao ?? "—"}</TableCell>
+              <TableCell className="text-muted-foreground">{getObservacaoOptionLabel(m.observacao)}</TableCell>
               <TableCell>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" onClick={() => openEdit(m)}>
@@ -257,28 +276,38 @@ export default function Medicoes() {
           ))}
         </TableBody>
       </Table>
-    )
-  );
+    );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold text-foreground">Medições</h1>
-        <Button onClick={() => { setEditingId(null); setForm(emptyForm); setSelectedCliente(""); setPeriodoError(""); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-2" />Nova Medição</Button>
+        <Button
+          onClick={() => {
+            setEditingId(null);
+            setForm(emptyForm);
+            setSelectedCliente("");
+            setPeriodoError("");
+            setDialogOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Medição
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="todos">Todos os Projetos</TabsTrigger>
           {projetosComMedicoes.map((c) => (
-            <TabsTrigger key={c.id} value={c.id}>{c.projeto_obra}</TabsTrigger>
+            <TabsTrigger key={c.id} value={c.id}>
+              {c.projeto_obra}
+            </TabsTrigger>
           ))}
         </TabsList>
 
         <Card className="mt-4">
-          <CardContent className="pt-6">
-            {renderTable(filteredMedicoes, activeTab === "todos")}
-          </CardContent>
+          <CardContent className="pt-6">{renderTable(filteredMedicoes, activeTab === "todos")}</CardContent>
         </Card>
       </Tabs>
 
@@ -291,40 +320,72 @@ export default function Medicoes() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Data Início *</Label>
-                <Input type="date" value={form.data_inicio} onChange={(e) => {
-                  const newInicio = e.target.value;
-                  setForm({ ...form, data_inicio: newInicio });
-                  validatePeriodo(newInicio, form.data_fim);
-                }} />
+                <Input
+                  type="date"
+                  value={form.data_inicio}
+                  onChange={(e) => {
+                    const newInicio = e.target.value;
+                    setForm({ ...form, data_inicio: newInicio });
+                    validatePeriodo(newInicio, form.data_fim);
+                  }}
+                />
               </div>
               <div>
                 <Label>Data Fim *</Label>
-                <Input type="date" value={form.data_fim} onChange={(e) => {
-                  const newFim = e.target.value;
-                  setForm({ ...form, data_fim: newFim });
-                  validatePeriodo(form.data_inicio, newFim);
-                }} />
+                <Input
+                  type="date"
+                  value={form.data_fim}
+                  onChange={(e) => {
+                    const newFim = e.target.value;
+                    setForm({ ...form, data_fim: newFim });
+                    validatePeriodo(form.data_inicio, newFim);
+                  }}
+                />
                 {periodoError && <p className="text-sm text-destructive mt-1">{periodoError}</p>}
               </div>
             </div>
             <div>
               <Label>Cliente *</Label>
-              <Select value={selectedCliente} onValueChange={(v) => { setSelectedCliente(v); setForm({ ...form, contrato_id: "" }); }}>
-                <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
-                <SelectContent position="popper" className="max-h-60">
+              <Select
+                key={`cliente-${selectedCliente || "placeholder"}`}
+                value={selectedCliente}
+                onValueChange={(value) => {
+                  if (!value) return;
+                  setSelectedCliente(value);
+                  setForm({ ...form, contrato_id: "" });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o cliente" />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-60 z-[9999]">
                   {clientesUnicos.map((cli) => (
-                    <SelectItem key={cli} value={cli}>{cli}</SelectItem>
+                    <SelectItem key={cli} value={cli}>
+                      {cli}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label>Contrato *</Label>
-              <Select value={form.contrato_id} onValueChange={(v) => setForm({ ...form, contrato_id: v })} disabled={!selectedCliente}>
-                <SelectTrigger><SelectValue placeholder={selectedCliente ? "Selecione o contrato" : "Selecione o cliente primeiro"} /></SelectTrigger>
-                <SelectContent position="popper" className="max-h-60">
+              <Select
+                key={`contrato-${form.contrato_id || "placeholder"}-${selectedCliente || "sem-cliente"}`}
+                value={form.contrato_id}
+                onValueChange={(value) => {
+                  if (!value) return;
+                  setForm({ ...form, contrato_id: value });
+                }}
+                disabled={!selectedCliente}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedCliente ? "Selecione o contrato" : "Selecione o cliente primeiro"} />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-60 z-[9999]">
                   {contratosFiltrados.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.projeto_obra}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.projeto_obra}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -349,7 +410,9 @@ export default function Medicoes() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancelar
+            </Button>
             <Button onClick={handleSave} disabled={createMedicao.isPending || updateMedicao.isPending}>
               {editingId ? "Salvar" : "Registrar"}
             </Button>

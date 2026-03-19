@@ -12,7 +12,6 @@ import {
 } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Error boundary to prevent blank pages
 class ChartErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
     super(props);
@@ -36,7 +35,6 @@ class ChartErrorBoundary extends Component<{ children: ReactNode }, { hasError: 
   }
 }
 
-// Professional color palette
 const CHART_PALETTE = [
   "hsl(225, 55%, 48%)",
   "hsl(35, 85%, 52%)",
@@ -60,7 +58,11 @@ const fmtCompact = (v: number) =>
     ? `${(v / 1_000).toFixed(0)}k`
     : v.toString();
 
-// Safe custom tooltip for pie charts
+const sanitizeSelectOptions = (values: Array<string | null | undefined>) =>
+  [...new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value) && value !== "todos"))].sort((a, b) =>
+    a.localeCompare(b, "pt-BR"),
+  );
+
 function PieTooltipCustom({ active, payload, totalContratado = 0, contratadoPorProjeto = {}, modo = "valor" }: {
   active?: boolean;
   payload?: any[];
@@ -80,10 +82,10 @@ function PieTooltipCustom({ active, payload, totalContratado = 0, contratadoPorP
 
     let pctLabel = "";
     if (modo === "pct_total" && totalContratado > 0) {
-      pctLabel = `${(valor / totalContratado * 100).toFixed(1)}% do total`;
+      pctLabel = `${((valor / totalContratado) * 100).toFixed(1)}% do total`;
     } else if (modo === "pct_projeto") {
       const contrato = contratadoPorProjeto[nome] || 0;
-      pctLabel = contrato > 0 ? `${(valor / contrato * 100).toFixed(1)}% do projeto` : "—";
+      pctLabel = contrato > 0 ? `${((valor / contrato) * 100).toFixed(1)}% do projeto` : "—";
     } else if (typeof percent === "number") {
       pctLabel = `${(percent * 100).toFixed(1)}%`;
     }
@@ -103,7 +105,6 @@ function PieTooltipCustom({ active, payload, totalContratado = 0, contratadoPorP
   }
 }
 
-// Custom legend
 interface LegendItemData {
   name: string;
   value: number;
@@ -114,7 +115,7 @@ function PieLegend({ data, total }: { data: LegendItemData[]; total: number }) {
   return (
     <div className="flex flex-col gap-2 py-2 overflow-y-auto max-h-[320px] pr-1">
       {data.map((item, i) => {
-        const pct = total > 0 ? (item.value / total * 100).toFixed(1) : "0.0";
+        const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0.0";
         return (
           <div key={i} className="flex items-start gap-2.5 text-sm">
             <span
@@ -134,7 +135,6 @@ function PieLegend({ data, total }: { data: LegendItemData[]; total: number }) {
   );
 }
 
-// Stat card
 function StatCard({ title, value, icon: Icon }: { title: string; value: string; icon: React.ElementType }) {
   return (
     <Card className="shadow-md border-border/40 hover:shadow-lg transition-shadow">
@@ -151,7 +151,6 @@ function StatCard({ title, value, icon: Icon }: { title: string; value: string; 
   );
 }
 
-// Safe pie label renderer — returns string for recharts
 function renderPieLabelFn(props: any): string {
   try {
     const percent = props?.percent;
@@ -174,8 +173,23 @@ export default function DashboardContratos() {
   const [filtroPeriodoDe, setFiltroPeriodoDe] = useState("");
   const [filtroPeriodoAte, setFiltroPeriodoAte] = useState("");
 
-  const clientes = useMemo(() => [...new Set(contratos.map((c) => c.cliente))], [contratos]);
-  const projetos = useMemo(() => [...new Set(contratos.map((c) => c.projeto_obra))], [contratos]);
+  const handleFiltroClienteChange = useCallback((value: string) => {
+    if (!value) return;
+    setFiltroCliente(value);
+  }, []);
+
+  const handleFiltroProjetoChange = useCallback((value: string) => {
+    if (!value) return;
+    setFiltroProjeto(value);
+  }, []);
+
+  const handleModoMedidoChange = useCallback((value: string) => {
+    if (!value) return;
+    setModoMedido(value as "valor" | "pct_total" | "pct_projeto");
+  }, []);
+
+  const clientes = useMemo(() => sanitizeSelectOptions(contratos.map((c) => c.cliente)), [contratos]);
+  const projetos = useMemo(() => sanitizeSelectOptions(contratos.map((c) => c.projeto_obra)), [contratos]);
 
   const contratosFiltrados = useMemo(() => {
     return contratos.filter((c) => {
@@ -203,7 +217,9 @@ export default function DashboardContratos() {
 
   const contratoMap = useMemo(() => {
     const map: Record<string, string> = {};
-    contratos.forEach((c) => { map[c.id] = c.projeto_obra; });
+    contratos.forEach((c) => {
+      map[c.id] = c.projeto_obra;
+    });
     return map;
   }, [contratos]);
 
@@ -211,7 +227,6 @@ export default function DashboardContratos() {
     return [...new Set(contratosFiltrados.map((c) => c.projeto_obra))].sort();
   }, [contratosFiltrados]);
 
-  // Consistent color mapping
   const projetoColorMap = useMemo(() => {
     const map: Record<string, string> = {};
     const allProjetos = [...new Set(contratos.map((c) => c.projeto_obra))].sort();
@@ -231,9 +246,9 @@ export default function DashboardContratos() {
     });
     return Object.entries(mapa)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([mes, projetos]) => ({
+      .map(([mes, projetosMes]) => ({
         mes: mes.split("-").reverse().join("/"),
-        ...projetos,
+        ...projetosMes,
       }));
   }, [medicoesFiltradas, contratoMap]);
 
@@ -277,13 +292,12 @@ export default function DashboardContratos() {
     <div className="space-y-6">
       <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard de Contratos</h1>
 
-      {/* Filters */}
       <Card className="shadow-md border-border/40">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">Cliente</Label>
-              <Select value={filtroCliente} onValueChange={(v) => setFiltroCliente(v)}>
+              <Select key={`cliente-${filtroCliente || "todos"}`} value={filtroCliente} onValueChange={handleFiltroClienteChange}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Todos" /></SelectTrigger>
                 <SelectContent position="popper" className="max-h-60 z-[9999]">
                   <SelectItem value="todos">Todos</SelectItem>
@@ -293,7 +307,7 @@ export default function DashboardContratos() {
             </div>
             <div>
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">Projeto / Obra</Label>
-              <Select value={filtroProjeto} onValueChange={(v) => setFiltroProjeto(v)}>
+              <Select key={`projeto-${filtroProjeto || "todos"}`} value={filtroProjeto} onValueChange={handleFiltroProjetoChange}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Todos" /></SelectTrigger>
                 <SelectContent position="popper" className="max-h-60 z-[9999]">
                   <SelectItem value="todos">Todos</SelectItem>
@@ -313,7 +327,6 @@ export default function DashboardContratos() {
         </CardContent>
       </Card>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Valor Total Contratado" value={fmt(valorTotalContratado)} icon={DollarSign} />
         <StatCard title="Valor Já Medido" value={fmt(valorTotalMedido)} icon={Wallet} />
@@ -325,7 +338,6 @@ export default function DashboardContratos() {
         <StatCard title="Valor Restante" value={fmt(valorRestante)} icon={BarChart3} />
       </div>
 
-      {/* Stacked Bar Chart */}
       <ChartErrorBoundary>
         <Card className="shadow-md border-border/40">
           <CardHeader className="pb-2">
@@ -387,9 +399,7 @@ export default function DashboardContratos() {
         </Card>
       </ChartErrorBoundary>
 
-      {/* Pie Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pie: Valor de Contrato */}
         <ChartErrorBoundary>
           <Card className="shadow-md border-border/40">
             <CardHeader className="pb-2">
@@ -442,14 +452,13 @@ export default function DashboardContratos() {
           </Card>
         </ChartErrorBoundary>
 
-        {/* Pie: Valor Medido */}
         <ChartErrorBoundary>
           <Card className="shadow-md border-border/40">
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2">
               <CardTitle className="text-lg font-heading font-bold text-foreground whitespace-nowrap">
                 Projetos — Valor Medido
               </CardTitle>
-              <Select value={modoMedido} onValueChange={(v) => setModoMedido(v as "valor" | "pct_total" | "pct_projeto")}>
+              <Select key={`modo-${modoMedido}`} value={modoMedido} onValueChange={handleModoMedidoChange}>
                 <SelectTrigger className="w-[200px] h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>

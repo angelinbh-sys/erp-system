@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
+import { PageErrorBoundary } from "@/components/PageErrorBoundary";
 import Login from "@/pages/Login";
 import AlterarSenha from "@/pages/AlterarSenha";
 import Dashboard from "@/pages/Dashboard";
@@ -42,9 +43,23 @@ const App = () => (
             <Route path="/alterar-senha" element={<AlterarSenha />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/contratos/dashboard" element={<DashboardContratos />} />
+              <Route
+                path="/contratos/dashboard"
+                element={
+                  <PageErrorBoundary title="o dashboard de contratos">
+                    <DashboardContratos />
+                  </PageErrorBoundary>
+                }
+              />
               <Route path="/contratos/cadastro" element={<CadastroContratos />} />
-              <Route path="/contratos/medicoes" element={<MedicoesPage />} />
+              <Route
+                path="/contratos/medicoes"
+                element={
+                  <PageErrorBoundary title="a tela de medições">
+                    <MedicoesPage />
+                  </PageErrorBoundary>
+                }
+              />
               <Route path="/contratos/relatorios" element={<RelatoriosContratos />} />
               <Route path="/rh/gestao-rh" element={<GestaoRH />} />
               <Route path="/rh/solicitacao-de-vaga" element={<AberturaDeVaga />} />
