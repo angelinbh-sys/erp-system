@@ -283,6 +283,8 @@ const Efetivo = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <ImportColaboradoresDialog open={showImport} onOpenChange={setShowImport} />
     </div>
   );
 };
