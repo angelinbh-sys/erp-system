@@ -1,13 +1,14 @@
-import React, { useState, useMemo, useCallback, Component, type ReactNode, type ErrorInfo } from "react";
+import React, { useState, useMemo, useCallback, useEffect, Component, type ReactNode, type ErrorInfo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
 import { DollarSign, BarChart3, Wallet, TrendingUp } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend as RechartsLegend,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Legend as RechartsLegend,
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -151,6 +152,35 @@ function StatCard({ title, value, icon: Icon }: { title: string; value: string; 
   );
 }
 
+function ProgressCard({ valorMedido, valorTotal, percentual }: { valorMedido: number; valorTotal: number; percentual: number }) {
+  const [animatedValue, setAnimatedValue] = useState(0);
+  const clampedPct = Math.min(percentual, 100);
+  const displayPct = (Math.floor(percentual * 100) / 100).toFixed(2);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimatedValue(clampedPct), 100);
+    return () => clearTimeout(timer);
+  }, [clampedPct]);
+
+  return (
+    <Card className="shadow-md border-border/40 hover:shadow-lg transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Avanço Financeiro</CardTitle>
+        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <TrendingUp className="h-4 w-4 text-primary" />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="text-2xl font-bold text-foreground font-heading">{displayPct}%</div>
+        <Progress value={animatedValue} className="h-2.5 bg-muted [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-out" />
+        <p className="text-xs text-muted-foreground">
+          {fmt(valorMedido)} / {fmt(valorTotal)}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function renderPieLabelFn(props: any): string {
   try {
     const percent = props?.percent;
@@ -252,6 +282,35 @@ export default function DashboardContratos() {
       }));
   }, [medicoesFiltradas, contratoMap]);
 
+  // Line chart data: Previsto (proportional monthly), Realizado (monthly), Acumulado (cumulative realized)
+  const dadosLinhas = useMemo(() => {
+    if (medicoesFiltradas.length === 0 || contratosFiltrados.length === 0) return [];
+
+    // Get all months from medições
+    const mesesSet = new Set<string>();
+    medicoesFiltradas.forEach((m) => mesesSet.add(m.data_inicio.substring(0, 7)));
+    const meses = [...mesesSet].sort();
+
+    if (meses.length === 0) return [];
+
+    // Previsto = valor total contratado / number of months (linear distribution)
+    const previstoMensal = valorTotalContratado / meses.length;
+
+    let acumulado = 0;
+    return meses.map((mes) => {
+      const realizadoMes = medicoesFiltradas
+        .filter((m) => m.data_inicio.substring(0, 7) === mes)
+        .reduce((s, m) => s + Number(m.valor_medido), 0);
+      acumulado += realizadoMes;
+      return {
+        mes: mes.split("-").reverse().join("/"),
+        Previsto: Math.round(previstoMensal * 100) / 100,
+        Realizado: Math.round(realizadoMes * 100) / 100,
+        Acumulado: Math.round(acumulado * 100) / 100,
+      };
+    });
+  }, [medicoesFiltradas, contratosFiltrados, valorTotalContratado]);
+
   const dadosPizza = useMemo(() => {
     return contratosFiltrados.map((c) => ({
       name: c.projeto_obra,
@@ -330,10 +389,10 @@ export default function DashboardContratos() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Valor Total Contratado" value={fmt(valorTotalContratado)} icon={DollarSign} />
         <StatCard title="Valor Já Medido" value={fmt(valorTotalMedido)} icon={Wallet} />
-        <StatCard
-          title="Avanço Financeiro"
-          value={`${(Math.floor(percentualAvanco * 100) / 100).toFixed(2)}%`}
-          icon={TrendingUp}
+        <ProgressCard
+          valorMedido={valorTotalMedido}
+          valorTotal={valorTotalContratado}
+          percentual={percentualAvanco}
         />
         <StatCard title="Valor Restante" value={fmt(valorRestante)} icon={BarChart3} />
       </div>
@@ -346,12 +405,12 @@ export default function DashboardContratos() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {dadosGrafico.length === 0 ? (
+            {dadosLinhas.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-12">Nenhuma medição registrada para o período.</p>
             ) : (
               <div className="w-full h-[320px] lg:h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dadosGrafico} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+                  <LineChart data={dadosLinhas} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                     <XAxis
                       dataKey="mes"
@@ -375,23 +434,39 @@ export default function DashboardContratos() {
                         fontSize: "12px",
                         boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)",
                       }}
-                      cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                      cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "4 4" }}
                     />
-                    {projetosFiltrados.map((projeto, i) => (
-                      <Bar
-                        key={projeto}
-                        dataKey={projeto}
-                        stackId="a"
-                        fill={projetoColorMap[projeto] || CHART_PALETTE[i % CHART_PALETTE.length]}
-                        radius={i === projetosFiltrados.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-                      />
-                    ))}
+                    <Line
+                      type="monotone"
+                      dataKey="Previsto"
+                      stroke={CHART_PALETTE[0]}
+                      strokeWidth={2.5}
+                      dot={{ r: 4, fill: CHART_PALETTE[0], strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Realizado"
+                      stroke={CHART_PALETTE[1]}
+                      strokeWidth={2.5}
+                      dot={{ r: 4, fill: CHART_PALETTE[1], strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Acumulado"
+                      stroke={CHART_PALETTE[2]}
+                      strokeWidth={2}
+                      strokeDasharray="6 3"
+                      dot={{ r: 3, fill: CHART_PALETTE[2], strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                      activeDot={{ r: 5 }}
+                    />
                     <RechartsLegend
                       wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
-                      iconType="square"
-                      iconSize={10}
+                      iconType="line"
+                      iconSize={14}
                     />
-                  </BarChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             )}
