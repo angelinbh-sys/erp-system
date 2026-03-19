@@ -20,8 +20,8 @@ export default function Organograma() {
   const { nodesQuery, createNode, updateNode, deleteNode } = useOrganograma(contratoId || undefined);
   const nodes = nodesQuery.data ?? [];
 
-  const { colaboradoresQuery } = useColaboradores();
-  const colaboradores = (colaboradoresQuery.data ?? []).map((c) => ({
+  const colaboradoresData = useColaboradores();
+  const colaboradores = (colaboradoresData.data ?? []).map((c) => ({
     id: c.id,
     nome: c.nome,
     cargo: c.cargo,

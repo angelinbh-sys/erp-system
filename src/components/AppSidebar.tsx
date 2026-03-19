@@ -34,6 +34,13 @@ const modules = [
     ],
   },
   {
+    label: "Planejamento",
+    icon: LayoutDashboard,
+    children: [
+      { title: "Organograma de Projetos", url: "/planejamento/organograma" },
+    ],
+  },
+  {
     label: "Recursos Humanos",
     icon: Users,
     children: [
