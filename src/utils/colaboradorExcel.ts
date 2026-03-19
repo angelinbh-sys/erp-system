@@ -9,7 +9,6 @@ export const COLUNAS_MODELO = [
   "Data de Nascimento",
   "Sexo",
   "Telefone",
-  "Email",
   "Cargo / Função",
   "Centro de Custo",
   "Contrato",
@@ -17,12 +16,8 @@ export const COLUNAS_MODELO = [
   "Data de Admissão",
   "Status do Colaborador",
   "CEP",
-  "Logradouro",
   "Número",
   "Complemento",
-  "Bairro",
-  "Cidade",
-  "Estado",
   "Banco",
   "Agência",
   "Dígito da Agência",
@@ -85,7 +80,6 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
           const dataNasc = parseDate(row["Data de Nascimento"]);
           const sexo = str(row["Sexo"]);
           const telefone = str(row["Telefone"]);
-          const email = str(row["Email"]);
           const cargo = str(row["Cargo / Função"]);
           const centroCusto = str(row["Centro de Custo"]);
           const contrato = str(row["Contrato"]);
@@ -106,7 +100,7 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
             erros.push("Status inválido (use: Ativo, Inativo, Afastado ou Desligado)");
 
           return {
-            linha: idx + 2, // +2 because header is row 1
+            linha: idx + 2,
             erros,
             valido: erros.length === 0,
             dados: {
@@ -115,7 +109,6 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
               data_nascimento: dataNasc || "",
               sexo,
               telefone,
-              email,
               cargo: capitalizeName(cargo),
               centro_custo: centroCusto,
               contrato,
@@ -123,12 +116,8 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
               data_admissao: dataAdm || new Date().toISOString().slice(0, 10),
               status,
               cep: str(row["CEP"]),
-              logradouro: str(row["Logradouro"]),
               numero: str(row["Número"]),
               complemento: str(row["Complemento"]),
-              bairro: str(row["Bairro"]),
-              cidade: str(row["Cidade"]),
-              estado: str(row["Estado"]),
               banco: str(row["Banco"]),
               agencia: str(row["Agência"]),
               digito_agencia: str(row["Dígito da Agência"]),
@@ -157,7 +146,6 @@ export async function insertColaboradores(rows: ImportRow[]) {
     data_nascimento: r.dados.data_nascimento || null,
     sexo: r.dados.sexo || null,
     telefone: r.dados.telefone || null,
-    email: r.dados.email || null,
     cargo: r.dados.cargo,
     centro_custo: r.dados.centro_custo,
     contrato: r.dados.contrato || null,
@@ -165,12 +153,8 @@ export async function insertColaboradores(rows: ImportRow[]) {
     data_admissao: r.dados.data_admissao,
     status: r.dados.status,
     cep: r.dados.cep || null,
-    logradouro: r.dados.logradouro || null,
     numero: r.dados.numero || null,
     complemento: r.dados.complemento || null,
-    bairro: r.dados.bairro || null,
-    cidade: r.dados.cidade || null,
-    estado: r.dados.estado || null,
     banco: r.dados.banco || null,
     agencia: r.dados.agencia || null,
     digito_agencia: r.dados.digito_agencia || null,
@@ -189,7 +173,6 @@ export interface ColaboradorExport {
   data_nascimento?: string | null;
   sexo?: string | null;
   telefone?: string | null;
-  email?: string | null;
   cargo: string;
   centro_custo: string;
   contrato?: string | null;
@@ -197,12 +180,8 @@ export interface ColaboradorExport {
   data_admissao: string;
   status: string;
   cep?: string | null;
-  logradouro?: string | null;
   numero?: string | null;
   complemento?: string | null;
-  bairro?: string | null;
-  cidade?: string | null;
-  estado?: string | null;
   banco?: string | null;
   agencia?: string | null;
   digito_agencia?: string | null;
@@ -226,7 +205,6 @@ export function exportColaboradores(colaboradores: ColaboradorExport[]) {
     "Data de Nascimento": fmtDate(c.data_nascimento),
     "Sexo": c.sexo || "",
     "Telefone": c.telefone || "",
-    "Email": (c as any).email || "",
     "Cargo / Função": c.cargo,
     "Centro de Custo": c.centro_custo,
     "Contrato": (c as any).contrato || "",
@@ -234,12 +212,8 @@ export function exportColaboradores(colaboradores: ColaboradorExport[]) {
     "Data de Admissão": fmtDate(c.data_admissao),
     "Status do Colaborador": c.status,
     "CEP": (c as any).cep || "",
-    "Logradouro": (c as any).logradouro || "",
     "Número": (c as any).numero || "",
     "Complemento": (c as any).complemento || "",
-    "Bairro": (c as any).bairro || "",
-    "Cidade": (c as any).cidade || "",
-    "Estado": (c as any).estado || "",
     "Banco": (c as any).banco || "",
     "Agência": (c as any).agencia || "",
     "Dígito da Agência": (c as any).digito_agencia || "",
