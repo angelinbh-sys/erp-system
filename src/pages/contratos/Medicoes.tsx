@@ -123,8 +123,8 @@ export default function Medicoes() {
     const inicio = new Date(form.data_inicio + "T00:00:00");
     const fim = new Date(form.data_fim + "T00:00:00");
     const diffDays = Math.round((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays < 30) {
-      setPeriodoError("O período deve ter no mínimo 30 dias.");
+    if (diffDays < 29) {
+      setPeriodoError("O período deve ter no mínimo 29 dias.");
       return;
     }
     try {
