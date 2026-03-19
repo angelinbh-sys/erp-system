@@ -173,9 +173,6 @@ function ProgressCard({ valorMedido, valorTotal, percentual }: { valorMedido: nu
       <CardContent className="space-y-2">
         <div className="text-2xl font-bold text-foreground font-heading">{displayPct}%</div>
         <Progress value={animatedValue} className="h-2.5 bg-muted [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-out" />
-        <p className="text-xs text-muted-foreground">
-          {fmt(valorMedido)} / {fmt(valorTotal)}
-        </p>
       </CardContent>
     </Card>
   );
