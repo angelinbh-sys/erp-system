@@ -1,13 +1,14 @@
-import React, { useState, useMemo, useCallback, Component, type ReactNode, type ErrorInfo } from "react";
+import React, { useState, useMemo, useCallback, useEffect, Component, type ReactNode, type ErrorInfo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
 import { DollarSign, BarChart3, Wallet, TrendingUp } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend as RechartsLegend,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Legend as RechartsLegend,
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
