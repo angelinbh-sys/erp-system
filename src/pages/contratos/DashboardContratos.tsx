@@ -378,12 +378,12 @@ export default function DashboardContratos() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {dadosLinhas.length === 0 ? (
+            {dadosGrafico.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-12">Nenhuma medição registrada para o período.</p>
             ) : (
               <div className="w-full h-[320px] lg:h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={dadosLinhas} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                  <LineChart data={dadosGrafico} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                     <XAxis
                       dataKey="mes"
@@ -409,31 +409,18 @@ export default function DashboardContratos() {
                       }}
                       cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "4 4" }}
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="Previsto"
-                      stroke={CHART_PALETTE[0]}
-                      strokeWidth={2.5}
-                      dot={{ r: 4, fill: CHART_PALETTE[0], strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Realizado"
-                      stroke={CHART_PALETTE[1]}
-                      strokeWidth={2.5}
-                      dot={{ r: 4, fill: CHART_PALETTE[1], strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Acumulado"
-                      stroke={CHART_PALETTE[2]}
-                      strokeWidth={2}
-                      strokeDasharray="6 3"
-                      dot={{ r: 3, fill: CHART_PALETTE[2], strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                      activeDot={{ r: 5 }}
-                    />
+                    {projetosFiltrados.map((projeto, i) => (
+                      <Line
+                        key={projeto}
+                        type="monotone"
+                        dataKey={projeto}
+                        stroke={projetoColorMap[projeto] || CHART_PALETTE[i % CHART_PALETTE.length]}
+                        strokeWidth={2.5}
+                        dot={{ r: 4, fill: projetoColorMap[projeto] || CHART_PALETTE[i % CHART_PALETTE.length], strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                        activeDot={{ r: 6 }}
+                        connectNulls
+                      />
+                    ))}
                     <RechartsLegend
                       wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
                       iconType="line"
