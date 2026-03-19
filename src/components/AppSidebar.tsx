@@ -11,6 +11,7 @@ import {
   HardHat,
   Home,
   FolderKanban,
+  LayoutDashboard,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -31,6 +32,13 @@ const modules = [
       { title: "Cadastro de Contratos", url: "/contratos/cadastro" },
       { title: "Medições", url: "/contratos/medicoes" },
       { title: "Relatórios", url: "/contratos/relatorios" },
+    ],
+  },
+  {
+    label: "Planejamento",
+    icon: LayoutDashboard,
+    children: [
+      { title: "Organograma de Projetos", url: "/planejamento/organograma" },
     ],
   },
   {

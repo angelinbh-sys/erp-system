@@ -333,6 +333,61 @@ export type Database = {
           },
         ]
       }
+      organograma_nodes: {
+        Row: {
+          cargo: string
+          colaborador_id: string | null
+          contrato_id: string
+          created_at: string
+          id: string
+          nome_colaborador: string
+          superior_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cargo: string
+          colaborador_id?: string | null
+          contrato_id: string
+          created_at?: string
+          id?: string
+          nome_colaborador: string
+          superior_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string
+          colaborador_id?: string | null
+          contrato_id?: string
+          created_at?: string
+          id?: string
+          nome_colaborador?: string
+          superior_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organograma_nodes_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organograma_nodes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organograma_nodes_superior_id_fkey"
+            columns: ["superior_id"]
+            isOneToOne: false
+            referencedRelation: "organograma_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           ativo: boolean
