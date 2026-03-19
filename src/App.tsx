@@ -75,6 +75,7 @@ const App = () => (
               <Route path="/admin/audit-log" element={<AuditLog />} />
               <Route path="/admin/limpar-dados" element={<LimparDadosTeste />} />
               <Route path="/sesmt/agendamento-aso" element={<AgendamentoASO />} />
+              <Route path="/planejamento/organograma" element={<Organograma />} />
               <Route path="/financeiro" element={<ModulePlaceholder title="Financeiro" />} />
               <Route path="/logistica" element={<ModulePlaceholder title="Logística" />} />
               <Route path="/qualidade" element={<ModulePlaceholder title="Qualidade" />} />
