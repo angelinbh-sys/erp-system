@@ -170,8 +170,8 @@ export default function Medicoes() {
       const d1 = new Date(inicio + "T00:00:00");
       const d2 = new Date(fim + "T00:00:00");
       const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-      if (diff < 29) {
-        setPeriodoError("O período deve ter no mínimo 29 dias.");
+      if (diff < 27) {
+        setPeriodoError("O período deve ter no mínimo 27 dias.");
         return;
       }
     }
