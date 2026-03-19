@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, History, User as UserIcon } from "lucide-react";
+import { Pencil, History, User as UserIcon, Upload, Download, FileDown } from "lucide-react";
 import { toast } from "@/lib/toast";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,8 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { formatFirstLastName } from "@/utils/formatName";
 import { supabase } from "@/integrations/supabase/client";
+import { downloadModelo, exportColaboradores } from "@/utils/colaboradorExcel";
+import ImportColaboradoresDialog from "@/components/ImportColaboradoresDialog";
 
 function useColaboradorFotos(colaboradores: Colaborador[]) {
   const [fotos, setFotos] = useState<Record<string, string>>({});
@@ -72,6 +74,7 @@ const Efetivo = () => {
   const updateColaborador = useUpdateColaborador();
   const { logAction } = useAuditLog();
   const fotos = useColaboradorFotos(colaboradores);
+  const [showImport, setShowImport] = useState(false);
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
   const [editForm, setEditForm] = useState({ nome: "", cargo: "", centro_custo: "", site_contrato: "", status: "" });
@@ -137,8 +140,31 @@ const Efetivo = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h2 className="font-heading text-2xl font-bold text-foreground mb-6">Efetivo</h2>
-
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-heading text-2xl font-bold text-foreground">Efetivo</h2>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={downloadModelo}>
+            <FileDown className="h-4 w-4 mr-1" /> Baixar modelo
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+            <Upload className="h-4 w-4 mr-1" /> Importar arquivo
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              exportColaboradores(colaboradores as any);
+              logAction({
+                modulo: "Dep. Pessoal", pagina: "Efetivo", acao: "exportacao",
+                descricao: `Exportou ${colaboradores.length} colaboradores do efetivo.`,
+              });
+            }}
+            disabled={colaboradores.length === 0}
+          >
+            <Download className="h-4 w-4 mr-1" /> Exportar arquivo
+          </Button>
+        </div>
+      </div>
       {isLoading ? (
         <p className="text-muted-foreground">Carregando...</p>
       ) : colaboradores.length === 0 ? (
@@ -257,6 +283,8 @@ const Efetivo = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <ImportColaboradoresDialog open={showImport} onOpenChange={setShowImport} />
     </div>
   );
 };

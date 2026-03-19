@@ -111,13 +111,29 @@ export type Database = {
       }
       colaboradores: {
         Row: {
+          agencia: string | null
+          bairro: string | null
+          banco: string | null
           cargo: string
           centro_custo: string
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          conta: string | null
+          contrato: string | null
+          cpf: string | null
           created_at: string
           data_admissao: string
           data_nascimento: string | null
+          digito_agencia: string | null
+          digito_conta: string | null
+          email: string | null
+          estado: string | null
           id: string
+          logradouro: string | null
           nome: string
+          numero: string | null
+          sexo: string | null
           site_contrato: string
           status: string
           telefone: string | null
@@ -125,13 +141,29 @@ export type Database = {
           vaga_id: string | null
         }
         Insert: {
+          agencia?: string | null
+          bairro?: string | null
+          banco?: string | null
           cargo: string
           centro_custo: string
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          conta?: string | null
+          contrato?: string | null
+          cpf?: string | null
           created_at?: string
           data_admissao?: string
           data_nascimento?: string | null
+          digito_agencia?: string | null
+          digito_conta?: string | null
+          email?: string | null
+          estado?: string | null
           id?: string
+          logradouro?: string | null
           nome: string
+          numero?: string | null
+          sexo?: string | null
           site_contrato: string
           status?: string
           telefone?: string | null
@@ -139,13 +171,29 @@ export type Database = {
           vaga_id?: string | null
         }
         Update: {
+          agencia?: string | null
+          bairro?: string | null
+          banco?: string | null
           cargo?: string
           centro_custo?: string
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          conta?: string | null
+          contrato?: string | null
+          cpf?: string | null
           created_at?: string
           data_admissao?: string
           data_nascimento?: string | null
+          digito_agencia?: string | null
+          digito_conta?: string | null
+          email?: string | null
+          estado?: string | null
           id?: string
+          logradouro?: string | null
           nome?: string
+          numero?: string | null
+          sexo?: string | null
           site_contrato?: string
           status?: string
           telefone?: string | null
