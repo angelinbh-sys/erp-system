@@ -74,6 +74,7 @@ const Efetivo = () => {
   const updateColaborador = useUpdateColaborador();
   const { logAction } = useAuditLog();
   const fotos = useColaboradorFotos(colaboradores);
+  const [showImport, setShowImport] = useState(false);
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
   const [editForm, setEditForm] = useState({ nome: "", cargo: "", centro_custo: "", site_contrato: "", status: "" });
