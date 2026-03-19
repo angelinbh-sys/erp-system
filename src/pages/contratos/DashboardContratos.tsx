@@ -282,34 +282,7 @@ export default function DashboardContratos() {
       }));
   }, [medicoesFiltradas, contratoMap]);
 
-  // Line chart data: Previsto (proportional monthly), Realizado (monthly), Acumulado (cumulative realized)
-  const dadosLinhas = useMemo(() => {
-    if (medicoesFiltradas.length === 0 || contratosFiltrados.length === 0) return [];
-
-    // Get all months from medições
-    const mesesSet = new Set<string>();
-    medicoesFiltradas.forEach((m) => mesesSet.add(m.data_inicio.substring(0, 7)));
-    const meses = [...mesesSet].sort();
-
-    if (meses.length === 0) return [];
-
-    // Previsto = valor total contratado / number of months (linear distribution)
-    const previstoMensal = valorTotalContratado / meses.length;
-
-    let acumulado = 0;
-    return meses.map((mes) => {
-      const realizadoMes = medicoesFiltradas
-        .filter((m) => m.data_inicio.substring(0, 7) === mes)
-        .reduce((s, m) => s + Number(m.valor_medido), 0);
-      acumulado += realizadoMes;
-      return {
-        mes: mes.split("-").reverse().join("/"),
-        Previsto: Math.round(previstoMensal * 100) / 100,
-        Realizado: Math.round(realizadoMes * 100) / 100,
-        Acumulado: Math.round(acumulado * 100) / 100,
-      };
-    });
-  }, [medicoesFiltradas, contratosFiltrados, valorTotalContratado]);
+  // dadosLinhas is not needed anymore — we use dadosGrafico directly for the line chart
 
   const dadosPizza = useMemo(() => {
     return contratosFiltrados.map((c) => ({
@@ -405,12 +378,12 @@ export default function DashboardContratos() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {dadosLinhas.length === 0 ? (
+            {dadosGrafico.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-12">Nenhuma medição registrada para o período.</p>
             ) : (
               <div className="w-full h-[320px] lg:h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={dadosLinhas} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                  <LineChart data={dadosGrafico} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                     <XAxis
                       dataKey="mes"
@@ -436,31 +409,18 @@ export default function DashboardContratos() {
                       }}
                       cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "4 4" }}
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="Previsto"
-                      stroke={CHART_PALETTE[0]}
-                      strokeWidth={2.5}
-                      dot={{ r: 4, fill: CHART_PALETTE[0], strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Realizado"
-                      stroke={CHART_PALETTE[1]}
-                      strokeWidth={2.5}
-                      dot={{ r: 4, fill: CHART_PALETTE[1], strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Acumulado"
-                      stroke={CHART_PALETTE[2]}
-                      strokeWidth={2}
-                      strokeDasharray="6 3"
-                      dot={{ r: 3, fill: CHART_PALETTE[2], strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                      activeDot={{ r: 5 }}
-                    />
+                    {projetosFiltrados.map((projeto, i) => (
+                      <Line
+                        key={projeto}
+                        type="monotone"
+                        dataKey={projeto}
+                        stroke={projetoColorMap[projeto] || CHART_PALETTE[i % CHART_PALETTE.length]}
+                        strokeWidth={2.5}
+                        dot={{ r: 4, fill: projetoColorMap[projeto] || CHART_PALETTE[i % CHART_PALETTE.length], strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                        activeDot={{ r: 6 }}
+                        connectNulls
+                      />
+                    ))}
                     <RechartsLegend
                       wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
                       iconType="line"
