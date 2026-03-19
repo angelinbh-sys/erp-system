@@ -282,6 +282,35 @@ export default function DashboardContratos() {
       }));
   }, [medicoesFiltradas, contratoMap]);
 
+  // Line chart data: Previsto (proportional monthly), Realizado (monthly), Acumulado (cumulative realized)
+  const dadosLinhas = useMemo(() => {
+    if (medicoesFiltradas.length === 0 || contratosFiltrados.length === 0) return [];
+
+    // Get all months from medições
+    const mesesSet = new Set<string>();
+    medicoesFiltradas.forEach((m) => mesesSet.add(m.data_inicio.substring(0, 7)));
+    const meses = [...mesesSet].sort();
+
+    if (meses.length === 0) return [];
+
+    // Previsto = valor total contratado / number of months (linear distribution)
+    const previstoMensal = valorTotalContratado / meses.length;
+
+    let acumulado = 0;
+    return meses.map((mes) => {
+      const realizadoMes = medicoesFiltradas
+        .filter((m) => m.data_inicio.substring(0, 7) === mes)
+        .reduce((s, m) => s + Number(m.valor_medido), 0);
+      acumulado += realizadoMes;
+      return {
+        mes: mes.split("-").reverse().join("/"),
+        Previsto: Math.round(previstoMensal * 100) / 100,
+        Realizado: Math.round(realizadoMes * 100) / 100,
+        Acumulado: Math.round(acumulado * 100) / 100,
+      };
+    });
+  }, [medicoesFiltradas, contratosFiltrados, valorTotalContratado]);
+
   const dadosPizza = useMemo(() => {
     return contratosFiltrados.map((c) => ({
       name: c.projeto_obra,
