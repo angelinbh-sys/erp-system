@@ -173,7 +173,6 @@ export interface ColaboradorExport {
   data_nascimento?: string | null;
   sexo?: string | null;
   telefone?: string | null;
-  email?: string | null;
   cargo: string;
   centro_custo: string;
   contrato?: string | null;
@@ -181,12 +180,8 @@ export interface ColaboradorExport {
   data_admissao: string;
   status: string;
   cep?: string | null;
-  logradouro?: string | null;
   numero?: string | null;
   complemento?: string | null;
-  bairro?: string | null;
-  cidade?: string | null;
-  estado?: string | null;
   banco?: string | null;
   agencia?: string | null;
   digito_agencia?: string | null;
@@ -210,7 +205,6 @@ export function exportColaboradores(colaboradores: ColaboradorExport[]) {
     "Data de Nascimento": fmtDate(c.data_nascimento),
     "Sexo": c.sexo || "",
     "Telefone": c.telefone || "",
-    "Email": (c as any).email || "",
     "Cargo / Função": c.cargo,
     "Centro de Custo": c.centro_custo,
     "Contrato": (c as any).contrato || "",
@@ -218,12 +212,8 @@ export function exportColaboradores(colaboradores: ColaboradorExport[]) {
     "Data de Admissão": fmtDate(c.data_admissao),
     "Status do Colaborador": c.status,
     "CEP": (c as any).cep || "",
-    "Logradouro": (c as any).logradouro || "",
     "Número": (c as any).numero || "",
     "Complemento": (c as any).complemento || "",
-    "Bairro": (c as any).bairro || "",
-    "Cidade": (c as any).cidade || "",
-    "Estado": (c as any).estado || "",
     "Banco": (c as any).banco || "",
     "Agência": (c as any).agencia || "",
     "Dígito da Agência": (c as any).digito_agencia || "",
