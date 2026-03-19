@@ -152,6 +152,35 @@ function StatCard({ title, value, icon: Icon }: { title: string; value: string; 
   );
 }
 
+function ProgressCard({ valorMedido, valorTotal, percentual }: { valorMedido: number; valorTotal: number; percentual: number }) {
+  const [animatedValue, setAnimatedValue] = useState(0);
+  const clampedPct = Math.min(percentual, 100);
+  const displayPct = (Math.floor(percentual * 100) / 100).toFixed(2);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimatedValue(clampedPct), 100);
+    return () => clearTimeout(timer);
+  }, [clampedPct]);
+
+  return (
+    <Card className="shadow-md border-border/40 hover:shadow-lg transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Avanço Financeiro</CardTitle>
+        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <TrendingUp className="h-4 w-4 text-primary" />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="text-2xl font-bold text-foreground font-heading">{displayPct}%</div>
+        <Progress value={animatedValue} className="h-2.5 bg-muted [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-out" />
+        <p className="text-xs text-muted-foreground">
+          {fmt(valorMedido)} / {fmt(valorTotal)}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function renderPieLabelFn(props: any): string {
   try {
     const percent = props?.percent;
