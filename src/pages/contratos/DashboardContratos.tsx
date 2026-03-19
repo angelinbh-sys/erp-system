@@ -412,7 +412,7 @@ export default function DashboardContratos() {
                     {projetosFiltrados.map((projeto, i) => (
                       <Line
                         key={projeto}
-                        type="monotone"
+                        type="linear"
                         dataKey={projeto}
                         stroke={projetoColorMap[projeto] || CHART_PALETTE[i % CHART_PALETTE.length]}
                         strokeWidth={2.5}
