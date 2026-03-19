@@ -80,7 +80,6 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
           const dataNasc = parseDate(row["Data de Nascimento"]);
           const sexo = str(row["Sexo"]);
           const telefone = str(row["Telefone"]);
-          const email = str(row["Email"]);
           const cargo = str(row["Cargo / Função"]);
           const centroCusto = str(row["Centro de Custo"]);
           const contrato = str(row["Contrato"]);
@@ -101,7 +100,7 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
             erros.push("Status inválido (use: Ativo, Inativo, Afastado ou Desligado)");
 
           return {
-            linha: idx + 2, // +2 because header is row 1
+            linha: idx + 2,
             erros,
             valido: erros.length === 0,
             dados: {
@@ -110,7 +109,6 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
               data_nascimento: dataNasc || "",
               sexo,
               telefone,
-              email,
               cargo: capitalizeName(cargo),
               centro_custo: centroCusto,
               contrato,
@@ -118,12 +116,8 @@ export function parseExcelFile(file: File): Promise<ImportRow[]> {
               data_admissao: dataAdm || new Date().toISOString().slice(0, 10),
               status,
               cep: str(row["CEP"]),
-              logradouro: str(row["Logradouro"]),
               numero: str(row["Número"]),
               complemento: str(row["Complemento"]),
-              bairro: str(row["Bairro"]),
-              cidade: str(row["Cidade"]),
-              estado: str(row["Estado"]),
               banco: str(row["Banco"]),
               agencia: str(row["Agência"]),
               digito_agencia: str(row["Dígito da Agência"]),
