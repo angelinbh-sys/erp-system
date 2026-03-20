@@ -46,11 +46,11 @@ export function NodeFormDialog({
       setObservacao(editingNode.observacao ?? "");
     } else {
       setCargo("");
-      setSuperiorId("none");
+      setSuperiorId(presetSuperiorId ?? "none");
       setQuantidade("1");
       setObservacao("");
     }
-  }, [editingNode, open]);
+  }, [editingNode, open, presetSuperiorId]);
 
   const possibleSuperiors = existingNodes.filter((n) => !editingNode || n.id !== editingNode.id);
 
