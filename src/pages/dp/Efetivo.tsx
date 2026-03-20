@@ -201,9 +201,40 @@ const Efetivo = () => {
                   <TableHead>Status</TableHead>
                   <TableHead className="w-24">Ações</TableHead>
                 </TableRow>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead></TableHead>
+                  <TableHead className="py-1.5">
+                    <Input placeholder="Filtrar..." value={filterNome} onChange={(e) => setFilterNome(e.target.value)} className="h-7 text-xs" />
+                  </TableHead>
+                  <TableHead className="py-1.5">
+                    <Input placeholder="Filtrar..." value={filterCargo} onChange={(e) => setFilterCargo(e.target.value)} className="h-7 text-xs" />
+                  </TableHead>
+                  <TableHead className="py-1.5">
+                    <Input placeholder="Filtrar..." value={filterCentroCusto} onChange={(e) => setFilterCentroCusto(e.target.value)} className="h-7 text-xs" />
+                  </TableHead>
+                  <TableHead className="py-1.5">
+                    <Input placeholder="Filtrar..." value={filterSite} onChange={(e) => setFilterSite(e.target.value)} className="h-7 text-xs" />
+                  </TableHead>
+                  <TableHead></TableHead>
+                  <TableHead className="py-1.5">
+                    <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v === "all" ? "" : v)}>
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue placeholder="Todos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="Ativo">Ativo</SelectItem>
+                        <SelectItem value="Inativo">Inativo</SelectItem>
+                        <SelectItem value="Afastado">Afastado</SelectItem>
+                        <SelectItem value="Desligado">Desligado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
               </TableHeader>
               <TableBody>
-                {colaboradores.map((c) => {
+                {filteredColaboradores.map((c) => {
                   const fotoUrl = c.vaga_id ? fotos[c.vaga_id] : undefined;
                   return (
                     <TableRow
