@@ -40,6 +40,8 @@ export default function Organograma() {
   const [editingNode, setEditingNode] = useState<OrganogramaNode | null>(null);
   const [detailNode, setDetailNode] = useState<OrganogramaNode | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [presetSuperiorId, setPresetSuperiorId] = useState<string | null>(null);
+  const [addAboveNode, setAddAboveNode] = useState<OrganogramaNode | null>(null);
 
   const handleNodeClick = (node: OrganogramaNode) => {
     setDetailNode(node);
