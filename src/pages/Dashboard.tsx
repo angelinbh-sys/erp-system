@@ -1,4 +1,10 @@
 import { useMemo } from "react";
+import {
+  SkeletonKpiGrid,
+  SkeletonAniversariantes,
+  SkeletonAtividades,
+  SkeletonTableCard,
+} from "@/components/dashboard/DashboardSkeletons";
 import { useNavigate } from "react-router-dom";
 import {
   Briefcase,
