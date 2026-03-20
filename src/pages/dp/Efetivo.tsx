@@ -75,6 +75,7 @@ const Efetivo = () => {
   const { data: colaboradores = [], isLoading } = useColaboradores();
   const updateColaborador = useUpdateColaborador();
   const { logAction } = useAuditLog();
+  const queryClient = useQueryClient();
   const fotos = useColaboradorFotos(colaboradores);
 
   const [filterNome, setFilterNome] = useState("");
