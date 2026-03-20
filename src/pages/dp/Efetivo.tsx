@@ -381,6 +381,60 @@ const Efetivo = () => {
       </Dialog>
 
       <ImportColaboradoresDialog open={showImport} onOpenChange={setShowImport} />
+
+      {/* Add New Dialog */}
+      <Dialog open={showAddNew} onOpenChange={(v) => { setShowAddNew(v); if (!v) setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" }); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Novo Colaborador</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>Nome Completo *</Label><Input value={newForm.nome} onChange={(e) => setNewForm((p) => ({ ...p, nome: e.target.value }))} placeholder="Nome completo" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>CPF</Label><Input value={newForm.cpf} onChange={(e) => setNewForm((p) => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
+              <div><Label>Data de Nascimento</Label><Input type="date" value={newForm.data_nascimento} onChange={(e) => setNewForm((p) => ({ ...p, data_nascimento: e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Sexo</Label>
+                <Select value={newForm.sexo} onValueChange={(v) => setNewForm((p) => ({ ...p, sexo: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Masculino">Masculino</SelectItem>
+                    <SelectItem value="Feminino">Feminino</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Telefone</Label><Input value={newForm.telefone} onChange={(e) => setNewForm((p) => ({ ...p, telefone: e.target.value }))} placeholder="(00) 00000-0000" /></div>
+            </div>
+            <div><Label>Cargo / Função *</Label><Input value={newForm.cargo} onChange={(e) => setNewForm((p) => ({ ...p, cargo: e.target.value }))} placeholder="Ex: Engenheiro Civil" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Centro de Custo *</Label><Input value={newForm.centro_custo} onChange={(e) => setNewForm((p) => ({ ...p, centro_custo: e.target.value }))} /></div>
+              <div><Label>Site / Contrato *</Label><Input value={newForm.site_contrato} onChange={(e) => setNewForm((p) => ({ ...p, site_contrato: e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Contrato</Label><Input value={newForm.contrato} onChange={(e) => setNewForm((p) => ({ ...p, contrato: e.target.value }))} /></div>
+              <div><Label>Data de Admissão</Label><Input type="date" value={newForm.data_admissao} onChange={(e) => setNewForm((p) => ({ ...p, data_admissao: e.target.value }))} /></div>
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select value={newForm.status} onValueChange={(v) => setNewForm((p) => ({ ...p, status: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inativo">Inativo</SelectItem>
+                  <SelectItem value="Afastado">Afastado</SelectItem>
+                  <SelectItem value="Desligado">Desligado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddNew(false)}>Cancelar</Button>
+            <Button onClick={handleAddNew} disabled={savingNew}>
+              {savingNew ? "Salvando..." : "Cadastrar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
