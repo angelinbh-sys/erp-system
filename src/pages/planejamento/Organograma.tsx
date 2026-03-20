@@ -21,11 +21,13 @@ export default function Organograma() {
   const nodes = nodesQuery.data ?? [];
 
   const colaboradoresData = useColaboradores();
-  const colaboradores = (colaboradoresData.data ?? []).map((c) => ({
-    id: c.id,
-    nome: c.nome,
-    cargo: c.cargo,
-  }));
+  const colaboradores = (colaboradoresData.data ?? [])
+    .filter((c) => c.status === "Ativo")
+    .map((c) => ({
+      id: c.id,
+      nome: c.nome,
+      cargo: c.cargo,
+    }));
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<OrganogramaNode | null>(null);
