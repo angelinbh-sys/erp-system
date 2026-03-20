@@ -111,8 +111,12 @@ const Efetivo = () => {
   const [showAddNew, setShowAddNew] = useState(false);
   const [newForm, setNewForm] = useState({
     nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "",
-    cargo: "", centro_custo: "", contrato: "", site_contrato: "",
+    cargo: "", centro_custo: "", centro_custo_id: "", contrato: "", site_contrato: "",
     data_admissao: "", status: "Ativo",
+  });
+
+  const selectedCC = centrosCusto.find((c) => c.id === newForm.centro_custo_id);
+  const sitesForCC = selectedCC?.sites ?? [];
   });
   const [savingNew, setSavingNew] = useState(false);
 
