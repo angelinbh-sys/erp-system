@@ -2,7 +2,7 @@ import React, { useMemo, forwardRef, useState, useCallback, useRef, useEffect } 
 import type { OrganogramaNode } from "@/hooks/useOrganograma";
 import { OrgNodeCard } from "./OrgNodeCard";
 import { Button } from "@/components/ui/button";
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, ChevronDown, ChevronUp } from "lucide-react";
 
 interface TreeNodeData {
   node: OrganogramaNode;
@@ -54,8 +54,9 @@ function groupChildren(children: TreeNodeData[]): GroupedChild[] {
   return groups;
 }
 
-const MAX_PER_ROW = 5;
+const INITIAL_VISIBLE = 3;
 
+/* ── Collapsible group: shows "Cargo (N)" chip when collapsed ── */
 function CollapsibleGroup({
   group,
   depth,
@@ -66,71 +67,87 @@ function CollapsibleGroup({
   onNodeClick: (n: OrganogramaNode) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const count = group.items.length;
 
+  // Single item — render directly
   if (count === 1) {
     return <TreeBranch data={group.items[0]} depth={depth} onNodeClick={onNodeClick} />;
   }
 
+  // Collapsed state — compact chip
   if (!expanded) {
     return (
       <div className="flex flex-col items-center">
         <button
           onClick={() => setExpanded(true)}
-          className="group relative min-w-[200px] max-w-[240px] rounded-xl border-2 border-dashed border-muted-foreground/40 bg-muted/30 px-4 py-3 shadow-sm hover:shadow-md transition-all text-left cursor-pointer"
+          className="group relative min-w-[180px] max-w-[220px] rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 px-4 py-3 shadow-sm hover:shadow-md hover:border-muted-foreground/50 transition-all text-left cursor-pointer"
         >
           <div className="text-sm font-semibold text-foreground leading-tight truncate">
             {group.cargo}
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5">
-            {count} posições — clique para expandir
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-xs text-muted-foreground">
+              {count} posições
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
           </div>
         </button>
       </div>
     );
   }
 
+  // Expanded state — show items (with "+X itens" limit)
+  const visibleItems = showAll ? group.items : group.items.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = count - INITIAL_VISIBLE;
+
   return (
     <div className="flex flex-col items-center gap-1">
       <button
-        onClick={() => setExpanded(false)}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 mb-1"
+        onClick={() => { setExpanded(false); setShowAll(false); }}
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1"
       >
-        Recolher {group.cargo} ({count})
+        <ChevronUp className="h-3 w-3" />
+        <span>Recolher {group.cargo} ({count})</span>
       </button>
-      <ChildrenRow items={group.items} depth={depth} onNodeClick={onNodeClick} />
-    </div>
-  );
-}
 
-function ChildrenRow({
-  items,
-  depth,
-  onNodeClick,
-}: {
-  items: TreeNodeData[];
-  depth: number;
-  onNodeClick: (n: OrganogramaNode) => void;
-}) {
-  // Split into rows of MAX_PER_ROW
-  const rows: TreeNodeData[][] = [];
-  for (let i = 0; i < items.length; i += MAX_PER_ROW) {
-    rows.push(items.slice(i, i + MAX_PER_ROW));
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-6">
-      {rows.map((row, ri) => (
-        <div key={ri} className="flex gap-6 justify-center flex-wrap">
-          {row.map((child) => (
-            <TreeBranch key={child.node.id} data={child} depth={depth} onNodeClick={onNodeClick} />
-          ))}
+      <div className="flex flex-col items-center">
+        {/* Vertical connector */}
+        <div className="relative flex items-start">
+          {visibleItems.length > 1 && (
+            <div
+              className="absolute top-0 h-px bg-border"
+              style={{
+                left: `calc(${100 / (visibleItems.length * 2)}%)`,
+                right: `calc(${100 / (visibleItems.length * 2)}%)`,
+              }}
+            />
+          )}
+          <div className="flex gap-5 items-start">
+            {visibleItems.map((child) => (
+              <div key={child.node.id} className="flex flex-col items-center">
+                {visibleItems.length > 1 && <div className="w-px h-5 bg-border" />}
+                <TreeBranch data={child} depth={depth} onNodeClick={onNodeClick} />
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
+
+        {/* +X itens button */}
+        {!showAll && hiddenCount > 0 && (
+          <button
+            onClick={() => setShowAll(true)}
+            className="mt-2 px-3 py-1 rounded-full bg-muted/50 border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+          >
+            +{hiddenCount} {hiddenCount === 1 ? "item" : "itens"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
 
+/* ── Single tree branch (node + children) ── */
 function TreeBranch({
   data,
   depth,
@@ -143,9 +160,6 @@ function TreeBranch({
   const groups = useMemo(() => groupChildren(data.children), [data.children]);
   const hasChildren = groups.length > 0;
 
-  // Flatten all items for connector rendering
-  const totalItems = groups.reduce((sum, g) => sum + (g.items.length === 1 ? 1 : 1), 0);
-
   return (
     <div className="flex flex-col items-center">
       <OrgNodeCard node={data.node} depth={depth} onClick={onNodeClick} />
@@ -153,25 +167,28 @@ function TreeBranch({
       {hasChildren && (
         <div className="flex flex-col items-center">
           {/* Vertical connector from parent */}
-          <div className="w-px h-8 bg-border" />
+          <div className="w-px h-7 bg-border" />
 
-          {totalItems === 1 ? (
-            <CollapsibleGroup group={groups[0]} depth={depth + 1} onNodeClick={onNodeClick} />
+          {groups.length === 1 && groups[0].items.length === 1 ? (
+            // Single child — straight line
+            <TreeBranch data={groups[0].items[0]} depth={depth + 1} onNodeClick={onNodeClick} />
           ) : (
             <div className="flex flex-col items-center">
-              {/* Horizontal rail */}
+              {/* Horizontal rail + children */}
               <div className="relative flex items-start">
-                <div
-                  className="absolute top-0 h-px bg-border"
-                  style={{
-                    left: `calc(${100 / (totalItems * 2)}%)`,
-                    right: `calc(${100 / (totalItems * 2)}%)`,
-                  }}
-                />
-                <div className="flex gap-6 items-start flex-wrap justify-center">
+                {groups.length > 1 && (
+                  <div
+                    className="absolute top-0 h-px bg-border"
+                    style={{
+                      left: `calc(${100 / (groups.length * 2)}%)`,
+                      right: `calc(${100 / (groups.length * 2)}%)`,
+                    }}
+                  />
+                )}
+                <div className="flex gap-6 items-start">
                   {groups.map((group, gi) => (
                     <div key={gi} className="flex flex-col items-center">
-                      <div className="w-px h-6 bg-border" />
+                      {groups.length > 1 && <div className="w-px h-5 bg-border" />}
                       <CollapsibleGroup group={group} depth={depth + 1} onNodeClick={onNodeClick} />
                     </div>
                   ))}
@@ -185,6 +202,7 @@ function TreeBranch({
   );
 }
 
+/* ── Main OrgTree component ── */
 interface OrgTreeProps {
   nodes: OrganogramaNode[];
   onNodeClick: (node: OrganogramaNode) => void;
@@ -197,12 +215,34 @@ export const OrgTree = forwardRef<HTMLDivElement, OrgTreeProps>(({ nodes, onNode
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [centered, setCentered] = useState(false);
+
+  // Auto-center on first render
+  useEffect(() => {
+    if (centered || tree.length === 0) return;
+    const timer = setTimeout(() => {
+      if (containerRef.current && contentRef.current) {
+        const containerW = containerRef.current.clientWidth;
+        const contentW = contentRef.current.scrollWidth;
+        if (contentW > containerW) {
+          setPosition({ x: (containerW - contentW) / 2, y: 0 });
+        }
+        setCentered(true);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [tree, centered]);
+
+  // Reset centering when nodes change
+  useEffect(() => setCentered(false), [nodes]);
 
   const zoomIn = useCallback(() => setScale((s) => Math.min(s + 0.15, 2)), []);
   const zoomOut = useCallback(() => setScale((s) => Math.max(s - 0.15, 0.3)), []);
   const resetView = useCallback(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
+    setCentered(false);
   }, []);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -215,7 +255,6 @@ export const OrgTree = forwardRef<HTMLDivElement, OrgTreeProps>(({ nodes, onNode
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
-    // Don't drag if clicking on a card/button
     if ((e.target as HTMLElement).closest("button")) return;
     setDragging(true);
     dragStart.current = { x: e.clientX, y: e.clientY, posX: position.x, posY: position.y };
@@ -272,6 +311,7 @@ export const OrgTree = forwardRef<HTMLDivElement, OrgTreeProps>(({ nodes, onNode
         onMouseUp={handleMouseUp}
       >
         <div
+          ref={contentRef}
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             transformOrigin: "top center",
