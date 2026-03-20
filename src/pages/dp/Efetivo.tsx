@@ -117,7 +117,6 @@ const Efetivo = () => {
 
   const selectedCC = centrosCusto.find((c) => c.id === newForm.centro_custo_id);
   const sitesForCC = selectedCC?.sites ?? [];
-  });
   const [savingNew, setSavingNew] = useState(false);
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
