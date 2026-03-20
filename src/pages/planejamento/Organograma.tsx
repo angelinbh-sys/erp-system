@@ -9,6 +9,7 @@ import { useColaboradores } from "@/hooks/useColaboradores";
 import { useCargos } from "@/hooks/useCadastros";
 import { useOrganograma, type OrganogramaNode } from "@/hooks/useOrganograma";
 import { OrgTree } from "@/components/organograma/OrgTree";
+import { OrgTable } from "@/components/organograma/OrgTable";
 import { NodeFormDialog } from "@/components/organograma/NodeFormDialog";
 import { NodeDetailDialog } from "@/components/organograma/NodeDetailDialog";
 import { toast } from "sonner";
@@ -26,16 +27,13 @@ export default function Organograma() {
 
   const contratoSelecionado = contratos.find((c) => c.id === contratoId);
   const projetoNome = contratoSelecionado?.projeto_obra ?? "";
+  const siteContrato = contratoSelecionado?.cliente ?? "";
 
   const colaboradoresData = useColaboradores();
   const colaboradores = (colaboradoresData.data ?? [])
     .filter((c) => c.status === "Ativo")
     .filter((c) => !projetoNome || c.centro_custo.toLowerCase() === projetoNome.toLowerCase())
-    .map((c) => ({
-      id: c.id,
-      nome: c.nome,
-      cargo: c.cargo,
-    }))
+    .map((c) => ({ id: c.id, nome: c.nome, cargo: c.cargo }))
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
   const [formOpen, setFormOpen] = useState(false);
@@ -45,37 +43,68 @@ export default function Organograma() {
   const [presetSuperiorId, setPresetSuperiorId] = useState<string | null>(null);
   const [addAboveNode, setAddAboveNode] = useState<OrganogramaNode | null>(null);
   const treeRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
 
+  /* ── PDF Export (A3 landscape, visual + table) ── */
   const handleExportPDF = useCallback(async () => {
     if (!treeRef.current) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(treeRef.current, {
+      // A3 dimensions in mm
+      const A3_W = 420;
+      const A3_H = 297;
+      const margin = 15;
+      const usableW = A3_W - margin * 2;
+
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a3" });
+
+      // Title
+      pdf.setFontSize(16);
+      pdf.text(`Organograma — ${projetoNome}`, margin, margin + 6);
+      let cursorY = margin + 14;
+
+      // 1) Capture visual tree
+      const treeCanvas = await html2canvas(treeRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
       });
-      const imgData = canvas.toDataURL("image/png");
-      const imgW = canvas.width;
-      const imgH = canvas.height;
+      const treeImgData = treeCanvas.toDataURL("image/png");
+      const treeRatio = Math.min(usableW / treeCanvas.width, (A3_H - cursorY - margin - 10) / treeCanvas.height);
+      const treeDrawW = treeCanvas.width * treeRatio;
+      const treeDrawH = treeCanvas.height * treeRatio;
+      const treeOffsetX = margin + (usableW - treeDrawW) / 2;
 
-      const pdfW = 297;
-      const pdfH = 210;
-      const margin = 15;
-      const usableW = pdfW - margin * 2;
-      const usableH = pdfH - margin * 2 - 10;
+      pdf.addImage(treeImgData, "PNG", treeOffsetX, cursorY, treeDrawW, treeDrawH);
+      cursorY += treeDrawH + 10;
 
-      const ratio = Math.min(usableW / imgW, usableH / imgH);
-      const drawW = imgW * ratio;
-      const drawH = imgH * ratio;
-      const offsetX = margin + (usableW - drawW) / 2;
+      // 2) Capture table
+      if (tableRef.current) {
+        const tableCanvas = await html2canvas(tableRef.current, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+        });
+        const tableImgData = tableCanvas.toDataURL("image/png");
+        const tableRatio = Math.min(usableW / tableCanvas.width, 1);
+        const tableDrawW = tableCanvas.width * tableRatio;
+        const tableDrawH = tableCanvas.height * tableRatio;
 
-      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      pdf.setFontSize(14);
-      pdf.text(`Organograma — ${projetoNome}`, margin, margin + 4);
-      pdf.addImage(imgData, "PNG", offsetX, margin + 10, drawW, drawH);
+        // Check if table fits on current page
+        if (cursorY + tableDrawH > A3_H - margin) {
+          pdf.addPage("a3", "landscape");
+          cursorY = margin;
+          pdf.setFontSize(12);
+          pdf.text(`Organograma — ${projetoNome} (Tabela)`, margin, cursorY + 4);
+          cursorY += 10;
+        }
+
+        const tableOffsetX = margin + (usableW - tableDrawW) / 2;
+        pdf.addImage(tableImgData, "PNG", tableOffsetX, cursorY, tableDrawW, tableDrawH);
+      }
 
       const safeName = projetoNome.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
       pdf.save(`organograma_${safeName || "projeto"}.pdf`);
@@ -149,7 +178,7 @@ export default function Organograma() {
           );
           await Promise.all(extra);
         }
-        toast.success(`Posição adicionada acima com sucesso.`);
+        toast.success("Posição adicionada acima com sucesso.");
       } else {
         const qty = Math.max(1, data.quantidade);
         const promises = Array.from({ length: qty }, () =>
@@ -256,16 +285,33 @@ export default function Organograma() {
       </Card>
 
       {contratoId ? (
-        <Card className="shadow-md border-border/40 min-h-[400px]">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-heading font-bold text-foreground">
-              {projetoNome}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <OrgTree ref={treeRef} nodes={nodes} onNodeClick={handleNodeClick} />
-          </CardContent>
-        </Card>
+        <>
+          {/* Visual organograma */}
+          <Card className="shadow-md border-border/40 min-h-[400px]">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-heading font-bold text-foreground">
+                {projetoNome}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OrgTree ref={treeRef} nodes={nodes} onNodeClick={handleNodeClick} />
+            </CardContent>
+          </Card>
+
+          {/* Hierarchy table */}
+          {nodes.length > 0 && (
+            <Card className="shadow-md border-border/40">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-heading font-bold text-foreground">
+                  Tabela Hierárquica
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0" ref={tableRef}>
+                <OrgTable nodes={nodes} projetoNome={projetoNome} siteContrato={siteContrato} />
+              </CardContent>
+            </Card>
+          )}
+        </>
       ) : (
         <Card className="shadow-md border-border/40">
           <CardContent className="py-16 text-center text-muted-foreground text-sm">
