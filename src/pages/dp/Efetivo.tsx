@@ -74,6 +74,21 @@ const Efetivo = () => {
   const updateColaborador = useUpdateColaborador();
   const { logAction } = useAuditLog();
   const fotos = useColaboradorFotos(colaboradores);
+
+  const [filterNome, setFilterNome] = useState("");
+  const [filterCargo, setFilterCargo] = useState("");
+  const [filterCentroCusto, setFilterCentroCusto] = useState("");
+  const [filterSite, setFilterSite] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  const filteredColaboradores = colaboradores.filter((c) => {
+    if (filterNome && !c.nome.toLowerCase().includes(filterNome.toLowerCase())) return false;
+    if (filterCargo && !c.cargo.toLowerCase().includes(filterCargo.toLowerCase())) return false;
+    if (filterCentroCusto && !c.centro_custo.toLowerCase().includes(filterCentroCusto.toLowerCase())) return false;
+    if (filterSite && !c.site_contrato.toLowerCase().includes(filterSite.toLowerCase())) return false;
+    if (filterStatus && c.status !== filterStatus) return false;
+    return true;
+  });
   const [showImport, setShowImport] = useState(false);
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
