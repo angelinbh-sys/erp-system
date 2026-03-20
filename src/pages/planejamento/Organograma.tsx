@@ -192,7 +192,7 @@ export default function Organograma() {
             {contratoId && (
               <div>
                 <Button
-                  onClick={() => { setEditingNode(null); setFormOpen(true); }}
+                  onClick={() => { setEditingNode(null); setAddAboveNode(null); setPresetSuperiorId(null); setFormOpen(true); }}
                   className="gap-1"
                 >
                   <Plus className="h-4 w-4" /> Adicionar Posição
