@@ -389,6 +389,8 @@ export type Database = {
           created_at: string
           id: string
           nome_colaborador: string
+          observacao: string | null
+          quantidade: number
           superior_id: string | null
           updated_at: string
         }
@@ -398,7 +400,9 @@ export type Database = {
           contrato_id: string
           created_at?: string
           id?: string
-          nome_colaborador: string
+          nome_colaborador?: string
+          observacao?: string | null
+          quantidade?: number
           superior_id?: string | null
           updated_at?: string
         }
@@ -409,6 +413,8 @@ export type Database = {
           created_at?: string
           id?: string
           nome_colaborador?: string
+          observacao?: string | null
+          quantidade?: number
           superior_id?: string | null
           updated_at?: string
         }
