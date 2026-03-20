@@ -490,7 +490,7 @@ export default function DashboardContratos() {
               <CardTitle className="text-lg font-heading font-bold text-foreground whitespace-nowrap">
                 Projetos — Valor Medido
               </CardTitle>
-              <Select key={`modo-${modoMedido}`} value={modoMedido} onValueChange={handleModoMedidoChange}>
+              <Select value={modoMedido} onValueChange={handleModoMedidoChange}>
                 <SelectTrigger className="w-[200px] h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
