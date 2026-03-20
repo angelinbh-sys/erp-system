@@ -1,4 +1,10 @@
 import { useMemo } from "react";
+import {
+  SkeletonKpiGrid,
+  SkeletonAniversariantes,
+  SkeletonAtividades,
+  SkeletonTableCard,
+} from "@/components/dashboard/DashboardSkeletons";
 import { useNavigate } from "react-router-dom";
 import {
   Briefcase,
@@ -117,10 +123,10 @@ function formatBirthdayDate(dateStr: string) {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useAuthContext();
-  const { data: vagas = [] } = useVagas();
+  const { data: vagas = [], isLoading: loadingVagas } = useVagas();
   const grupoNotif = profile?.super_admin ? "super_admin" : profile?.grupo_permissao || "";
-  const { data: notificacoes = [] } = useNotificacoes(grupoNotif);
-  const { data: colaboradores = [] } = useColaboradores();
+  const { data: notificacoes = [], isLoading: loadingNotif } = useNotificacoes(grupoNotif);
+  const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
   const updateStatus = useUpdateVagaStatus();
 
   const isDiretoria = profile?.super_admin || profile?.grupo_permissao === "Diretoria";
@@ -205,241 +211,262 @@ const Dashboard = () => {
       </div>
 
       {/* ── Linha 1: KPIs ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <KpiCard icon={Briefcase} title="Vagas Abertas" value={kpis.vagasAbertas} color="bg-primary/10 text-primary" />
-        <KpiCard icon={Clock} title="Aguardando Aprovação" value={kpis.aguardando} color="bg-amber-100 text-amber-600" />
-        <KpiCard icon={UserSearch} title="Candidatos em Análise" value={kpis.emAnalise} color="bg-blue-100 text-blue-600" />
-        <KpiCard icon={UserCheck} title="Candidatos Aprovados" value={kpis.aprovados} color="bg-emerald-100 text-emerald-600" />
-        <KpiCard icon={UserX} title="Candidatos Reprovados" value={kpis.reprovados} color="bg-red-100 text-red-600" />
-      </div>
+      {loadingVagas ? (
+        <SkeletonKpiGrid />
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <KpiCard icon={Briefcase} title="Vagas Abertas" value={kpis.vagasAbertas} color="bg-primary/10 text-primary" />
+          <KpiCard icon={Clock} title="Aguardando Aprovação" value={kpis.aguardando} color="bg-amber-100 text-amber-600" />
+          <KpiCard icon={UserSearch} title="Candidatos em Análise" value={kpis.emAnalise} color="bg-blue-100 text-blue-600" />
+          <KpiCard icon={UserCheck} title="Candidatos Aprovados" value={kpis.aprovados} color="bg-emerald-100 text-emerald-600" />
+          <KpiCard icon={UserX} title="Candidatos Reprovados" value={kpis.reprovados} color="bg-red-100 text-red-600" />
+        </div>
+      )}
 
       {/* ── Aniversariantes ───────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            🎉 Aniversariantes
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Aniversariantes do dia */}
-          <div>
-            <h4 className="text-sm font-semibold text-foreground mb-3">🎉 Aniversariantes de Hoje</h4>
-            {aniversariantesDoDia.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Hoje não há aniversariantes.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {aniversariantesDoDia.map((c) => (
-                  <div key={c.id} className="p-4 rounded-lg bg-primary/5 border border-primary/10">
-                    <p className="text-sm font-semibold text-foreground">{c.nome}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Cargo: {c.cargo}</p>
-                    <p className="text-xs text-muted-foreground">Contrato: {c.centro_custo}</p>
-                    <p className="text-xs text-muted-foreground">Site: {c.site_contrato}</p>
-                  </div>
-                ))}
+      {loadingColab ? (
+        <SkeletonAniversariantes />
+      ) : (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              🎉 Aniversariantes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-3">🎉 Aniversariantes de Hoje</h4>
+              {aniversariantesDoDia.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Hoje não há aniversariantes.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {aniversariantesDoDia.map((c) => (
+                    <div key={c.id} className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                      <p className="text-sm font-semibold text-foreground">{c.nome}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Cargo: {c.cargo}</p>
+                      <p className="text-xs text-muted-foreground">Contrato: {c.centro_custo}</p>
+                      <p className="text-xs text-muted-foreground">Site: {c.site_contrato}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {aniversariantesDoMes.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Aniversariantes do Mês</h4>
+                <div className="space-y-1">
+                  {aniversariantesDoMes.map((c) => {
+                    const day = c.data_nascimento
+                      ? String(new Date(c.data_nascimento + "T00:00:00").getDate()).padStart(2, "0")
+                      : "--";
+                    return (
+                      <p key={c.id} className="text-sm text-muted-foreground">
+                        {day} – {c.nome} – {c.cargo}
+                      </p>
+                    );
+                  })}
+                </div>
               </div>
             )}
-          </div>
-
-          {/* Aniversariantes do mês */}
-          {aniversariantesDoMes.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Aniversariantes do Mês</h4>
-              <div className="space-y-1">
-                {aniversariantesDoMes.map((c) => {
-                  const day = c.data_nascimento
-                    ? String(new Date(c.data_nascimento + "T00:00:00").getDate()).padStart(2, "0")
-                    : "--";
-                  return (
-                    <p key={c.id} className="text-sm text-muted-foreground">
-                      {day} – {c.nome} – {c.cargo}
-                    </p>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Minhas Pendências ─────────────────────────────────────── */}
       <PainelPendencias profile={profile} vagas={vagas} />
       {/* ── Linha 2: Vagas recentes + Aprovação ───────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Últimas Vagas Criadas */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Últimas Vagas Criadas</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nº</TableHead>
-                  <TableHead>Cargo / Função</TableHead>
-                  <TableHead>Centro de Custo</TableHead>
-                  <TableHead>Criação</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vagasRecentes.length === 0 ? (
+        {loadingVagas ? (
+          <SkeletonTableCard title="Últimas Vagas Criadas" columns={5} rows={5} headers={["Nº", "Cargo / Função", "Centro de Custo", "Criação", "Status"]} />
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Últimas Vagas Criadas</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      Nenhuma vaga encontrada.
-                    </TableCell>
+                    <TableHead>Nº</TableHead>
+                    <TableHead>Cargo / Função</TableHead>
+                    <TableHead>Centro de Custo</TableHead>
+                    <TableHead>Criação</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ) : (
-                  vagasRecentes.map((v) => (
-                    <TableRow
-                      key={v.id}
-                      className="cursor-pointer"
-                      onClick={() => navigate("/rh/aprovacao-vaga")}
-                    >
-                      <TableCell className="font-mono text-xs text-primary">{(v as any).numero_vaga || "—"}</TableCell>
-                      <TableCell className="font-medium">{v.cargo}</TableCell>
-                      <TableCell>{v.centro_custo_nome}</TableCell>
-                      <TableCell>{formatDate(v.created_at)}</TableCell>
-                      <TableCell>{vagaStatusBadge(v.status)}</TableCell>
+                </TableHeader>
+                <TableBody>
+                  {vagasRecentes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                        Nenhuma vaga encontrada.
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  ) : (
+                    vagasRecentes.map((v) => (
+                      <TableRow
+                        key={v.id}
+                        className="cursor-pointer"
+                        onClick={() => navigate("/rh/aprovacao-vaga")}
+                      >
+                        <TableCell className="font-mono text-xs text-primary">{(v as any).numero_vaga || "—"}</TableCell>
+                        <TableCell className="font-medium">{v.cargo}</TableCell>
+                        <TableCell>{v.centro_custo_nome}</TableCell>
+                        <TableCell>{formatDate(v.created_at)}</TableCell>
+                        <TableCell>{vagaStatusBadge(v.status)}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Vagas aguardando aprovação */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Vagas Aguardando Aprovação</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Centro de Custo</TableHead>
-                  <TableHead>Criação</TableHead>
-                  {isDiretoria && <TableHead className="w-32">Ações</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vagasAguardando.length === 0 ? (
+        {loadingVagas ? (
+          <SkeletonTableCard title="Vagas Aguardando Aprovação" columns={isDiretoria ? 4 : 3} rows={5} headers={isDiretoria ? ["Cargo", "Centro de Custo", "Criação", "Ações"] : ["Cargo", "Centro de Custo", "Criação"]} />
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Vagas Aguardando Aprovação</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={isDiretoria ? 4 : 3} className="text-center text-muted-foreground">
-                      Nenhuma vaga aguardando aprovação.
-                    </TableCell>
+                    <TableHead>Cargo</TableHead>
+                    <TableHead>Centro de Custo</TableHead>
+                    <TableHead>Criação</TableHead>
+                    {isDiretoria && <TableHead className="w-32">Ações</TableHead>}
                   </TableRow>
-                ) : (
-                  vagasAguardando.map((v) => (
-                    <TableRow key={v.id}>
-                      <TableCell className="font-medium">{v.cargo}</TableCell>
-                      <TableCell>{v.centro_custo_nome}</TableCell>
-                      <TableCell>{formatDate(v.created_at)}</TableCell>
-                      {isDiretoria && (
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-[hsl(var(--success))] hover:text-[hsl(var(--success))]"
-                              onClick={() => handleAprovar(v.id)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => handleReprovar(v.id)}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" /> Reprovar
-                            </Button>
-                          </div>
-                        </TableCell>
-                      )}
+                </TableHeader>
+                <TableBody>
+                  {vagasAguardando.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={isDiretoria ? 4 : 3} className="text-center text-muted-foreground">
+                        Nenhuma vaga aguardando aprovação.
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  ) : (
+                    vagasAguardando.map((v) => (
+                      <TableRow key={v.id}>
+                        <TableCell className="font-medium">{v.cargo}</TableCell>
+                        <TableCell>{v.centro_custo_nome}</TableCell>
+                        <TableCell>{formatDate(v.created_at)}</TableCell>
+                        {isDiretoria && (
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-[hsl(var(--success))] hover:text-[hsl(var(--success))]"
+                                onClick={() => handleAprovar(v.id)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => handleReprovar(v.id)}
+                              >
+                                <XCircle className="h-4 w-4 mr-1" /> Reprovar
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* ── Linha 3: Candidatos + Atividades ──────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Candidatos recentes */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Candidatos Recentes</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Cadastro</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {candidatosRecentes.length === 0 ? (
+        {loadingVagas ? (
+          <SkeletonTableCard title="Candidatos Recentes" columns={4} rows={5} headers={["Nome", "Cargo", "Status", "Cadastro"]} />
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Candidatos Recentes</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      Nenhum candidato encontrado.
-                    </TableCell>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Cargo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Cadastro</TableHead>
                   </TableRow>
-                ) : (
-                  candidatosRecentes.map((v) => (
-                    <TableRow key={v.id}>
-                      <TableCell className="font-medium">{v.nome_candidato}</TableCell>
-                      <TableCell>{v.cargo}</TableCell>
-                      <TableCell>{candidatoStatusBadge(v.status_candidato)}</TableCell>
-                      <TableCell>{formatDate(v.created_at)}</TableCell>
+                </TableHeader>
+                <TableBody>
+                  {candidatosRecentes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        Nenhum candidato encontrado.
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  ) : (
+                    candidatosRecentes.map((v) => (
+                      <TableRow key={v.id}>
+                        <TableCell className="font-medium">{v.nome_candidato}</TableCell>
+                        <TableCell>{v.cargo}</TableCell>
+                        <TableCell>{candidatoStatusBadge(v.status_candidato)}</TableCell>
+                        <TableCell>{formatDate(v.created_at)}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Atividades recentes */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-              Atividades Recentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {atividadesRecentes.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhuma atividade recente.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {atividadesRecentes.map((n) => (
-                  <div
-                    key={n.id}
-                    className="flex items-start gap-3 rounded-md border border-border p-3"
-                  >
-                    <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{n.titulo}</p>
-                      <p className="text-xs text-muted-foreground truncate">{n.mensagem}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDateTime(n.created_at)}
-                      </p>
+        {loadingNotif ? (
+          <SkeletonAtividades />
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Bell className="h-5 w-5 text-muted-foreground" />
+                Atividades Recentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {atividadesRecentes.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhuma atividade recente.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {atividadesRecentes.map((n) => (
+                    <div
+                      key={n.id}
+                      className="flex items-start gap-3 rounded-md border border-border p-3"
+                    >
+                      <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{n.titulo}</p>
+                        <p className="text-xs text-muted-foreground truncate">{n.mensagem}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDateTime(n.created_at)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
