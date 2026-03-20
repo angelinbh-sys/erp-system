@@ -123,10 +123,10 @@ function formatBirthdayDate(dateStr: string) {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useAuthContext();
-  const { data: vagas = [] } = useVagas();
+  const { data: vagas = [], isLoading: loadingVagas } = useVagas();
   const grupoNotif = profile?.super_admin ? "super_admin" : profile?.grupo_permissao || "";
-  const { data: notificacoes = [] } = useNotificacoes(grupoNotif);
-  const { data: colaboradores = [] } = useColaboradores();
+  const { data: notificacoes = [], isLoading: loadingNotif } = useNotificacoes(grupoNotif);
+  const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
   const updateStatus = useUpdateVagaStatus();
 
   const isDiretoria = profile?.super_admin || profile?.grupo_permissao === "Diretoria";
