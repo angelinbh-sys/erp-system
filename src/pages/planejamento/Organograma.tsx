@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { useContratos } from "@/hooks/useContratos";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { useCargos } from "@/hooks/useCadastros";
 import { useOrganograma, type OrganogramaNode } from "@/hooks/useOrganograma";
 import { OrgTree } from "@/components/organograma/OrgTree";
 import { NodeFormDialog } from "@/components/organograma/NodeFormDialog";
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 export default function Organograma() {
   const { contratosQuery } = useContratos();
   const contratos = contratosQuery.data ?? [];
+  const { items: cargos } = useCargos();
 
   const [contratoId, setContratoId] = useState<string>("");
   const { nodesQuery, createNode, updateNode, deleteNode } = useOrganograma(contratoId || undefined);
@@ -54,6 +56,8 @@ export default function Organograma() {
     nome_colaborador: string;
     superior_id: string | null;
     colaborador_id: string | null;
+    quantidade: number;
+    observacao: string | null;
   }) => {
     try {
       if (editingNode) {
@@ -71,7 +75,6 @@ export default function Organograma() {
 
   const handleDelete = async (id: string) => {
     try {
-      // Check if node has children
       const hasChildren = nodes.some((n) => n.superior_id === id);
       if (hasChildren) {
         toast.error("Remova os subordinados antes de excluir esta posição.");
@@ -81,6 +84,26 @@ export default function Organograma() {
       toast.success("Posição excluída.");
     } catch {
       toast.error("Erro ao excluir posição.");
+    }
+  };
+
+  const handleLinkColaborador = async (nodeId: string, colaboradorId: string, nomeColaborador: string) => {
+    try {
+      await updateNode.mutateAsync({ id: nodeId, colaborador_id: colaboradorId, nome_colaborador: nomeColaborador });
+      setDetailNode((prev) => prev ? { ...prev, colaborador_id: colaboradorId, nome_colaborador: nomeColaborador } : prev);
+      toast.success("Colaborador vinculado com sucesso.");
+    } catch {
+      toast.error("Erro ao vincular colaborador.");
+    }
+  };
+
+  const handleUnlinkColaborador = async (nodeId: string) => {
+    try {
+      await updateNode.mutateAsync({ id: nodeId, colaborador_id: null, nome_colaborador: "" });
+      setDetailNode((prev) => prev ? { ...prev, colaborador_id: null, nome_colaborador: "" } : prev);
+      toast.success("Colaborador desvinculado.");
+    } catch {
+      toast.error("Erro ao desvincular colaborador.");
     }
   };
 
@@ -145,7 +168,7 @@ export default function Organograma() {
         onSave={handleSave}
         editingNode={editingNode}
         existingNodes={nodes}
-        colaboradores={colaboradores}
+        cargos={cargos}
       />
 
       <NodeDetailDialog
@@ -156,6 +179,9 @@ export default function Organograma() {
         projetoNome={projetoNome}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onLinkColaborador={handleLinkColaborador}
+        onUnlinkColaborador={handleUnlinkColaborador}
+        colaboradores={colaboradores}
       />
     </div>
   );

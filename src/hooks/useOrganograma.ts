@@ -8,6 +8,8 @@ export interface OrganogramaNode {
   cargo: string;
   nome_colaborador: string;
   superior_id: string | null;
+  quantidade: number;
+  observacao: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,7 +21,7 @@ export function useOrganograma(contratoId?: string) {
     queryKey: ["organograma", contratoId],
     queryFn: async () => {
       let query = supabase
-        .from("organograma_nodes" as any)
+        .from("organograma_nodes")
         .select("*")
         .order("created_at", { ascending: true });
 
@@ -29,7 +31,11 @@ export function useOrganograma(contratoId?: string) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as unknown as OrganogramaNode[];
+      return (data as any[]).map((d) => ({
+        ...d,
+        quantidade: d.quantidade ?? 1,
+        observacao: d.observacao ?? null,
+      })) as OrganogramaNode[];
     },
     enabled: !!contratoId,
   });
@@ -37,7 +43,7 @@ export function useOrganograma(contratoId?: string) {
   const createNode = useMutation({
     mutationFn: async (node: Omit<OrganogramaNode, "id" | "created_at" | "updated_at">) => {
       const { data, error } = await supabase
-        .from("organograma_nodes" as any)
+        .from("organograma_nodes")
         .insert(node as any)
         .select()
         .single();
@@ -50,7 +56,7 @@ export function useOrganograma(contratoId?: string) {
   const updateNode = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<OrganogramaNode> & { id: string }) => {
       const { data, error } = await supabase
-        .from("organograma_nodes" as any)
+        .from("organograma_nodes")
         .update(updates as any)
         .eq("id", id)
         .select()
@@ -64,7 +70,7 @@ export function useOrganograma(contratoId?: string) {
   const deleteNode = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from("organograma_nodes" as any)
+        .from("organograma_nodes")
         .delete()
         .eq("id", id);
       if (error) throw error;

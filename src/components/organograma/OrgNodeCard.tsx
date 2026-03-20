@@ -1,5 +1,6 @@
 import React from "react";
 import type { OrganogramaNode } from "@/hooks/useOrganograma";
+import { UserRound } from "lucide-react";
 
 interface OrgNodeCardProps {
   node: OrganogramaNode;
@@ -18,19 +19,34 @@ const LEVEL_STYLES: { bg: string; border: string; accent: string }[] = [
 
 export function OrgNodeCard({ node, depth, onClick }: OrgNodeCardProps) {
   const style = LEVEL_STYLES[depth % LEVEL_STYLES.length];
+  const hasColaborador = !!node.colaborador_id && !!node.nome_colaborador;
 
   return (
     <button
       onClick={() => onClick(node)}
-      className={`group relative min-w-[180px] max-w-[220px] rounded-xl border-2 ${style.border} ${style.bg} px-4 py-3 shadow-md hover:shadow-lg transition-all text-left cursor-pointer overflow-hidden`}
+      className={`group relative min-w-[200px] max-w-[240px] rounded-xl border-2 ${style.border} ${style.bg} px-4 py-3 shadow-md hover:shadow-lg transition-all text-left cursor-pointer overflow-hidden`}
     >
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.accent}`} />
-      <div className="text-sm font-semibold text-foreground leading-tight truncate">
-        {node.nome_colaborador}
-      </div>
-      <div className="text-xs text-muted-foreground mt-0.5 truncate">
-        {node.cargo}
-      </div>
+      {hasColaborador ? (
+        <>
+          <div className="text-sm font-semibold text-foreground leading-tight truncate">
+            {node.nome_colaborador}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5 truncate">
+            {node.cargo}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="text-sm font-semibold text-foreground leading-tight truncate">
+            {node.cargo}
+          </div>
+          <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 mt-1">
+            <UserRound className="h-3 w-3" />
+            <span className="truncate">Vaga sem colaborador vinculado</span>
+          </div>
+        </>
+      )}
     </button>
   );
 }
