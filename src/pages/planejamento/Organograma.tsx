@@ -23,6 +23,7 @@ export default function Organograma() {
   const colaboradoresData = useColaboradores();
   const colaboradores = (colaboradoresData.data ?? [])
     .filter((c) => c.status === "Ativo")
+    .filter((c) => !projetoNome || c.centro_custo.toLowerCase() === projetoNome.toLowerCase())
     .map((c) => ({
       id: c.id,
       nome: c.nome,
