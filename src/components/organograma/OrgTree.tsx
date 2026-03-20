@@ -25,34 +25,28 @@ function buildTree(nodes: OrganogramaNode[]): TreeNodeData[] {
   return roots;
 }
 
-function TreeBranch({ data, onNodeClick }: { data: TreeNodeData; onNodeClick: (n: OrganogramaNode) => void }) {
+function TreeBranch({ data, depth, onNodeClick }: { data: TreeNodeData; depth: number; onNodeClick: (n: OrganogramaNode) => void }) {
   return (
     <div className="flex flex-col items-center">
-      <OrgNodeCard node={data.node} onClick={onNodeClick} />
+      <OrgNodeCard node={data.node} depth={depth} onClick={onNodeClick} />
       {data.children.length > 0 && (
         <>
-          {/* vertical connector */}
           <div className="w-px h-6 bg-border" />
-          {/* horizontal line spanning children */}
           {data.children.length > 1 && (
             <div className="relative flex items-start">
               <div
                 className="absolute top-0 h-px bg-border"
-                style={{
-                  left: "50%",
-                  right: "50%",
-                  // will be sized by children flex
-                }}
+                style={{ left: "50%", right: "50%" }}
               />
             </div>
           )}
           <div className="flex gap-6 items-start">
-            {data.children.map((child, i) => (
+            {data.children.map((child) => (
               <div key={child.node.id} className="flex flex-col items-center">
                 {data.children.length > 1 && (
                   <div className="w-px h-4 bg-border" />
                 )}
-                <TreeBranch data={child} onNodeClick={onNodeClick} />
+                <TreeBranch data={child} depth={depth + 1} onNodeClick={onNodeClick} />
               </div>
             ))}
           </div>
@@ -82,7 +76,7 @@ export function OrgTree({ nodes, onNodeClick }: OrgTreeProps) {
     <div className="overflow-auto py-8 px-4">
       <div className="flex gap-10 justify-center items-start">
         {tree.map((root) => (
-          <TreeBranch key={root.node.id} data={root} onNodeClick={onNodeClick} />
+          <TreeBranch key={root.node.id} data={root} depth={0} onNodeClick={onNodeClick} />
         ))}
       </div>
     </div>
