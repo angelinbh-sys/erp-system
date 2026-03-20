@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { OrganogramaNode } from "@/hooks/useOrganograma";
 
 interface Colaborador {
@@ -38,6 +39,7 @@ export function NodeFormDialog({
   const [nomeColaborador, setNomeColaborador] = useState("");
   const [superiorId, setSuperiorId] = useState<string>("none");
   const [colaboradorId, setColaboradorId] = useState<string>("manual");
+  const [searchColab, setSearchColab] = useState("");
 
   useEffect(() => {
     if (editingNode) {
@@ -51,17 +53,27 @@ export function NodeFormDialog({
       setSuperiorId("none");
       setColaboradorId("manual");
     }
+    setSearchColab("");
   }, [editingNode, open]);
 
-  const handleColaboradorChange = (val: string) => {
-    setColaboradorId(val);
-    if (val !== "manual") {
-      const col = colaboradores.find((c) => c.id === val);
-      if (col) {
-        setNomeColaborador(col.nome);
-        if (!cargo) setCargo(col.cargo);
-      }
-    }
+  const filteredColaboradores = useMemo(() => {
+    if (!searchColab.trim()) return colaboradores;
+    const term = searchColab.toLowerCase();
+    return colaboradores.filter(
+      (c) => c.nome.toLowerCase().includes(term) || c.cargo.toLowerCase().includes(term)
+    );
+  }, [colaboradores, searchColab]);
+
+  const handleColaboradorSelect = (col: Colaborador) => {
+    setColaboradorId(col.id);
+    setNomeColaborador(col.nome);
+    if (!cargo) setCargo(col.cargo);
+    setSearchColab("");
+  };
+
+  const handleManual = () => {
+    setColaboradorId("manual");
+    setSearchColab("");
   };
 
   const possibleSuperiors = existingNodes.filter((n) => !editingNode || n.id !== editingNode.id);
@@ -77,6 +89,10 @@ export function NodeFormDialog({
     onOpenChange(false);
   };
 
+  const selectedColabName = colaboradorId !== "manual"
+    ? colaboradores.find((c) => c.id === colaboradorId)?.nome
+    : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -84,21 +100,55 @@ export function NodeFormDialog({
           <DialogTitle>{editingNode ? "Editar Posição" : "Adicionar Posição"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          {/* Colaborador search */}
           <div>
             <Label className="text-xs uppercase tracking-wide text-muted-foreground">Colaborador</Label>
-            <Select value={colaboradorId} onValueChange={handleColaboradorChange}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Selecione ou digite manualmente" />
-              </SelectTrigger>
-              <SelectContent className="max-h-60 z-[9999]">
-                <SelectItem value="manual">Digitar manualmente</SelectItem>
-                {colaboradores.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nome} — {c.cargo}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="mt-1 space-y-2">
+              <Input
+                placeholder="Buscar colaborador pelo nome..."
+                value={searchColab}
+                onChange={(e) => setSearchColab(e.target.value)}
+                className="h-8 text-sm"
+              />
+              {selectedColabName && !searchColab && (
+                <div className="flex items-center gap-2 text-sm bg-muted/50 rounded-md px-3 py-1.5">
+                  <span className="font-medium text-foreground">{selectedColabName}</span>
+                  <Button variant="ghost" size="sm" className="h-5 px-1 text-xs ml-auto" onClick={handleManual}>
+                    Limpar
+                  </Button>
+                </div>
+              )}
+              {searchColab.trim() && (
+                <ScrollArea className="max-h-40 border rounded-md">
+                  <div className="p-1">
+                    <button
+                      type="button"
+                      className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-muted transition-colors text-muted-foreground italic"
+                      onClick={handleManual}
+                    >
+                      Digitar manualmente
+                    </button>
+                    {filteredColaboradores.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">Nenhum colaborador encontrado.</div>
+                    ) : (
+                      filteredColaboradores.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-muted transition-colors"
+                          onClick={() => handleColaboradorSelect(c)}
+                        >
+                          {c.nome} — <span className="text-muted-foreground">{c.cargo}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              )}
+              {!searchColab.trim() && !selectedColabName && (
+                <p className="text-xs text-muted-foreground">Digite para buscar ou preencha manualmente abaixo.</p>
+              )}
+            </div>
           </div>
           <div>
             <Label className="text-xs uppercase tracking-wide text-muted-foreground">Nome do Colaborador</Label>

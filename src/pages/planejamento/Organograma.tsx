@@ -27,7 +27,8 @@ export default function Organograma() {
       id: c.id,
       nome: c.nome,
       cargo: c.cargo,
-    }));
+    }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<OrganogramaNode | null>(null);
