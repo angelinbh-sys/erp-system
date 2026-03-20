@@ -41,6 +41,23 @@ export interface ImportRow {
   valido: boolean;
 }
 
+/** Re-validate a single row's dados and return updated erros + valido */
+export function revalidateRow(dados: Record<string, string>): string[] {
+  const erros: string[] = [];
+  if (!dados.nome) erros.push("Nome Completo obrigatório");
+  if (!dados.cpf) erros.push("CPF obrigatório");
+  else if (!isValidCPF(dados.cpf.replace(/\D/g, ""))) erros.push("CPF inválido");
+  if (!dados.sexo) erros.push("Sexo obrigatório");
+  if (!dados.data_nascimento) erros.push("Data de Nascimento inválida ou ausente");
+  if (!dados.cargo) erros.push("Cargo / Função obrigatório");
+  if (!dados.contrato) erros.push("Contrato obrigatório");
+  if (!dados.site_contrato) erros.push("Site obrigatório");
+  const status = dados.status || "Ativo";
+  if (!["Ativo", "Inativo", "Afastado", "Desligado"].includes(status))
+    erros.push("Status inválido (use: Ativo, Inativo, Afastado ou Desligado)");
+  return erros;
+}
+
 function str(val: unknown): string {
   if (val == null) return "";
   return String(val).trim();
