@@ -225,6 +225,9 @@ const Efetivo = () => {
           >
             <Download className="h-4 w-4 mr-1" /> Exportar arquivo
           </Button>
+          <Button size="sm" onClick={() => setShowAddNew(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Novo Colaborador
+          </Button>
         </div>
       </div>
       {isLoading ? (
