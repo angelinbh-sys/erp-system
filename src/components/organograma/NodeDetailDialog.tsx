@@ -39,6 +39,8 @@ export function NodeDetailDialog({
   onLinkColaborador,
   onUnlinkColaborador,
   colaboradores,
+  onAddBelow,
+  onAddAbove,
 }: NodeDetailDialogProps) {
   const [linking, setLinking] = useState(false);
   const [searchColab, setSearchColab] = useState("");
