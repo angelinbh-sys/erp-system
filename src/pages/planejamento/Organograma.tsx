@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, FileDown } from "lucide-react";
 import { useContratos } from "@/hooks/useContratos";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useCargos } from "@/hooks/useCadastros";
@@ -12,6 +12,8 @@ import { OrgTree } from "@/components/organograma/OrgTree";
 import { NodeFormDialog } from "@/components/organograma/NodeFormDialog";
 import { NodeDetailDialog } from "@/components/organograma/NodeDetailDialog";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export default function Organograma() {
   const { contratosQuery } = useContratos();
@@ -42,6 +44,48 @@ export default function Organograma() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [presetSuperiorId, setPresetSuperiorId] = useState<string | null>(null);
   const [addAboveNode, setAddAboveNode] = useState<OrganogramaNode | null>(null);
+  const treeRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPDF = useCallback(async () => {
+    if (!treeRef.current) return;
+    setExporting(true);
+    try {
+      const canvas = await html2canvas(treeRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+
+      const pdfW = 297;
+      const pdfH = 210;
+      const margin = 15;
+      const usableW = pdfW - margin * 2;
+      const usableH = pdfH - margin * 2 - 10;
+
+      const ratio = Math.min(usableW / imgW, usableH / imgH);
+      const drawW = imgW * ratio;
+      const drawH = imgH * ratio;
+      const offsetX = margin + (usableW - drawW) / 2;
+
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      pdf.setFontSize(14);
+      pdf.text(`Organograma — ${projetoNome}`, margin, margin + 4);
+      pdf.addImage(imgData, "PNG", offsetX, margin + 10, drawW, drawH);
+
+      const safeName = projetoNome.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
+      pdf.save(`organograma_${safeName || "projeto"}.pdf`);
+      toast.success("PDF exportado com sucesso.");
+    } catch {
+      toast.error("Erro ao exportar PDF.");
+    } finally {
+      setExporting(false);
+    }
+  }, [projetoNome]);
 
   const handleNodeClick = (node: OrganogramaNode) => {
     setDetailNode(node);
@@ -80,7 +124,6 @@ export default function Organograma() {
         await updateNode.mutateAsync({ id: editingNode.id, ...data, quantidade: 1 });
         toast.success("Posição atualizada com sucesso.");
       } else if (addAboveNode) {
-        // "Add above": create new node taking the child's superior, then re-parent the child
         const qty = Math.max(1, data.quantidade);
         const created = await createNode.mutateAsync({
           cargo: data.cargo,
@@ -91,9 +134,7 @@ export default function Organograma() {
           observacao: data.observacao,
           contrato_id: contratoId,
         });
-        // Re-parent the original node to the newly created node
         await updateNode.mutateAsync({ id: addAboveNode.id, superior_id: created.id });
-        // Create additional positions if qty > 1 (as siblings)
         if (qty > 1) {
           const extra = Array.from({ length: qty - 1 }, () =>
             createNode.mutateAsync({
@@ -190,13 +231,24 @@ export default function Organograma() {
               </Select>
             </div>
             {contratoId && (
-              <div>
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   onClick={() => { setEditingNode(null); setAddAboveNode(null); setPresetSuperiorId(null); setFormOpen(true); }}
                   className="gap-1"
                 >
                   <Plus className="h-4 w-4" /> Adicionar Posição
                 </Button>
+                {nodes.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleExportPDF}
+                    disabled={exporting}
+                    className="gap-1"
+                  >
+                    <FileDown className="h-4 w-4" />
+                    {exporting ? "Exportando..." : "Exportar em PDF"}
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -211,7 +263,7 @@ export default function Organograma() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <OrgTree nodes={nodes} onNodeClick={handleNodeClick} />
+            <OrgTree ref={treeRef} nodes={nodes} onNodeClick={handleNodeClick} />
           </CardContent>
         </Card>
       ) : (
