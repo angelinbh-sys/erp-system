@@ -24,6 +24,8 @@ interface NodeDetailDialogProps {
   onLinkColaborador: (nodeId: string, colaboradorId: string, nomeColaborador: string) => void;
   onUnlinkColaborador: (nodeId: string) => void;
   colaboradores: Colaborador[];
+  onAddBelow?: (parentNode: OrganogramaNode) => void;
+  onAddAbove?: (childNode: OrganogramaNode) => void;
 }
 
 export function NodeDetailDialog({
