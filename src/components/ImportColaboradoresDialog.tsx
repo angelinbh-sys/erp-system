@@ -1,9 +1,12 @@
 import { useState, useRef } from "react";
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Pencil, X, Check } from "lucide-react";
 import { toast } from "@/lib/toast";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -12,20 +15,38 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { parseExcelFile, insertColaboradores, type ImportRow } from "@/utils/colaboradorExcel";
+import { parseExcelFile, insertColaboradores, revalidateRow, type ImportRow } from "@/utils/colaboradorExcel";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { capitalizeName } from "@/utils/formatName";
+import { formatCPF } from "@/utils/cpf";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const EDITABLE_FIELDS: { key: string; label: string; type?: "select"; options?: string[] }[] = [
+  { key: "nome", label: "Nome Completo" },
+  { key: "cpf", label: "CPF" },
+  { key: "data_nascimento", label: "Data de Nascimento" },
+  { key: "sexo", label: "Sexo", type: "select", options: ["Masculino", "Feminino"] },
+  { key: "telefone", label: "Telefone" },
+  { key: "cargo", label: "Cargo / Função" },
+  { key: "centro_custo", label: "Centro de Custo" },
+  { key: "contrato", label: "Contrato" },
+  { key: "site_contrato", label: "Site" },
+  { key: "data_admissao", label: "Data de Admissão" },
+  { key: "status", label: "Status", type: "select", options: ["Ativo", "Inativo", "Afastado", "Desligado"] },
+];
+
 export default function ImportColaboradoresDialog({ open, onOpenChange }: Props) {
   const [step, setStep] = useState<"upload" | "review" | "done">("upload");
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [resultMsg, setResultMsg] = useState("");
+  const [editingLinha, setEditingLinha] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { logAction } = useAuditLog();
@@ -35,6 +56,8 @@ export default function ImportColaboradoresDialog({ open, onOpenChange }: Props)
     setRows([]);
     setResultMsg("");
     setImporting(false);
+    setEditingLinha(null);
+    setEditForm({});
   };
 
   const handleClose = (v: boolean) => {
@@ -66,6 +89,45 @@ export default function ImportColaboradoresDialog({ open, onOpenChange }: Props)
   const validos = rows.filter((r) => r.valido).length;
   const comErro = rows.filter((r) => !r.valido).length;
 
+  const startEditing = (row: ImportRow) => {
+    setEditingLinha(row.linha);
+    setEditForm({ ...row.dados });
+  };
+
+  const cancelEditing = () => {
+    setEditingLinha(null);
+    setEditForm({});
+  };
+
+  const saveEditing = () => {
+    if (editingLinha == null) return;
+
+    const updatedDados = {
+      ...editForm,
+      nome: capitalizeName(editForm.nome || ""),
+      cpf: editForm.cpf ? formatCPF(editForm.cpf.replace(/\D/g, "")) : "",
+      cargo: capitalizeName(editForm.cargo || ""),
+    };
+
+    const erros = revalidateRow(updatedDados);
+
+    setRows((prev) =>
+      prev.map((r) =>
+        r.linha === editingLinha
+          ? { ...r, dados: updatedDados, erros, valido: erros.length === 0 }
+          : r
+      )
+    );
+    setEditingLinha(null);
+    setEditForm({});
+
+    if (erros.length === 0) {
+      toast.success("Registro corrigido com sucesso!");
+    } else {
+      toast.error(`Ainda há ${erros.length} erro(s) neste registro.`);
+    }
+  };
+
   const handleImport = async () => {
     setImporting(true);
     try {
@@ -88,7 +150,7 @@ export default function ImportColaboradoresDialog({ open, onOpenChange }: Props)
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" /> Importar Colaboradores
@@ -115,40 +177,108 @@ export default function ImportColaboradoresDialog({ open, onOpenChange }: Props)
         )}
 
         {step === "review" && (
-          <div className="space-y-4">
-            <div className="flex gap-4 text-sm">
-              <Badge variant="outline">Registros encontrados: {rows.length}</Badge>
+          <div className="space-y-4 flex-1 min-h-0 flex flex-col">
+            <div className="flex gap-4 text-sm flex-wrap">
+              <Badge variant="outline">Registros: {rows.length}</Badge>
               <Badge variant="default" className="bg-green-600">Válidos: {validos}</Badge>
               {comErro > 0 && <Badge variant="destructive">Com erro: {comErro}</Badge>}
             </div>
 
-            <ScrollArea className="max-h-72 border rounded-md">
+            <ScrollArea className="flex-1 border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-16">Linha</TableHead>
+                    <TableHead className="w-14">Linha</TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>CPF</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="w-16">Status</TableHead>
                     <TableHead>Erros</TableHead>
+                    <TableHead className="w-20">Ação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {rows.map((r) => (
                     <TableRow key={r.linha} className={r.valido ? "" : "bg-destructive/5"}>
-                      <TableCell>{r.linha}</TableCell>
-                      <TableCell className="font-medium">{r.dados.nome || "—"}</TableCell>
-                      <TableCell>{r.dados.cpf || "—"}</TableCell>
-                      <TableCell>
-                        {r.valido ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-destructive" />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-destructive max-w-48">
-                        {r.erros.join("; ")}
-                      </TableCell>
+                      {editingLinha === r.linha ? (
+                        <TableCell colSpan={6} className="p-0">
+                          <div className="p-4 space-y-3 bg-muted/30">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-semibold">Corrigir linha {r.linha}</span>
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="ghost" onClick={cancelEditing} className="h-7 px-2">
+                                  <X className="h-3.5 w-3.5 mr-1" /> Cancelar
+                                </Button>
+                                <Button size="sm" onClick={saveEditing} className="h-7 px-2">
+                                  <Check className="h-3.5 w-3.5 mr-1" /> Salvar
+                                </Button>
+                              </div>
+                            </div>
+                            {r.erros.length > 0 && (
+                              <div className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-1.5">
+                                {r.erros.join(" • ")}
+                              </div>
+                            )}
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              {EDITABLE_FIELDS.map((f) => (
+                                <div key={f.key}>
+                                  <Label className="text-xs text-muted-foreground">{f.label}</Label>
+                                  {f.type === "select" ? (
+                                    <Select
+                                      value={editForm[f.key] || ""}
+                                      onValueChange={(v) => setEditForm((p) => ({ ...p, [f.key]: v }))}
+                                    >
+                                      <SelectTrigger className="h-8 text-sm mt-0.5">
+                                        <SelectValue placeholder="Selecione" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {f.options!.map((o) => (
+                                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  ) : (
+                                    <Input
+                                      className="h-8 text-sm mt-0.5"
+                                      value={editForm[f.key] || ""}
+                                      onChange={(e) =>
+                                        setEditForm((p) => ({ ...p, [f.key]: e.target.value }))
+                                      }
+                                    />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </TableCell>
+                      ) : (
+                        <>
+                          <TableCell>{r.linha}</TableCell>
+                          <TableCell className="font-medium">{r.dados.nome || "—"}</TableCell>
+                          <TableCell>{r.dados.cpf || "—"}</TableCell>
+                          <TableCell>
+                            {r.valido ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4 text-destructive" />
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs text-destructive max-w-48">
+                            {r.erros.join("; ")}
+                          </TableCell>
+                          <TableCell>
+                            {!r.valido && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => startEditing(r)}
+                                className="h-7 px-2 text-xs"
+                              >
+                                <Pencil className="h-3.5 w-3.5 mr-1" /> Corrigir
+                              </Button>
+                            )}
+                          </TableCell>
+                        </>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
