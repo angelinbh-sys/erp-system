@@ -224,11 +224,12 @@ export default function Organograma() {
 
       <NodeFormDialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => { setFormOpen(open); if (!open) { setPresetSuperiorId(null); setAddAboveNode(null); } }}
         onSave={handleSave}
         editingNode={editingNode}
         existingNodes={nodes}
         cargos={cargos}
+        presetSuperiorId={presetSuperiorId}
       />
 
       <NodeDetailDialog
