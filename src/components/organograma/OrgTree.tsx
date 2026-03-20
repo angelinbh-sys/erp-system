@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, forwardRef } from "react";
 import type { OrganogramaNode } from "@/hooks/useOrganograma";
 import { OrgNodeCard } from "./OrgNodeCard";
 
