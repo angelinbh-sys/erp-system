@@ -87,6 +87,11 @@ const Efetivo = () => {
 
   const isMaster = profile?.super_admin || profile?.grupo_permissao === "Master";
 
+  const { items: cargos } = useCargos();
+  const { items: centrosCusto } = useCentrosCusto();
+  const { contratosQuery } = useContratos();
+  const contratos = contratosQuery.data ?? [];
+
   const [filterNome, setFilterNome] = useState("");
   const [filterCargo, setFilterCargo] = useState("");
   const [filterCentroCusto, setFilterCentroCusto] = useState("");
