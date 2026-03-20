@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, forwardRef } from "react";
 import type { OrganogramaNode } from "@/hooks/useOrganograma";
 import { OrgNodeCard } from "./OrgNodeCard";
 
@@ -72,7 +72,7 @@ interface OrgTreeProps {
   onNodeClick: (node: OrganogramaNode) => void;
 }
 
-export function OrgTree({ nodes, onNodeClick }: OrgTreeProps) {
+export const OrgTree = forwardRef<HTMLDivElement, OrgTreeProps>(({ nodes, onNodeClick }, ref) => {
   const tree = useMemo(() => buildTree(nodes), [nodes]);
 
   if (tree.length === 0) {
@@ -85,11 +85,13 @@ export function OrgTree({ nodes, onNodeClick }: OrgTreeProps) {
 
   return (
     <div className="overflow-auto py-8 px-4">
-      <div className="flex gap-10 justify-center items-start">
+      <div ref={ref} className="inline-flex gap-10 justify-center items-start">
         {tree.map((root) => (
           <TreeBranch key={root.node.id} data={root} depth={0} onNodeClick={onNodeClick} />
         ))}
       </div>
     </div>
   );
-}
+});
+
+OrgTree.displayName = "OrgTree";
