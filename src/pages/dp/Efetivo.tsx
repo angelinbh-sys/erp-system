@@ -523,13 +523,75 @@ const Efetivo = () => {
               </div>
               <div><Label>Telefone</Label><Input value={newForm.telefone} onChange={(e) => setNewForm((p) => ({ ...p, telefone: e.target.value }))} placeholder="(00) 00000-0000" /></div>
             </div>
-            <div><Label>Cargo / Função *</Label><Input value={newForm.cargo} onChange={(e) => setNewForm((p) => ({ ...p, cargo: e.target.value }))} placeholder="Ex: Engenheiro Civil" /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Centro de Custo *</Label><Input value={newForm.centro_custo} onChange={(e) => setNewForm((p) => ({ ...p, centro_custo: e.target.value }))} /></div>
-              <div><Label>Site / Contrato *</Label><Input value={newForm.site_contrato} onChange={(e) => setNewForm((p) => ({ ...p, site_contrato: e.target.value }))} /></div>
+            <div>
+              <Label>Cargo / Função *</Label>
+              <Select value={newForm.cargo} onValueChange={(v) => setNewForm((p) => ({ ...p, cargo: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione o cargo" /></SelectTrigger>
+                <SelectContent>
+                  {cargos.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">Nenhum cargo cadastrado. Cadastre em Gestão RH.</div>
+                  ) : (
+                    cargos.map((c) => (
+                      <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>Contrato</Label><Input value={newForm.contrato} onChange={(e) => setNewForm((p) => ({ ...p, contrato: e.target.value }))} /></div>
+              <div>
+                <Label>Centro de Custo *</Label>
+                <Select
+                  value={newForm.centro_custo_id}
+                  onValueChange={(v) => {
+                    const cc = centrosCusto.find((c) => c.id === v);
+                    setNewForm((p) => ({ ...p, centro_custo_id: v, centro_custo: cc?.nome ?? "", site_contrato: "" }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {centrosCusto.length === 0 ? (
+                      <div className="p-3 text-sm text-muted-foreground text-center">Nenhum centro de custo cadastrado.</div>
+                    ) : (
+                      centrosCusto.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.codigo ? `${c.codigo} - ${c.nome}` : c.nome}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Site / Contrato *</Label>
+                <Select
+                  value={newForm.site_contrato}
+                  onValueChange={(v) => setNewForm((p) => ({ ...p, site_contrato: v }))}
+                  disabled={sitesForCC.length === 0}
+                >
+                  <SelectTrigger><SelectValue placeholder={newForm.centro_custo_id ? "Selecione o site" : "Selecione o centro de custo primeiro"} /></SelectTrigger>
+                  <SelectContent>
+                    {sitesForCC.map((s) => (
+                      <SelectItem key={s.id} value={s.nome}>{s.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Contrato</Label>
+                <Select value={newForm.contrato} onValueChange={(v) => setNewForm((p) => ({ ...p, contrato: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {contratos.map((c) => (
+                      <SelectItem key={c.id} value={c.projeto_obra}>
+                        {c.projeto_obra} — {c.cliente}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div><Label>Data de Admissão</Label><Input type="date" value={newForm.data_admissao} onChange={(e) => setNewForm((p) => ({ ...p, data_admissao: e.target.value }))} /></div>
             </div>
             <div>
