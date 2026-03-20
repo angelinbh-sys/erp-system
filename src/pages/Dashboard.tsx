@@ -211,13 +211,17 @@ const Dashboard = () => {
       </div>
 
       {/* ── Linha 1: KPIs ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <KpiCard icon={Briefcase} title="Vagas Abertas" value={kpis.vagasAbertas} color="bg-primary/10 text-primary" />
-        <KpiCard icon={Clock} title="Aguardando Aprovação" value={kpis.aguardando} color="bg-amber-100 text-amber-600" />
-        <KpiCard icon={UserSearch} title="Candidatos em Análise" value={kpis.emAnalise} color="bg-blue-100 text-blue-600" />
-        <KpiCard icon={UserCheck} title="Candidatos Aprovados" value={kpis.aprovados} color="bg-emerald-100 text-emerald-600" />
-        <KpiCard icon={UserX} title="Candidatos Reprovados" value={kpis.reprovados} color="bg-red-100 text-red-600" />
-      </div>
+      {loadingVagas ? (
+        <SkeletonKpiGrid />
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <KpiCard icon={Briefcase} title="Vagas Abertas" value={kpis.vagasAbertas} color="bg-primary/10 text-primary" />
+          <KpiCard icon={Clock} title="Aguardando Aprovação" value={kpis.aguardando} color="bg-amber-100 text-amber-600" />
+          <KpiCard icon={UserSearch} title="Candidatos em Análise" value={kpis.emAnalise} color="bg-blue-100 text-blue-600" />
+          <KpiCard icon={UserCheck} title="Candidatos Aprovados" value={kpis.aprovados} color="bg-emerald-100 text-emerald-600" />
+          <KpiCard icon={UserX} title="Candidatos Reprovados" value={kpis.reprovados} color="bg-red-100 text-red-600" />
+        </div>
+      )}
 
       {/* ── Aniversariantes ───────────────────────────────────────── */}
       <Card>
