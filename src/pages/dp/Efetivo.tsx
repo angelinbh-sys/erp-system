@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, History, User as UserIcon, Upload, Download, FileDown } from "lucide-react";
+import { Pencil, History, User as UserIcon, Upload, Download, FileDown, Plus } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { capitalizeName } from "@/utils/formatName";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useColaboradores, useColaboradorHistorico, useUpdateColaborador, type Colaborador,
 } from "@/hooks/useColaboradores";
@@ -73,6 +75,7 @@ const Efetivo = () => {
   const { data: colaboradores = [], isLoading } = useColaboradores();
   const updateColaborador = useUpdateColaborador();
   const { logAction } = useAuditLog();
+  const queryClient = useQueryClient();
   const fotos = useColaboradorFotos(colaboradores);
 
   const [filterNome, setFilterNome] = useState("");
@@ -90,6 +93,13 @@ const Efetivo = () => {
     return true;
   });
   const [showImport, setShowImport] = useState(false);
+  const [showAddNew, setShowAddNew] = useState(false);
+  const [newForm, setNewForm] = useState({
+    nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "",
+    cargo: "", centro_custo: "", contrato: "", site_contrato: "",
+    data_admissao: "", status: "Ativo",
+  });
+  const [savingNew, setSavingNew] = useState(false);
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
   const [editForm, setEditForm] = useState({ nome: "", cargo: "", centro_custo: "", site_contrato: "", status: "" });
@@ -147,6 +157,43 @@ const Efetivo = () => {
     } catch { toast.error("Erro ao atualizar dados."); }
   };
 
+  const handleAddNew = async () => {
+    if (!newForm.nome.trim() || !newForm.cargo.trim() || !newForm.centro_custo.trim() || !newForm.site_contrato.trim()) {
+      toast.error("Preencha os campos obrigatórios: Nome, Cargo, Centro de Custo e Site.");
+      return;
+    }
+    setSavingNew(true);
+    try {
+      const record = {
+        nome: capitalizeName(newForm.nome.trim()),
+        cpf: newForm.cpf.trim() || null,
+        data_nascimento: newForm.data_nascimento || null,
+        sexo: newForm.sexo || null,
+        telefone: newForm.telefone.trim() || null,
+        cargo: capitalizeName(newForm.cargo.trim()),
+        centro_custo: newForm.centro_custo.trim(),
+        contrato: newForm.contrato.trim() || null,
+        site_contrato: newForm.site_contrato.trim(),
+        data_admissao: newForm.data_admissao || new Date().toISOString().slice(0, 10),
+        status: newForm.status,
+      };
+      const { error } = await supabase.from("colaboradores").insert(record as any);
+      if (error) throw error;
+      await logAction({
+        modulo: "Dep. Pessoal", pagina: "Efetivo", acao: "criacao",
+        descricao: `Cadastrou manualmente o colaborador ${record.nome}.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
+      toast.success("Colaborador cadastrado com sucesso!");
+      setShowAddNew(false);
+      setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" });
+    } catch {
+      toast.error("Erro ao cadastrar colaborador.");
+    } finally {
+      setSavingNew(false);
+    }
+  };
+
   const getInitials = (name: string) => {
     const parts = name.trim().split(/\s+/);
     if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -177,6 +224,9 @@ const Efetivo = () => {
             disabled={colaboradores.length === 0}
           >
             <Download className="h-4 w-4 mr-1" /> Exportar arquivo
+          </Button>
+          <Button size="sm" onClick={() => setShowAddNew(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Novo Colaborador
           </Button>
         </div>
       </div>
@@ -331,6 +381,60 @@ const Efetivo = () => {
       </Dialog>
 
       <ImportColaboradoresDialog open={showImport} onOpenChange={setShowImport} />
+
+      {/* Add New Dialog */}
+      <Dialog open={showAddNew} onOpenChange={(v) => { setShowAddNew(v); if (!v) setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" }); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Novo Colaborador</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>Nome Completo *</Label><Input value={newForm.nome} onChange={(e) => setNewForm((p) => ({ ...p, nome: e.target.value }))} placeholder="Nome completo" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>CPF</Label><Input value={newForm.cpf} onChange={(e) => setNewForm((p) => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
+              <div><Label>Data de Nascimento</Label><Input type="date" value={newForm.data_nascimento} onChange={(e) => setNewForm((p) => ({ ...p, data_nascimento: e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Sexo</Label>
+                <Select value={newForm.sexo} onValueChange={(v) => setNewForm((p) => ({ ...p, sexo: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Masculino">Masculino</SelectItem>
+                    <SelectItem value="Feminino">Feminino</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Telefone</Label><Input value={newForm.telefone} onChange={(e) => setNewForm((p) => ({ ...p, telefone: e.target.value }))} placeholder="(00) 00000-0000" /></div>
+            </div>
+            <div><Label>Cargo / Função *</Label><Input value={newForm.cargo} onChange={(e) => setNewForm((p) => ({ ...p, cargo: e.target.value }))} placeholder="Ex: Engenheiro Civil" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Centro de Custo *</Label><Input value={newForm.centro_custo} onChange={(e) => setNewForm((p) => ({ ...p, centro_custo: e.target.value }))} /></div>
+              <div><Label>Site / Contrato *</Label><Input value={newForm.site_contrato} onChange={(e) => setNewForm((p) => ({ ...p, site_contrato: e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Contrato</Label><Input value={newForm.contrato} onChange={(e) => setNewForm((p) => ({ ...p, contrato: e.target.value }))} /></div>
+              <div><Label>Data de Admissão</Label><Input type="date" value={newForm.data_admissao} onChange={(e) => setNewForm((p) => ({ ...p, data_admissao: e.target.value }))} /></div>
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select value={newForm.status} onValueChange={(v) => setNewForm((p) => ({ ...p, status: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inativo">Inativo</SelectItem>
+                  <SelectItem value="Afastado">Afastado</SelectItem>
+                  <SelectItem value="Desligado">Desligado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddNew(false)}>Cancelar</Button>
+            <Button onClick={handleAddNew} disabled={savingNew}>
+              {savingNew ? "Salvando..." : "Cadastrar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
