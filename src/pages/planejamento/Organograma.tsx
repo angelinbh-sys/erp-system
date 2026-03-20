@@ -40,6 +40,8 @@ export default function Organograma() {
   const [editingNode, setEditingNode] = useState<OrganogramaNode | null>(null);
   const [detailNode, setDetailNode] = useState<OrganogramaNode | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [presetSuperiorId, setPresetSuperiorId] = useState<string | null>(null);
+  const [addAboveNode, setAddAboveNode] = useState<OrganogramaNode | null>(null);
 
   const handleNodeClick = (node: OrganogramaNode) => {
     setDetailNode(node);
@@ -48,6 +50,20 @@ export default function Organograma() {
 
   const handleEdit = (node: OrganogramaNode) => {
     setEditingNode(node);
+    setFormOpen(true);
+  };
+
+  const handleAddBelow = (parentNode: OrganogramaNode) => {
+    setEditingNode(null);
+    setAddAboveNode(null);
+    setPresetSuperiorId(parentNode.id);
+    setFormOpen(true);
+  };
+
+  const handleAddAbove = (childNode: OrganogramaNode) => {
+    setEditingNode(null);
+    setPresetSuperiorId(childNode.superior_id ?? null);
+    setAddAboveNode(childNode);
     setFormOpen(true);
   };
 
@@ -63,6 +79,36 @@ export default function Organograma() {
       if (editingNode) {
         await updateNode.mutateAsync({ id: editingNode.id, ...data, quantidade: 1 });
         toast.success("Posição atualizada com sucesso.");
+      } else if (addAboveNode) {
+        // "Add above": create new node taking the child's superior, then re-parent the child
+        const qty = Math.max(1, data.quantidade);
+        const created = await createNode.mutateAsync({
+          cargo: data.cargo,
+          nome_colaborador: data.nome_colaborador,
+          superior_id: data.superior_id,
+          colaborador_id: data.colaborador_id,
+          quantidade: 1,
+          observacao: data.observacao,
+          contrato_id: contratoId,
+        });
+        // Re-parent the original node to the newly created node
+        await updateNode.mutateAsync({ id: addAboveNode.id, superior_id: created.id });
+        // Create additional positions if qty > 1 (as siblings)
+        if (qty > 1) {
+          const extra = Array.from({ length: qty - 1 }, () =>
+            createNode.mutateAsync({
+              cargo: data.cargo,
+              nome_colaborador: data.nome_colaborador,
+              superior_id: data.superior_id,
+              colaborador_id: data.colaborador_id,
+              quantidade: 1,
+              observacao: data.observacao,
+              contrato_id: contratoId,
+            })
+          );
+          await Promise.all(extra);
+        }
+        toast.success(`Posição adicionada acima com sucesso.`);
       } else {
         const qty = Math.max(1, data.quantidade);
         const promises = Array.from({ length: qty }, () =>
@@ -80,6 +126,8 @@ export default function Organograma() {
         toast.success(`${qty} posição(ões) adicionada(s) com sucesso.`);
       }
       setEditingNode(null);
+      setAddAboveNode(null);
+      setPresetSuperiorId(null);
     } catch {
       toast.error("Erro ao salvar posição.");
     }
@@ -144,7 +192,7 @@ export default function Organograma() {
             {contratoId && (
               <div>
                 <Button
-                  onClick={() => { setEditingNode(null); setFormOpen(true); }}
+                  onClick={() => { setEditingNode(null); setAddAboveNode(null); setPresetSuperiorId(null); setFormOpen(true); }}
                   className="gap-1"
                 >
                   <Plus className="h-4 w-4" /> Adicionar Posição
@@ -176,11 +224,12 @@ export default function Organograma() {
 
       <NodeFormDialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => { setFormOpen(open); if (!open) { setPresetSuperiorId(null); setAddAboveNode(null); } }}
         onSave={handleSave}
         editingNode={editingNode}
         existingNodes={nodes}
         cargos={cargos}
+        presetSuperiorId={presetSuperiorId}
       />
 
       <NodeDetailDialog
@@ -194,6 +243,8 @@ export default function Organograma() {
         onLinkColaborador={handleLinkColaborador}
         onUnlinkColaborador={handleUnlinkColaborador}
         colaboradores={colaboradores}
+        onAddBelow={handleAddBelow}
+        onAddAbove={handleAddAbove}
       />
     </div>
   );

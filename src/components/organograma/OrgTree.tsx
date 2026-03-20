@@ -26,31 +26,42 @@ function buildTree(nodes: OrganogramaNode[]): TreeNodeData[] {
 }
 
 function TreeBranch({ data, depth, onNodeClick }: { data: TreeNodeData; depth: number; onNodeClick: (n: OrganogramaNode) => void }) {
+  const childCount = data.children.length;
+
   return (
     <div className="flex flex-col items-center">
       <OrgNodeCard node={data.node} depth={depth} onClick={onNodeClick} />
-      {data.children.length > 0 && (
-        <>
-          <div className="w-px h-6 bg-border" />
-          {data.children.length > 1 && (
+      {childCount > 0 && (
+        <div className="flex flex-col items-center">
+          {/* Vertical line down from parent */}
+          <div className="w-0.5 h-6 bg-border/70" />
+
+          {childCount === 1 ? (
+            /* Single child — just a straight vertical connector */
+            <TreeBranch data={data.children[0]} depth={depth + 1} onNodeClick={onNodeClick} />
+          ) : (
+            /* Multiple children — horizontal rail + vertical drops */
             <div className="relative flex items-start">
+              {/* Horizontal rail connecting first child center to last child center */}
               <div
-                className="absolute top-0 h-px bg-border"
-                style={{ left: "50%", right: "50%" }}
+                className="absolute top-0 h-0.5 bg-border/70"
+                style={{
+                  left: `calc(${(100 / (childCount * 2))}%)`,
+                  right: `calc(${(100 / (childCount * 2))}%)`,
+                }}
               />
+              <div className="flex gap-8 items-start">
+                {data.children.map((child) => (
+                  <div key={child.node.id} className="flex flex-col items-center">
+                    {/* Vertical drop from horizontal rail to child */}
+                    <div className="w-0.5 h-5 bg-border/70" />
+                    <TreeBranch data={child} depth={depth + 1} onNodeClick={onNodeClick} />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
-          <div className="flex gap-6 items-start">
-            {data.children.map((child) => (
-              <div key={child.node.id} className="flex flex-col items-center">
-                {data.children.length > 1 && (
-                  <div className="w-px h-4 bg-border" />
-                )}
-                <TreeBranch data={child} depth={depth + 1} onNodeClick={onNodeClick} />
-              </div>
-            ))}
-          </div>
-        </>
+        </div>
       )}
     </div>
   );

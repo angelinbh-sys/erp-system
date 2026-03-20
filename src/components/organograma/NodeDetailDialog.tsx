@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { OrganogramaNode } from "@/hooks/useOrganograma";
-import { Pencil, Trash2, UserPlus, UserMinus, AlertTriangle } from "lucide-react";
+import { Pencil, Trash2, UserPlus, UserMinus, AlertTriangle, ArrowDown, ArrowUp } from "lucide-react";
 
 interface Colaborador {
   id: string;
@@ -24,6 +24,8 @@ interface NodeDetailDialogProps {
   onLinkColaborador: (nodeId: string, colaboradorId: string, nomeColaborador: string) => void;
   onUnlinkColaborador: (nodeId: string) => void;
   colaboradores: Colaborador[];
+  onAddBelow?: (parentNode: OrganogramaNode) => void;
+  onAddAbove?: (childNode: OrganogramaNode) => void;
 }
 
 export function NodeDetailDialog({
@@ -37,6 +39,8 @@ export function NodeDetailDialog({
   onLinkColaborador,
   onUnlinkColaborador,
   colaboradores,
+  onAddBelow,
+  onAddAbove,
 }: NodeDetailDialogProps) {
   const [linking, setLinking] = useState(false);
   const [searchColab, setSearchColab] = useState("");
@@ -125,6 +129,12 @@ export function NodeDetailDialog({
               ) : null}
               <Button variant="outline" size="sm" onClick={handleOpenLink}>
                 <UserPlus className="h-4 w-4 mr-1" /> {hasColaborador ? "Trocar" : "Vincular"} Colaborador
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { handleClose(); onAddAbove?.(node); }}>
+                <ArrowUp className="h-4 w-4 mr-1" /> Adicionar acima
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { handleClose(); onAddBelow?.(node); }}>
+                <ArrowDown className="h-4 w-4 mr-1" /> Adicionar abaixo
               </Button>
               <Button variant="outline" size="sm" onClick={() => { handleClose(); onEdit(node); }}>
                 <Pencil className="h-4 w-4 mr-1" /> Editar

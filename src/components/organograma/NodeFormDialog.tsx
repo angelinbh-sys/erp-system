@@ -21,6 +21,7 @@ interface NodeFormDialogProps {
   editingNode?: OrganogramaNode | null;
   existingNodes: OrganogramaNode[];
   cargos: { id: string; nome: string }[];
+  presetSuperiorId?: string | null;
 }
 
 export function NodeFormDialog({
@@ -30,6 +31,7 @@ export function NodeFormDialog({
   editingNode,
   existingNodes,
   cargos,
+  presetSuperiorId,
 }: NodeFormDialogProps) {
   const [cargo, setCargo] = useState("");
   const [superiorId, setSuperiorId] = useState<string>("none");
@@ -44,11 +46,11 @@ export function NodeFormDialog({
       setObservacao(editingNode.observacao ?? "");
     } else {
       setCargo("");
-      setSuperiorId("none");
+      setSuperiorId(presetSuperiorId ?? "none");
       setQuantidade("1");
       setObservacao("");
     }
-  }, [editingNode, open]);
+  }, [editingNode, open, presetSuperiorId]);
 
   const possibleSuperiors = existingNodes.filter((n) => !editingNode || n.id !== editingNode.id);
 
