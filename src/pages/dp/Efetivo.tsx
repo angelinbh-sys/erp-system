@@ -155,6 +155,43 @@ const Efetivo = () => {
     } catch { toast.error("Erro ao atualizar dados."); }
   };
 
+  const handleAddNew = async () => {
+    if (!newForm.nome.trim() || !newForm.cargo.trim() || !newForm.centro_custo.trim() || !newForm.site_contrato.trim()) {
+      toast.error("Preencha os campos obrigatórios: Nome, Cargo, Centro de Custo e Site.");
+      return;
+    }
+    setSavingNew(true);
+    try {
+      const record = {
+        nome: capitalizeName(newForm.nome.trim()),
+        cpf: newForm.cpf.trim() || null,
+        data_nascimento: newForm.data_nascimento || null,
+        sexo: newForm.sexo || null,
+        telefone: newForm.telefone.trim() || null,
+        cargo: capitalizeName(newForm.cargo.trim()),
+        centro_custo: newForm.centro_custo.trim(),
+        contrato: newForm.contrato.trim() || null,
+        site_contrato: newForm.site_contrato.trim(),
+        data_admissao: newForm.data_admissao || new Date().toISOString().slice(0, 10),
+        status: newForm.status,
+      };
+      const { error } = await supabase.from("colaboradores").insert(record as any);
+      if (error) throw error;
+      await logAction({
+        modulo: "Dep. Pessoal", pagina: "Efetivo", acao: "criacao",
+        descricao: `Cadastrou manualmente o colaborador ${record.nome}.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
+      toast.success("Colaborador cadastrado com sucesso!");
+      setShowAddNew(false);
+      setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" });
+    } catch {
+      toast.error("Erro ao cadastrar colaborador.");
+    } finally {
+      setSavingNew(false);
+    }
+  };
+
   const getInitials = (name: string) => {
     const parts = name.trim().split(/\s+/);
     if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
