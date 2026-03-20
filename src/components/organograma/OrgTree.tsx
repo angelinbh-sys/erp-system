@@ -1,6 +1,8 @@
-import React, { useMemo, forwardRef } from "react";
+import React, { useMemo, forwardRef, useState, useCallback, useRef, useEffect } from "react";
 import type { OrganogramaNode } from "@/hooks/useOrganograma";
 import { OrgNodeCard } from "./OrgNodeCard";
+import { Button } from "@/components/ui/button";
+import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 
 interface TreeNodeData {
   node: OrganogramaNode;
@@ -25,39 +27,155 @@ function buildTree(nodes: OrganogramaNode[]): TreeNodeData[] {
   return roots;
 }
 
-function TreeBranch({ data, depth, onNodeClick }: { data: TreeNodeData; depth: number; onNodeClick: (n: OrganogramaNode) => void }) {
-  const childCount = data.children.length;
+/** Group sibling children that share the same cargo */
+interface GroupedChild {
+  cargo: string;
+  items: TreeNodeData[];
+}
+
+function groupChildren(children: TreeNodeData[]): GroupedChild[] {
+  const groups: GroupedChild[] = [];
+  const map = new Map<string, TreeNodeData[]>();
+  const order: string[] = [];
+
+  children.forEach((c) => {
+    const key = c.node.cargo;
+    if (!map.has(key)) {
+      map.set(key, []);
+      order.push(key);
+    }
+    map.get(key)!.push(c);
+  });
+
+  order.forEach((cargo) => {
+    groups.push({ cargo, items: map.get(cargo)! });
+  });
+
+  return groups;
+}
+
+const MAX_PER_ROW = 5;
+
+function CollapsibleGroup({
+  group,
+  depth,
+  onNodeClick,
+}: {
+  group: GroupedChild;
+  depth: number;
+  onNodeClick: (n: OrganogramaNode) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const count = group.items.length;
+
+  if (count === 1) {
+    return <TreeBranch data={group.items[0]} depth={depth} onNodeClick={onNodeClick} />;
+  }
+
+  if (!expanded) {
+    return (
+      <div className="flex flex-col items-center">
+        <button
+          onClick={() => setExpanded(true)}
+          className="group relative min-w-[200px] max-w-[240px] rounded-xl border-2 border-dashed border-muted-foreground/40 bg-muted/30 px-4 py-3 shadow-sm hover:shadow-md transition-all text-left cursor-pointer"
+        >
+          <div className="text-sm font-semibold text-foreground leading-tight truncate">
+            {group.cargo}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {count} posições — clique para expandir
+          </div>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <button
+        onClick={() => setExpanded(false)}
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 mb-1"
+      >
+        Recolher {group.cargo} ({count})
+      </button>
+      <ChildrenRow items={group.items} depth={depth} onNodeClick={onNodeClick} />
+    </div>
+  );
+}
+
+function ChildrenRow({
+  items,
+  depth,
+  onNodeClick,
+}: {
+  items: TreeNodeData[];
+  depth: number;
+  onNodeClick: (n: OrganogramaNode) => void;
+}) {
+  // Split into rows of MAX_PER_ROW
+  const rows: TreeNodeData[][] = [];
+  for (let i = 0; i < items.length; i += MAX_PER_ROW) {
+    rows.push(items.slice(i, i + MAX_PER_ROW));
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      {rows.map((row, ri) => (
+        <div key={ri} className="flex gap-6 justify-center flex-wrap">
+          {row.map((child) => (
+            <TreeBranch key={child.node.id} data={child} depth={depth} onNodeClick={onNodeClick} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TreeBranch({
+  data,
+  depth,
+  onNodeClick,
+}: {
+  data: TreeNodeData;
+  depth: number;
+  onNodeClick: (n: OrganogramaNode) => void;
+}) {
+  const groups = useMemo(() => groupChildren(data.children), [data.children]);
+  const hasChildren = groups.length > 0;
+
+  // Flatten all items for connector rendering
+  const totalItems = groups.reduce((sum, g) => sum + (g.items.length === 1 ? 1 : 1), 0);
 
   return (
     <div className="flex flex-col items-center">
       <OrgNodeCard node={data.node} depth={depth} onClick={onNodeClick} />
-      {childCount > 0 && (
-        <div className="flex flex-col items-center">
-          {/* Vertical line down from parent */}
-          <div className="w-0.5 h-6 bg-border/70" />
 
-          {childCount === 1 ? (
-            /* Single child — just a straight vertical connector */
-            <TreeBranch data={data.children[0]} depth={depth + 1} onNodeClick={onNodeClick} />
+      {hasChildren && (
+        <div className="flex flex-col items-center">
+          {/* Vertical connector from parent */}
+          <div className="w-px h-8 bg-border" />
+
+          {totalItems === 1 ? (
+            <CollapsibleGroup group={groups[0]} depth={depth + 1} onNodeClick={onNodeClick} />
           ) : (
-            /* Multiple children — horizontal rail + vertical drops */
-            <div className="relative flex items-start">
-              {/* Horizontal rail connecting first child center to last child center */}
-              <div
-                className="absolute top-0 h-0.5 bg-border/70"
-                style={{
-                  left: `calc(${(100 / (childCount * 2))}%)`,
-                  right: `calc(${(100 / (childCount * 2))}%)`,
-                }}
-              />
-              <div className="flex gap-8 items-start">
-                {data.children.map((child) => (
-                  <div key={child.node.id} className="flex flex-col items-center">
-                    {/* Vertical drop from horizontal rail to child */}
-                    <div className="w-0.5 h-5 bg-border/70" />
-                    <TreeBranch data={child} depth={depth + 1} onNodeClick={onNodeClick} />
-                  </div>
-                ))}
+            <div className="flex flex-col items-center">
+              {/* Horizontal rail */}
+              <div className="relative flex items-start">
+                <div
+                  className="absolute top-0 h-px bg-border"
+                  style={{
+                    left: `calc(${100 / (totalItems * 2)}%)`,
+                    right: `calc(${100 / (totalItems * 2)}%)`,
+                  }}
+                />
+                <div className="flex gap-6 items-start flex-wrap justify-center">
+                  {groups.map((group, gi) => (
+                    <div key={gi} className="flex flex-col items-center">
+                      <div className="w-px h-6 bg-border" />
+                      <CollapsibleGroup group={group} depth={depth + 1} onNodeClick={onNodeClick} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -74,6 +192,49 @@ interface OrgTreeProps {
 
 export const OrgTree = forwardRef<HTMLDivElement, OrgTreeProps>(({ nodes, onNodeClick }, ref) => {
   const tree = useMemo(() => buildTree(nodes), [nodes]);
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const zoomIn = useCallback(() => setScale((s) => Math.min(s + 0.15, 2)), []);
+  const zoomOut = useCallback(() => setScale((s) => Math.max(s - 0.15, 0.3)), []);
+  const resetView = useCallback(() => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  }, []);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.08 : 0.08;
+      setScale((s) => Math.min(Math.max(s + delta, 0.3), 2));
+    }
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    // Don't drag if clicking on a card/button
+    if ((e.target as HTMLElement).closest("button")) return;
+    setDragging(true);
+    dragStart.current = { x: e.clientX, y: e.clientY, posX: position.x, posY: position.y };
+  }, [position]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!dragging) return;
+    const dx = e.clientX - dragStart.current.x;
+    const dy = e.clientY - dragStart.current.y;
+    setPosition({ x: dragStart.current.posX + dx, y: dragStart.current.posY + dy });
+  }, [dragging]);
+
+  const handleMouseUp = useCallback(() => setDragging(false), []);
+
+  useEffect(() => {
+    const handleGlobalUp = () => setDragging(false);
+    window.addEventListener("mouseup", handleGlobalUp);
+    return () => window.removeEventListener("mouseup", handleGlobalUp);
+  }, []);
 
   if (tree.length === 0) {
     return (
@@ -84,11 +245,46 @@ export const OrgTree = forwardRef<HTMLDivElement, OrgTreeProps>(({ nodes, onNode
   }
 
   return (
-    <div className="overflow-auto py-8 px-4">
-      <div ref={ref} className="inline-flex gap-10 justify-center items-start">
-        {tree.map((root) => (
-          <TreeBranch key={root.node.id} data={root} depth={0} onNodeClick={onNodeClick} />
-        ))}
+    <div className="relative">
+      {/* Zoom controls */}
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-lg border border-border p-1 shadow-sm">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={zoomIn} title="Zoom in">
+          <ZoomIn className="h-4 w-4" />
+        </Button>
+        <span className="text-xs text-muted-foreground w-10 text-center tabular-nums">
+          {Math.round(scale * 100)}%
+        </span>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={zoomOut} title="Zoom out">
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={resetView} title="Centralizar">
+          <Maximize2 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Canvas */}
+      <div
+        ref={containerRef}
+        className="overflow-hidden min-h-[500px] cursor-grab active:cursor-grabbing"
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
+        <div
+          style={{
+            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+            transformOrigin: "top center",
+            transition: dragging ? "none" : "transform 0.2s ease-out",
+          }}
+          className="py-10 px-8"
+        >
+          <div ref={ref} className="inline-flex flex-col gap-0 items-center w-full">
+            {tree.map((root) => (
+              <TreeBranch key={root.node.id} data={root} depth={0} onNodeClick={onNodeClick} />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
