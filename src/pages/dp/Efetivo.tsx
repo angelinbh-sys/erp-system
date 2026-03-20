@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, History, User as UserIcon, Upload, Download, FileDown, Plus } from "lucide-react";
+import { Pencil, History, User as UserIcon, Upload, Download, FileDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { capitalizeName } from "@/utils/formatName";
 
@@ -10,16 +10,21 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -78,6 +83,8 @@ const Efetivo = () => {
   const queryClient = useQueryClient();
   const fotos = useColaboradorFotos(colaboradores);
 
+  const isMaster = profile?.super_admin || profile?.grupo_permissao === "Master";
+
   const [filterNome, setFilterNome] = useState("");
   const [filterCargo, setFilterCargo] = useState("");
   const [filterCentroCusto, setFilterCentroCusto] = useState("");
@@ -92,6 +99,7 @@ const Efetivo = () => {
     if (filterStatus && c.status !== filterStatus) return false;
     return true;
   });
+
   const [showImport, setShowImport] = useState(false);
   const [showAddNew, setShowAddNew] = useState(false);
   const [newForm, setNewForm] = useState({
@@ -106,6 +114,66 @@ const Efetivo = () => {
   const [motivo, setMotivo] = useState("");
   const [histColaboradorId, setHistColaboradorId] = useState<string | null>(null);
   const { data: historico = [] } = useColaboradorHistorico(histColaboradorId);
+
+  // Delete state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<"single" | "mass">("mass");
+  const [singleDeleteId, setSingleDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredColaboradores.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredColaboradores.map((c) => c.id)));
+    }
+  };
+
+  const handleDeleteSingle = (id: string) => {
+    setSingleDeleteId(id);
+    setDeleteTarget("single");
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteMass = () => {
+    setDeleteTarget("mass");
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    setDeleting(true);
+    try {
+      const ids = deleteTarget === "single" && singleDeleteId ? [singleDeleteId] : Array.from(selectedIds);
+      const nomes = ids.map((id) => colaboradores.find((c) => c.id === id)?.nome || id);
+
+      const { error } = await supabase.from("colaboradores").delete().in("id", ids);
+      if (error) throw error;
+
+      await logAction({
+        modulo: "Dep. Pessoal", pagina: "Efetivo", acao: "exclusao",
+        descricao: `Excluiu ${ids.length} colaborador(es): ${nomes.map(n => formatFirstLastName(n)).join(", ")}.`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
+      toast.success(`${ids.length} colaborador(es) excluído(s) com sucesso.`);
+      setSelectedIds(new Set());
+      setSingleDeleteId(null);
+    } catch {
+      toast.error("Erro ao excluir colaborador(es).");
+    } finally {
+      setDeleting(false);
+      setDeleteConfirmOpen(false);
+    }
+  };
 
   const openEdit = (c: Colaborador) => {
     setEditColaborador(c);
@@ -200,6 +268,9 @@ const Efetivo = () => {
     return name.substring(0, 2).toUpperCase();
   };
 
+  const deleteCountLabel = deleteTarget === "single" ? "1" : String(selectedIds.size);
+  const singleDeleteName = singleDeleteId ? formatFirstLastName(colaboradores.find((c) => c.id === singleDeleteId)?.nome || "") : "";
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -230,6 +301,21 @@ const Efetivo = () => {
           </Button>
         </div>
       </div>
+
+      {isMaster && selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 mb-4 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+          <span className="text-sm font-medium text-destructive">
+            {selectedIds.size} selecionado(s)
+          </span>
+          <Button variant="destructive" size="sm" onClick={handleDeleteMass}>
+            <Trash2 className="h-4 w-4 mr-1" /> Excluir selecionados
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-muted-foreground">
+            Limpar seleção
+          </Button>
+        </div>
+      )}
+
       {isLoading ? (
         <p className="text-muted-foreground">Carregando...</p>
       ) : colaboradores.length === 0 ? (
@@ -242,6 +328,14 @@ const Efetivo = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  {isMaster && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={filteredColaboradores.length > 0 && selectedIds.size === filteredColaboradores.length}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                  )}
                   <TableHead className="w-12"></TableHead>
                   <TableHead>Nome</TableHead>
                   <TableHead>Cargo / Função</TableHead>
@@ -249,9 +343,10 @@ const Efetivo = () => {
                   <TableHead>Site / Contrato</TableHead>
                   <TableHead>Data de Admissão</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-24">Ações</TableHead>
+                  <TableHead className="w-28">Ações</TableHead>
                 </TableRow>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  {isMaster && <TableHead></TableHead>}
                   <TableHead></TableHead>
                   <TableHead className="py-1.5">
                     <Input placeholder="Filtrar..." value={filterNome} onChange={(e) => setFilterNome(e.target.value)} className="h-7 text-xs" />
@@ -289,9 +384,17 @@ const Efetivo = () => {
                   return (
                     <TableRow
                       key={c.id}
-                      className="cursor-pointer hover:bg-muted/50"
+                      className={`cursor-pointer hover:bg-muted/50 ${selectedIds.has(c.id) ? "bg-destructive/5" : ""}`}
                       onClick={() => navigate(`/departamento-pessoal/efetivo/${c.id}`)}
                     >
+                      {isMaster && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.has(c.id)}
+                            onCheckedChange={() => toggleSelect(c.id)}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={fotoUrl} />
@@ -312,6 +415,11 @@ const Efetivo = () => {
                         <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" title="Editar" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" title="Histórico" onClick={() => setHistColaboradorId(c.id)}><History className="h-4 w-4" /></Button>
+                          {isMaster && (
+                            <Button variant="ghost" size="icon" title="Excluir" onClick={() => handleDeleteSingle(c.id)} className="text-destructive hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -435,6 +543,26 @@ const Efetivo = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget === "single"
+                ? `Tem certeza que deseja excluir o colaborador "${singleDeleteName}"? Esta ação não pode ser desfeita.`
+                : `Tem certeza que deseja excluir ${selectedIds.size} colaborador(es)? Esta ação não pode ser desfeita.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? "Excluindo..." : `Excluir ${deleteCountLabel}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
