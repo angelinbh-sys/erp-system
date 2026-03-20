@@ -36,6 +36,8 @@ import { formatFirstLastName } from "@/utils/formatName";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadModelo, exportColaboradores } from "@/utils/colaboradorExcel";
 import ImportColaboradoresDialog from "@/components/ImportColaboradoresDialog";
+import { useCentrosCusto, useCargos } from "@/hooks/useCadastros";
+import { useContratos } from "@/hooks/useContratos";
 
 function useColaboradorFotos(colaboradores: Colaborador[]) {
   const [fotos, setFotos] = useState<Record<string, string>>({});
