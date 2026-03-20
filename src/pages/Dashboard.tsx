@@ -277,105 +277,113 @@ const Dashboard = () => {
       {/* ── Linha 2: Vagas recentes + Aprovação ───────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Últimas Vagas Criadas */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Últimas Vagas Criadas</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nº</TableHead>
-                  <TableHead>Cargo / Função</TableHead>
-                  <TableHead>Centro de Custo</TableHead>
-                  <TableHead>Criação</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vagasRecentes.length === 0 ? (
+        {loadingVagas ? (
+          <SkeletonTableCard title="Últimas Vagas Criadas" columns={5} rows={5} headers={["Nº", "Cargo / Função", "Centro de Custo", "Criação", "Status"]} />
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Últimas Vagas Criadas</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      Nenhuma vaga encontrada.
-                    </TableCell>
+                    <TableHead>Nº</TableHead>
+                    <TableHead>Cargo / Função</TableHead>
+                    <TableHead>Centro de Custo</TableHead>
+                    <TableHead>Criação</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ) : (
-                  vagasRecentes.map((v) => (
-                    <TableRow
-                      key={v.id}
-                      className="cursor-pointer"
-                      onClick={() => navigate("/rh/aprovacao-vaga")}
-                    >
-                      <TableCell className="font-mono text-xs text-primary">{(v as any).numero_vaga || "—"}</TableCell>
-                      <TableCell className="font-medium">{v.cargo}</TableCell>
-                      <TableCell>{v.centro_custo_nome}</TableCell>
-                      <TableCell>{formatDate(v.created_at)}</TableCell>
-                      <TableCell>{vagaStatusBadge(v.status)}</TableCell>
+                </TableHeader>
+                <TableBody>
+                  {vagasRecentes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                        Nenhuma vaga encontrada.
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  ) : (
+                    vagasRecentes.map((v) => (
+                      <TableRow
+                        key={v.id}
+                        className="cursor-pointer"
+                        onClick={() => navigate("/rh/aprovacao-vaga")}
+                      >
+                        <TableCell className="font-mono text-xs text-primary">{(v as any).numero_vaga || "—"}</TableCell>
+                        <TableCell className="font-medium">{v.cargo}</TableCell>
+                        <TableCell>{v.centro_custo_nome}</TableCell>
+                        <TableCell>{formatDate(v.created_at)}</TableCell>
+                        <TableCell>{vagaStatusBadge(v.status)}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Vagas aguardando aprovação */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Vagas Aguardando Aprovação</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Centro de Custo</TableHead>
-                  <TableHead>Criação</TableHead>
-                  {isDiretoria && <TableHead className="w-32">Ações</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vagasAguardando.length === 0 ? (
+        {loadingVagas ? (
+          <SkeletonTableCard title="Vagas Aguardando Aprovação" columns={isDiretoria ? 4 : 3} rows={5} headers={isDiretoria ? ["Cargo", "Centro de Custo", "Criação", "Ações"] : ["Cargo", "Centro de Custo", "Criação"]} />
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Vagas Aguardando Aprovação</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={isDiretoria ? 4 : 3} className="text-center text-muted-foreground">
-                      Nenhuma vaga aguardando aprovação.
-                    </TableCell>
+                    <TableHead>Cargo</TableHead>
+                    <TableHead>Centro de Custo</TableHead>
+                    <TableHead>Criação</TableHead>
+                    {isDiretoria && <TableHead className="w-32">Ações</TableHead>}
                   </TableRow>
-                ) : (
-                  vagasAguardando.map((v) => (
-                    <TableRow key={v.id}>
-                      <TableCell className="font-medium">{v.cargo}</TableCell>
-                      <TableCell>{v.centro_custo_nome}</TableCell>
-                      <TableCell>{formatDate(v.created_at)}</TableCell>
-                      {isDiretoria && (
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-[hsl(var(--success))] hover:text-[hsl(var(--success))]"
-                              onClick={() => handleAprovar(v.id)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => handleReprovar(v.id)}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" /> Reprovar
-                            </Button>
-                          </div>
-                        </TableCell>
-                      )}
+                </TableHeader>
+                <TableBody>
+                  {vagasAguardando.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={isDiretoria ? 4 : 3} className="text-center text-muted-foreground">
+                        Nenhuma vaga aguardando aprovação.
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  ) : (
+                    vagasAguardando.map((v) => (
+                      <TableRow key={v.id}>
+                        <TableCell className="font-medium">{v.cargo}</TableCell>
+                        <TableCell>{v.centro_custo_nome}</TableCell>
+                        <TableCell>{formatDate(v.created_at)}</TableCell>
+                        {isDiretoria && (
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-[hsl(var(--success))] hover:text-[hsl(var(--success))]"
+                                onClick={() => handleAprovar(v.id)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => handleReprovar(v.id)}
+                              >
+                                <XCircle className="h-4 w-4 mr-1" /> Reprovar
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* ── Linha 3: Candidatos + Atividades ──────────────────────── */}
