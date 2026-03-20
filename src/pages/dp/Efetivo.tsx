@@ -21,6 +21,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useColaboradores, useColaboradorHistorico, useUpdateColaborador, type Colaborador,
 } from "@/hooks/useColaboradores";
