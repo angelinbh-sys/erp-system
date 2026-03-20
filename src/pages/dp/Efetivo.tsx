@@ -501,7 +501,7 @@ const Efetivo = () => {
       <ImportColaboradoresDialog open={showImport} onOpenChange={setShowImport} />
 
       {/* Add New Dialog */}
-      <Dialog open={showAddNew} onOpenChange={(v) => { setShowAddNew(v); if (!v) setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" }); }}>
+      <Dialog open={showAddNew} onOpenChange={(v) => { setShowAddNew(v); if (!v) setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", centro_custo_id: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" }); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Novo Colaborador</DialogTitle></DialogHeader>
           <div className="space-y-4">
