@@ -91,6 +91,13 @@ const Efetivo = () => {
     return true;
   });
   const [showImport, setShowImport] = useState(false);
+  const [showAddNew, setShowAddNew] = useState(false);
+  const [newForm, setNewForm] = useState({
+    nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "",
+    cargo: "", centro_custo: "", contrato: "", site_contrato: "",
+    data_admissao: "", status: "Ativo",
+  });
+  const [savingNew, setSavingNew] = useState(false);
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
   const [editForm, setEditForm] = useState({ nome: "", cargo: "", centro_custo: "", site_contrato: "", status: "" });
