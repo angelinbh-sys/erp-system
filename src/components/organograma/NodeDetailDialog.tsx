@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { OrganogramaNode } from "@/hooks/useOrganograma";
-import { Pencil, Trash2, UserPlus, UserMinus, AlertTriangle } from "lucide-react";
+import { Pencil, Trash2, UserPlus, UserMinus, AlertTriangle, ArrowDown, ArrowUp } from "lucide-react";
 
 interface Colaborador {
   id: string;
