@@ -61,11 +61,23 @@ export default function Organograma() {
   }) => {
     try {
       if (editingNode) {
-        await updateNode.mutateAsync({ id: editingNode.id, ...data });
+        await updateNode.mutateAsync({ id: editingNode.id, ...data, quantidade: 1 });
         toast.success("Posição atualizada com sucesso.");
       } else {
-        await createNode.mutateAsync({ ...data, contrato_id: contratoId });
-        toast.success("Posição adicionada com sucesso.");
+        const qty = Math.max(1, data.quantidade);
+        const promises = Array.from({ length: qty }, () =>
+          createNode.mutateAsync({
+            cargo: data.cargo,
+            nome_colaborador: data.nome_colaborador,
+            superior_id: data.superior_id,
+            colaborador_id: data.colaborador_id,
+            quantidade: 1,
+            observacao: data.observacao,
+            contrato_id: contratoId,
+          })
+        );
+        await Promise.all(promises);
+        toast.success(`${qty} posição(ões) adicionada(s) com sucesso.`);
       }
       setEditingNode(null);
     } catch {
