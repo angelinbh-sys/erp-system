@@ -3,15 +3,28 @@ import type { OrganogramaNode } from "@/hooks/useOrganograma";
 
 interface OrgNodeCardProps {
   node: OrganogramaNode;
+  depth: number;
   onClick: (node: OrganogramaNode) => void;
 }
 
-export function OrgNodeCard({ node, onClick }: OrgNodeCardProps) {
+const LEVEL_STYLES: { bg: string; border: string; accent: string }[] = [
+  { bg: "bg-blue-50 dark:bg-blue-950/40", border: "border-blue-400", accent: "bg-blue-500" },
+  { bg: "bg-emerald-50 dark:bg-emerald-950/40", border: "border-emerald-400", accent: "bg-emerald-500" },
+  { bg: "bg-amber-50 dark:bg-amber-950/40", border: "border-amber-400", accent: "bg-amber-500" },
+  { bg: "bg-purple-50 dark:bg-purple-950/40", border: "border-purple-400", accent: "bg-purple-500" },
+  { bg: "bg-rose-50 dark:bg-rose-950/40", border: "border-rose-400", accent: "bg-rose-500" },
+  { bg: "bg-teal-50 dark:bg-teal-950/40", border: "border-teal-400", accent: "bg-teal-500" },
+];
+
+export function OrgNodeCard({ node, depth, onClick }: OrgNodeCardProps) {
+  const style = LEVEL_STYLES[depth % LEVEL_STYLES.length];
+
   return (
     <button
       onClick={() => onClick(node)}
-      className="group min-w-[180px] max-w-[220px] rounded-xl border-2 border-border/60 bg-card px-4 py-3 shadow-md hover:shadow-lg hover:border-primary/40 transition-all text-left cursor-pointer"
+      className={`group relative min-w-[180px] max-w-[220px] rounded-xl border-2 ${style.border} ${style.bg} px-4 py-3 shadow-md hover:shadow-lg transition-all text-left cursor-pointer overflow-hidden`}
     >
+      <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.accent}`} />
       <div className="text-sm font-semibold text-foreground leading-tight truncate">
         {node.nome_colaborador}
       </div>
