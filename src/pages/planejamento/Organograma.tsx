@@ -20,6 +20,9 @@ export default function Organograma() {
   const { nodesQuery, createNode, updateNode, deleteNode } = useOrganograma(contratoId || undefined);
   const nodes = nodesQuery.data ?? [];
 
+  const contratoSelecionado = contratos.find((c) => c.id === contratoId);
+  const projetoNome = contratoSelecionado?.projeto_obra ?? "";
+
   const colaboradoresData = useColaboradores();
   const colaboradores = (colaboradoresData.data ?? [])
     .filter((c) => c.status === "Ativo")
@@ -35,9 +38,6 @@ export default function Organograma() {
   const [editingNode, setEditingNode] = useState<OrganogramaNode | null>(null);
   const [detailNode, setDetailNode] = useState<OrganogramaNode | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-
-  const contratoSelecionado = contratos.find((c) => c.id === contratoId);
-  const projetoNome = contratoSelecionado?.projeto_obra ?? "";
 
   const handleNodeClick = (node: OrganogramaNode) => {
     setDetailNode(node);
