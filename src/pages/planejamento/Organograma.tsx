@@ -243,6 +243,8 @@ export default function Organograma() {
         onLinkColaborador={handleLinkColaborador}
         onUnlinkColaborador={handleUnlinkColaborador}
         colaboradores={colaboradores}
+        onAddBelow={handleAddBelow}
+        onAddAbove={handleAddAbove}
       />
     </div>
   );

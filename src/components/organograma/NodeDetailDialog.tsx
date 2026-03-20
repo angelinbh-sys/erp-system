@@ -130,6 +130,12 @@ export function NodeDetailDialog({
               <Button variant="outline" size="sm" onClick={handleOpenLink}>
                 <UserPlus className="h-4 w-4 mr-1" /> {hasColaborador ? "Trocar" : "Vincular"} Colaborador
               </Button>
+              <Button variant="outline" size="sm" onClick={() => { handleClose(); onAddAbove?.(node); }}>
+                <ArrowUp className="h-4 w-4 mr-1" /> Adicionar acima
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { handleClose(); onAddBelow?.(node); }}>
+                <ArrowDown className="h-4 w-4 mr-1" /> Adicionar abaixo
+              </Button>
               <Button variant="outline" size="sm" onClick={() => { handleClose(); onEdit(node); }}>
                 <Pencil className="h-4 w-4 mr-1" /> Editar
               </Button>
