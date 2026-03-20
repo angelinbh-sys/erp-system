@@ -389,76 +389,84 @@ const Dashboard = () => {
       {/* ── Linha 3: Candidatos + Atividades ──────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Candidatos recentes */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Candidatos Recentes</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Cadastro</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {candidatosRecentes.length === 0 ? (
+        {loadingVagas ? (
+          <SkeletonTableCard title="Candidatos Recentes" columns={4} rows={5} headers={["Nome", "Cargo", "Status", "Cadastro"]} />
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Candidatos Recentes</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      Nenhum candidato encontrado.
-                    </TableCell>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Cargo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Cadastro</TableHead>
                   </TableRow>
-                ) : (
-                  candidatosRecentes.map((v) => (
-                    <TableRow key={v.id}>
-                      <TableCell className="font-medium">{v.nome_candidato}</TableCell>
-                      <TableCell>{v.cargo}</TableCell>
-                      <TableCell>{candidatoStatusBadge(v.status_candidato)}</TableCell>
-                      <TableCell>{formatDate(v.created_at)}</TableCell>
+                </TableHeader>
+                <TableBody>
+                  {candidatosRecentes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        Nenhum candidato encontrado.
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  ) : (
+                    candidatosRecentes.map((v) => (
+                      <TableRow key={v.id}>
+                        <TableCell className="font-medium">{v.nome_candidato}</TableCell>
+                        <TableCell>{v.cargo}</TableCell>
+                        <TableCell>{candidatoStatusBadge(v.status_candidato)}</TableCell>
+                        <TableCell>{formatDate(v.created_at)}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Atividades recentes */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-              Atividades Recentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {atividadesRecentes.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhuma atividade recente.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {atividadesRecentes.map((n) => (
-                  <div
-                    key={n.id}
-                    className="flex items-start gap-3 rounded-md border border-border p-3"
-                  >
-                    <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{n.titulo}</p>
-                      <p className="text-xs text-muted-foreground truncate">{n.mensagem}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDateTime(n.created_at)}
-                      </p>
+        {loadingNotif ? (
+          <SkeletonAtividades />
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Bell className="h-5 w-5 text-muted-foreground" />
+                Atividades Recentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {atividadesRecentes.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhuma atividade recente.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {atividadesRecentes.map((n) => (
+                    <div
+                      key={n.id}
+                      className="flex items-start gap-3 rounded-md border border-border p-3"
+                    >
+                      <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{n.titulo}</p>
+                        <p className="text-xs text-muted-foreground truncate">{n.mensagem}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDateTime(n.created_at)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
