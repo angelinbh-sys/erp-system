@@ -264,7 +264,7 @@ const Efetivo = () => {
       queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
       toast.success("Colaborador cadastrado com sucesso!");
       setShowAddNew(false);
-      setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" });
+      setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", centro_custo_id: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" });
     } catch {
       toast.error("Erro ao cadastrar colaborador.");
     } finally {
