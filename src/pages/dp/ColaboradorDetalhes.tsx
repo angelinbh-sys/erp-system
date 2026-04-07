@@ -246,7 +246,24 @@ const ColaboradorDetalhes = () => {
     }
   };
 
-  const downloadFile = async (path: string, name: string) => {
+  const handleFotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !colaborador) return;
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `colaboradores/${colaborador.id}/foto.${ext}`;
+      const { error } = await supabase.storage.from("admissao-documentos").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = await supabase.storage.from("admissao-documentos").createSignedUrl(path, 3600);
+      if (urlData?.signedUrl) setFotoUrl(urlData.signedUrl);
+      toast.success("Foto atualizada com sucesso!");
+    } catch {
+      toast.error("Erro ao enviar foto.");
+    }
+    if (fotoInputRef.current) fotoInputRef.current.value = "";
+  };
+
+
     try {
       const bucket = path.includes("resultado-aso") ? "aso-documentos" : "admissao-documentos";
       const { data } = await supabase.storage.from(bucket).download(path);
