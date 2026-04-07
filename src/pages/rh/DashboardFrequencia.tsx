@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, Tooltip,
 } from "recharts";
 
@@ -147,8 +147,8 @@ export default function DashboardFrequencia() {
     return items.map((d) => ({ ...d, percent: total > 0 ? d.value / total : 0 }));
   }, [totaisPorStatus]);
 
-  // Line chart: por dia
-  const lineData = useMemo(() => {
+  // Bar chart: por dia
+  const barData = useMemo(() => {
     if (!dataInicio || !dataFim) return [];
     const end = dataFim > hoje ? hoje : dataFim;
     const days = eachDayOfInterval({ start: dataInicio, end });
@@ -162,6 +162,31 @@ export default function DashboardFrequencia() {
       return row;
     });
   }, [freqFiltradas, dataInicio, dataFim]);
+
+  // Ausentes no período
+  const ausentesNoPeriodo = useMemo(() => {
+    const statusAusencia = ["Falta Não Comunicada", "Falta Comunicada", "Atestado Médico ou Afastamento"];
+    const ausMap: Record<string, { nome: string; cargo: string; contrato: string; dias: number; status: string[] }> = {};
+    freqFiltradas.forEach((f) => {
+      if (statusAusencia.includes(f.status)) {
+        if (!ausMap[f.colaborador_id]) {
+          const colab = colabsFiltrados.find((c) => c.id === f.colaborador_id);
+          ausMap[f.colaborador_id] = {
+            nome: colab?.nome || "—",
+            cargo: colab?.cargo || "—",
+            contrato: colab?.site_contrato || "—",
+            dias: 0,
+            status: [],
+          };
+        }
+        ausMap[f.colaborador_id].dias++;
+        if (!ausMap[f.colaborador_id].status.includes(f.status)) {
+          ausMap[f.colaborador_id].status.push(f.status);
+        }
+      }
+    });
+    return Object.values(ausMap).sort((a, b) => b.dias - a.dias);
+  }, [freqFiltradas, colabsFiltrados]);
 
   // Ranking faltas
   const rankingFaltas = useMemo(() => {
@@ -338,7 +363,7 @@ export default function DashboardFrequencia() {
               </CardContent>
             </Card>
 
-            {/* Line chart - por dia */}
+            {/* Bar chart - por dia + ausentes */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -346,32 +371,64 @@ export default function DashboardFrequencia() {
                   Frequência por Dia
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                {lineData.length === 0 ? (
+              <CardContent className="space-y-6">
+                {barData.length === 0 ? (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                     Sem dados no período
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={340}>
-                    <LineChart data={lineData}>
+                    <BarChart data={barData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="dia" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
                       <ReTooltip content={<CustomLineTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+                      <Legend wrapperStyle={{ fontSize: 11 }} iconType="square" />
                       {STATUS_ANALISE.map((s) => (
-                        <Line
+                        <Bar
                           key={s}
-                          type="monotone"
                           dataKey={s}
-                          stroke={COLORS[s]}
-                          strokeWidth={2}
-                          dot={{ r: 3, fill: COLORS[s] }}
-                          activeDot={{ r: 5 }}
+                          fill={COLORS[s]}
+                          stackId="freq"
+                          radius={0}
                         />
                       ))}
-                    </LineChart>
+                    </BarChart>
                   </ResponsiveContainer>
+                )}
+
+                {/* Lista de ausentes */}
+                {ausentesNoPeriodo.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                      <Users className="h-4 w-4 text-destructive" />
+                      Colaboradores Ausentes no Período
+                    </h4>
+                    <div className="max-h-[250px] overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead>Cargo</TableHead>
+                            <TableHead>Contrato</TableHead>
+                            <TableHead>Motivo</TableHead>
+                            <TableHead className="text-right">Dias</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {ausentesNoPeriodo.map((a, i) => (
+                            <TableRow key={i}>
+                              <TableCell className="font-medium">{a.nome}</TableCell>
+                              <TableCell>{a.cargo}</TableCell>
+                              <TableCell>{a.contrato}</TableCell>
+                              <TableCell className="text-xs">{a.status.join(", ")}</TableCell>
+                              <TableCell className="text-right font-bold text-destructive">{a.dias}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
