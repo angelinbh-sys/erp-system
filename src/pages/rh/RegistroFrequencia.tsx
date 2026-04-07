@@ -17,6 +17,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useFrequenciaByDate, useUpsertFrequencia, STATUS_FREQUENCIA, type StatusFrequencia } from "@/hooks/useFrequencia";
