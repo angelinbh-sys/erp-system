@@ -38,6 +38,10 @@ const ColaboradorDetalhes = () => {
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferForm, setTransferForm] = useState({ centro_custo: "", site_contrato: "" });
   const [transferMotivo, setTransferMotivo] = useState("");
+  const { items: centrosCusto } = useCentrosCusto();
+  const allSitesTransfer = centrosCusto.flatMap((cc) =>
+    (cc.sites ?? []).map((s) => ({ siteId: s.id, siteNome: s.nome, ccId: cc.id, ccNome: cc.nome, ccCodigo: cc.codigo }))
+  );
   const updateColaborador = useUpdateColaborador();
 
   const { data: historico = [] } = useColaboradorHistorico(id || null);
