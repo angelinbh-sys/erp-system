@@ -92,6 +92,7 @@ const ColaboradorDetalhes = () => {
         cargo: colaborador.cargo,
         status: colaborador.status,
         telefone: colaborador.telefone || "",
+        data_desligamento: colaborador.data_desligamento || "",
       };
     } else if (block === "endereco" && vaga) {
       form = {
