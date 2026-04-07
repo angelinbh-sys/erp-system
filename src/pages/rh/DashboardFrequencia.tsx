@@ -363,46 +363,52 @@ export default function DashboardFrequencia() {
               </CardContent>
             </Card>
 
-            {/* Bar chart - por dia + ausentes */}
+            {/* Horizontal bar chart - Frequência do Dia (hoje) + ausentes */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
-                  Frequência por Dia
+                  Frequência do Dia — {format(hoje, "dd/MM/yyyy")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {barData.length === 0 ? (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    Sem dados no período
+                {horizontalBarData.length === 0 ? (
+                  <div className="h-[260px] flex items-center justify-center text-muted-foreground">
+                    Sem dados para hoje
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={340}>
-                    <BarChart data={barData}>
+                  <ResponsiveContainer width="100%" height={Math.max(260, horizontalBarData.length * 48)}>
+                    <BarChart data={horizontalBarData} layout="vertical" margin={{ left: 20, right: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="dia" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                      <YAxis fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                      <ReTooltip content={<CustomLineTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} iconType="square" />
-                      {STATUS_ANALISE.map((s) => (
-                        <Bar
-                          key={s}
-                          dataKey={s}
-                          fill={COLORS[s]}
-                          stackId="freq"
-                          radius={0}
-                        />
-                      ))}
+                      <XAxis type="number" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                      <YAxis type="category" dataKey="status" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} width={180} />
+                      <ReTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0].payload;
+                          return (
+                            <div className="bg-popover border border-border rounded-lg shadow-lg px-3 py-2 text-sm">
+                              <p className="font-medium" style={{ color: d.fill }}>{d.status}</p>
+                              <p className="text-foreground">Quantidade: <strong>{d.quantidade}</strong></p>
+                            </div>
+                          );
+                        }}
+                      />
+                      <Bar dataKey="quantidade" radius={[0, 4, 4, 0]}>
+                        {horizontalBarData.map((d, i) => (
+                          <Cell key={i} fill={d.fill} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 )}
 
-                {/* Lista de ausentes */}
-                {ausentesNoPeriodo.length > 0 && (
+                {/* Lista de ausentes do dia */}
+                {ausentesHoje.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                       <Users className="h-4 w-4 text-destructive" />
-                      Colaboradores Ausentes no Período
+                      Colaboradores Ausentes Hoje
                     </h4>
                     <div className="max-h-[250px] overflow-y-auto">
                       <Table>
@@ -411,24 +417,26 @@ export default function DashboardFrequencia() {
                             <TableHead>Nome</TableHead>
                             <TableHead>Cargo</TableHead>
                             <TableHead>Contrato</TableHead>
-                            <TableHead>Motivo</TableHead>
-                            <TableHead className="text-right">Dias</TableHead>
+                            <TableHead>Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {ausentesNoPeriodo.map((a, i) => (
+                          {ausentesHoje.map((a, i) => (
                             <TableRow key={i}>
                               <TableCell className="font-medium">{a.nome}</TableCell>
                               <TableCell>{a.cargo}</TableCell>
                               <TableCell>{a.contrato}</TableCell>
-                              <TableCell className="text-xs">{a.status.join(", ")}</TableCell>
-                              <TableCell className="text-right font-bold text-destructive">{a.dias}</TableCell>
+                              <TableCell className="text-xs text-destructive font-medium">{a.status}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
                       </Table>
                     </div>
                   </div>
+                )}
+
+                {ausentesHoje.length === 0 && horizontalBarData.length > 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhum colaborador ausente hoje.</p>
                 )}
               </CardContent>
             </Card>
