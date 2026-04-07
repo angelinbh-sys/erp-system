@@ -166,6 +166,10 @@ const ColaboradorDetalhes = () => {
       toast.error("O motivo da alteração é obrigatório.");
       return;
     }
+    if (editingBlock === "pessoais" && editForm.status === "Inativo" && !editForm.data_desligamento) {
+      toast.error("A data de desligamento é obrigatória ao inativar o colaborador.");
+      return;
+    }
     setSaving(true);
     const alteradoPor = formatFirstLastName(profile?.nome) || "Sistema";
 
@@ -178,6 +182,7 @@ const ColaboradorDetalhes = () => {
           { key: "cargo", label: "Cargo" },
           { key: "status", label: "Status" },
           { key: "telefone", label: "Telefone" },
+          { key: "data_desligamento", label: "Data de Desligamento" },
         ];
         for (const f of fields) {
           const oldVal = colaborador[f.key as keyof Colaborador] as string | null;
