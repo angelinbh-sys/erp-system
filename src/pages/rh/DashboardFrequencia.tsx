@@ -380,7 +380,7 @@ export default function DashboardFrequencia() {
                           );
                         }}
                       />
-                      <Bar dataKey="quantidade" radius={[0, 4, 4, 0]}>
+                      <Bar dataKey="quantidade" radius={[0, 4, 4, 0]} barSize={20}>
                         {horizontalBarData.map((d, i) => (
                           <Cell key={i} fill={d.fill} />
                         ))}
