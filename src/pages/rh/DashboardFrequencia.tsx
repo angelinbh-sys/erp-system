@@ -160,10 +160,9 @@ export default function DashboardFrequencia() {
     })).filter((d) => d.quantidade > 0);
   }, [freqFiltradas, hojeStr]);
 
-  // Ausentes hoje
-  const ausentesHoje = useMemo(() => {
-    const statusAusencia = ["Falta Não Comunicada", "Falta Comunicada", "Atestado Médico ou Afastamento"];
-    const hojeFreqs = freqFiltradas.filter((f) => f.data === hojeStr && statusAusencia.includes(f.status));
+  // Não presentes hoje (todos exceto "Presente")
+  const naoPresentesHoje = useMemo(() => {
+    const hojeFreqs = freqFiltradas.filter((f) => f.data === hojeStr && f.status !== "Presente");
     return hojeFreqs.map((f) => {
       const colab = colabsFiltrados.find((c) => c.id === f.colaborador_id);
       return {
