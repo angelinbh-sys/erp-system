@@ -71,6 +71,8 @@ export default function RegistroFrequencia() {
     return list.sort((a, b) => a.nome.localeCompare(b.nome));
   }, [colaboradoresAtivos, filtroContrato, busca]);
 
+  const jaTemRegistro = frequencias.length > 0;
+
   useEffect(() => {
     if (frequencias.length > 0) {
       const map: Record<string, StatusFrequencia> = {};
@@ -81,6 +83,7 @@ export default function RegistroFrequencia() {
     } else {
       setRegistros({});
     }
+    setModoEdicao(false);
   }, [frequencias]);
 
   const getStatus = (colabId: string): StatusFrequencia =>
