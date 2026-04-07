@@ -334,7 +334,7 @@ const ColaboradorDetalhes = () => {
                 <div><Label>Telefone</Label><Input value={editForm.telefone} onChange={e => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
                 <div>
                   <Label>Status</Label>
-                  <Select value={editForm.status} onValueChange={v => setEditForm(p => ({ ...p, status: v }))}>
+                  <Select value={editForm.status} onValueChange={v => setEditForm(p => ({ ...p, status: v, ...(v !== "Inativo" ? { data_desligamento: "" } : {}) }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Ativo">Ativo</SelectItem>
@@ -344,6 +344,12 @@ const ColaboradorDetalhes = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                {editForm.status === "Inativo" && (
+                  <div>
+                    <Label>Data de Desligamento *</Label>
+                    <Input type="date" value={editForm.data_desligamento} onChange={e => setEditForm(p => ({ ...p, data_desligamento: e.target.value }))} />
+                  </div>
+                )}
               </div>
               {editBlockFooter}
             </div>
