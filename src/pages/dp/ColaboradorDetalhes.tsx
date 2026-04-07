@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Download, User as UserIcon, FileText, History, Pencil, Save, X, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Download, User as UserIcon, FileText, History, Pencil, Save, X, ArrowRightLeft, Camera } from "lucide-react";
 import { formatFirstLastName } from "@/utils/formatName";
 import { useColaboradorHistorico, useUpdateColaborador, type Colaborador } from "@/hooks/useColaboradores";
 import { useAdmissaoDocumentos, DOCUMENTOS_OBRIGATORIOS } from "@/hooks/useAdmissaoDocumentos";
