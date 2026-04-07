@@ -221,7 +221,7 @@ export default function RegistroFrequencia() {
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Marcar todos como</label>
-              <Select onValueChange={(v) => handleMarcarTodos(v as StatusFrequencia)}>
+              <Select onValueChange={(v) => handleMarcarTodos(v as StatusFrequencia)} disabled={jaTemRegistro && !modoEdicao}>
                 <SelectTrigger className="w-[220px]">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
