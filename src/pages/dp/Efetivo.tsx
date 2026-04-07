@@ -540,46 +540,39 @@ const Efetivo = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Centro de Custo *</Label>
-                <Select
-                  value={newForm.centro_custo_id}
-                  onValueChange={(v) => {
-                    const cc = centrosCusto.find((c) => c.id === v);
-                    setNewForm((p) => ({ ...p, centro_custo_id: v, centro_custo: cc?.nome ?? "", site_contrato: "" }));
-                  }}
-                >
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {centrosCusto.length === 0 ? (
-                      <div className="p-3 text-sm text-muted-foreground text-center">Nenhum centro de custo cadastrado.</div>
-                    ) : (
-                      centrosCusto.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.codigo ? `${c.codigo} - ${c.nome}` : c.nome}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Site / Contrato *</Label>
-                <Select
-                  value={newForm.site_contrato}
-                  onValueChange={(v) => setNewForm((p) => ({ ...p, site_contrato: v }))}
-                  disabled={sitesForCC.length === 0}
-                >
-                  <SelectTrigger><SelectValue placeholder={newForm.centro_custo_id ? "Selecione o site" : "Selecione o centro de custo primeiro"} /></SelectTrigger>
-                  <SelectContent>
-                    {sitesForCC.map((s) => (
-                      <SelectItem key={s.id} value={s.nome}>{s.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label>Site / Local de Trabalho *</Label>
+              <Select
+                value={newForm.site_contrato}
+                onValueChange={(v) => {
+                  const site = allSites.find((s) => s.siteNome === v);
+                  setNewForm((p) => ({
+                    ...p,
+                    site_contrato: v,
+                    centro_custo: site ? (site.ccCodigo ? `${site.ccCodigo} - ${site.ccNome}` : site.ccNome) : "",
+                    centro_custo_id: site?.ccId ?? "",
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o site" /></SelectTrigger>
+                <SelectContent>
+                  {allSites.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">Nenhum site cadastrado. Cadastre em Gestão RH → Centro de Custo.</div>
+                  ) : (
+                    allSites.map((s) => (
+                      <SelectItem key={s.siteId} value={s.siteNome}>
+                        {s.siteNome} ({s.ccCodigo || s.ccNome})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
+            {newForm.centro_custo && (
+              <div className="bg-muted/50 rounded-md p-3 text-sm">
+                <span className="font-medium">Centro de Custo:</span> {newForm.centro_custo}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Contrato</Label>
