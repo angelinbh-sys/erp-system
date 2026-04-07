@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isBefore, startOfDay } from "date-fns";
+import { format, startOfMonth, endOfMonth, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, BarChart3, TrendingDown, Users } from "lucide-react";
 
