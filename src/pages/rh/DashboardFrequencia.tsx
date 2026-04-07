@@ -147,21 +147,6 @@ export default function DashboardFrequencia() {
     return items.map((d) => ({ ...d, percent: total > 0 ? d.value / total : 0 }));
   }, [totaisPorStatus]);
 
-  // Bar chart: por dia
-  const barData = useMemo(() => {
-    if (!dataInicio || !dataFim) return [];
-    const end = dataFim > hoje ? hoje : dataFim;
-    const days = eachDayOfInterval({ start: dataInicio, end });
-    return days.map((day) => {
-      const dayStr = format(day, "yyyy-MM-dd");
-      const dayFreqs = freqFiltradas.filter((f) => f.data === dayStr);
-      const row: any = { dia: format(day, "dd/MM") };
-      STATUS_ANALISE.forEach((s) => {
-        row[s] = dayFreqs.filter((f) => f.status === s).length;
-      });
-      return row;
-    });
-  }, [freqFiltradas, dataInicio, dataFim]);
 
   // Horizontal bar data for today
   const hojeStr = format(hoje, "yyyy-MM-dd");
