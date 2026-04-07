@@ -34,7 +34,7 @@ export function useColaboradores() {
       const { data, error } = await supabase
         .from("colaboradores")
         .select("*")
-        .order("data_admissao", { ascending: false });
+        .order("nome", { ascending: true });
       if (error) throw error;
       return data as Colaborador[];
     },
