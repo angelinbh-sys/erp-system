@@ -96,7 +96,7 @@ const Efetivo = () => {
   const [filterCargo, setFilterCargo] = useState("");
   const [filterCentroCusto, setFilterCentroCusto] = useState("");
   const [filterSite, setFilterSite] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Ativo");
 
   const filteredColaboradores = colaboradores.filter((c) => {
     if (filterNome && !c.nome.toLowerCase().includes(filterNome.toLowerCase())) return false;
