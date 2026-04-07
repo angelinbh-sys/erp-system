@@ -11,6 +11,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -160,10 +161,9 @@ export default function DashboardFrequencia() {
     })).filter((d) => d.quantidade > 0);
   }, [freqFiltradas, hojeStr]);
 
-  // Ausentes hoje
-  const ausentesHoje = useMemo(() => {
-    const statusAusencia = ["Falta Não Comunicada", "Falta Comunicada", "Atestado Médico ou Afastamento"];
-    const hojeFreqs = freqFiltradas.filter((f) => f.data === hojeStr && statusAusencia.includes(f.status));
+  // Não presentes hoje (todos exceto "Presente")
+  const naoPresentesHoje = useMemo(() => {
+    const hojeFreqs = freqFiltradas.filter((f) => f.data === hojeStr && f.status !== "Presente");
     return hojeFreqs.map((f) => {
       const colab = colabsFiltrados.find((c) => c.id === f.colaborador_id);
       return {
@@ -381,7 +381,7 @@ export default function DashboardFrequencia() {
                           );
                         }}
                       />
-                      <Bar dataKey="quantidade" radius={[0, 4, 4, 0]}>
+                      <Bar dataKey="quantidade" radius={[0, 4, 4, 0]} barSize={20}>
                         {horizontalBarData.map((d, i) => (
                           <Cell key={i} fill={d.fill} />
                         ))}
@@ -391,13 +391,13 @@ export default function DashboardFrequencia() {
                 )}
 
                 {/* Lista de ausentes do dia */}
-                {ausentesHoje.length > 0 && (
+                {naoPresentesHoje.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                       <Users className="h-4 w-4 text-destructive" />
-                      Colaboradores Ausentes Hoje
+                      Colaboradores Não Presentes Hoje ({naoPresentesHoje.length})
                     </h4>
-                    <div className="max-h-[250px] overflow-y-auto">
+                    <ScrollArea className="max-h-[300px]">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -408,7 +408,7 @@ export default function DashboardFrequencia() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {ausentesHoje.map((a, i) => (
+                          {naoPresentesHoje.map((a, i) => (
                             <TableRow key={i}>
                               <TableCell className="font-medium">{a.nome}</TableCell>
                               <TableCell>{a.cargo}</TableCell>
@@ -418,12 +418,12 @@ export default function DashboardFrequencia() {
                           ))}
                         </TableBody>
                       </Table>
-                    </div>
+                    </ScrollArea>
                   </div>
                 )}
 
-                {ausentesHoje.length === 0 && horizontalBarData.length > 0 && (
-                  <p className="text-sm text-muted-foreground">Nenhum colaborador ausente hoje.</p>
+                {naoPresentesHoje.length === 0 && horizontalBarData.length > 0 && (
+                  <p className="text-sm text-muted-foreground">Todos os colaboradores estão presentes hoje.</p>
                 )}
               </CardContent>
             </Card>
