@@ -415,7 +415,7 @@ const Efetivo = () => {
                           </AvatarFallback>
                         </Avatar>
                       </TableCell>
-                      <TableCell className="font-medium">{formatFirstLastName(c.nome)}</TableCell>
+                      <TableCell className="font-medium">{c.nome}</TableCell>
                       <TableCell>{c.cargo}</TableCell>
                       <TableCell>{c.centro_custo}</TableCell>
                       <TableCell>{c.site_contrato}</TableCell>
