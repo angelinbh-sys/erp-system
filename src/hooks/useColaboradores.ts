@@ -12,6 +12,7 @@ export interface Colaborador {
   data_nascimento: string | null;
   telefone: string | null;
   status: string;
+  data_desligamento: string | null;
   created_at: string;
   updated_at: string;
 }
