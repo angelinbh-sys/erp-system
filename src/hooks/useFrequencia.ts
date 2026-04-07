@@ -22,6 +22,7 @@ export const STATUS_FREQUENCIA = [
   "Desligamento",
   "Feriado",
   "Descanso Remunerado",
+  "Suspensão",
 ] as const;
 
 export type StatusFrequencia = (typeof STATUS_FREQUENCIA)[number];
