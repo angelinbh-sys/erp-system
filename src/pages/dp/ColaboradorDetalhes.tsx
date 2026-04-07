@@ -16,6 +16,7 @@ import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { useAuthContext } from "@/contexts/AuthContext";
 import VagaTimeline from "@/components/VagaTimeline";
 import { toast } from "@/lib/toast";
+import { useCentrosCusto } from "@/hooks/useCadastros";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
