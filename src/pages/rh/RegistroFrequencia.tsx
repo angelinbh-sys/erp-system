@@ -33,6 +33,7 @@ const statusColors: Record<string, string> = {
   "Desligamento": "bg-gray-100 text-gray-800 border-gray-300",
   "Feriado": "bg-purple-100 text-purple-800 border-purple-300",
   "Descanso Remunerado": "bg-teal-100 text-teal-800 border-teal-300",
+  "Suspensão": "bg-rose-100 text-rose-800 border-rose-300",
 };
 
 export default function RegistroFrequencia() {

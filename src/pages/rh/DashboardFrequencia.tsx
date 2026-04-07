@@ -36,6 +36,7 @@ const COLORS: Record<string, string> = {
   "Atestado Médico ou Afastamento": "hsl(48, 96%, 53%)",
   "Férias": "hsl(217, 91%, 60%)",
   "Desligamento": "hsl(0, 0%, 64%)",
+  "Suspensão": "hsl(350, 80%, 55%)",
 };
 
 const CustomPieTooltip = ({ active, payload }: any) => {
