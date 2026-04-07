@@ -363,7 +363,7 @@ export default function DashboardFrequencia() {
               </CardContent>
             </Card>
 
-            {/* Line chart - por dia */}
+            {/* Bar chart - por dia + ausentes */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -371,32 +371,64 @@ export default function DashboardFrequencia() {
                   Frequência por Dia
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                {lineData.length === 0 ? (
+              <CardContent className="space-y-6">
+                {barData.length === 0 ? (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                     Sem dados no período
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={340}>
-                    <LineChart data={lineData}>
+                    <BarChart data={barData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="dia" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
                       <ReTooltip content={<CustomLineTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+                      <Legend wrapperStyle={{ fontSize: 11 }} iconType="square" />
                       {STATUS_ANALISE.map((s) => (
-                        <Line
+                        <Bar
                           key={s}
-                          type="monotone"
                           dataKey={s}
-                          stroke={COLORS[s]}
-                          strokeWidth={2}
-                          dot={{ r: 3, fill: COLORS[s] }}
-                          activeDot={{ r: 5 }}
+                          fill={COLORS[s]}
+                          stackId="freq"
+                          radius={0}
                         />
                       ))}
-                    </LineChart>
+                    </BarChart>
                   </ResponsiveContainer>
+                )}
+
+                {/* Lista de ausentes */}
+                {ausentesNoPeriodo.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                      <Users className="h-4 w-4 text-destructive" />
+                      Colaboradores Ausentes no Período
+                    </h4>
+                    <div className="max-h-[250px] overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead>Cargo</TableHead>
+                            <TableHead>Contrato</TableHead>
+                            <TableHead>Motivo</TableHead>
+                            <TableHead className="text-right">Dias</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {ausentesNoPeriodo.map((a, i) => (
+                            <TableRow key={i}>
+                              <TableCell className="font-medium">{a.nome}</TableCell>
+                              <TableCell>{a.cargo}</TableCell>
+                              <TableCell>{a.contrato}</TableCell>
+                              <TableCell className="text-xs">{a.status.join(", ")}</TableCell>
+                              <TableCell className="text-right font-bold text-destructive">{a.dias}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
