@@ -28,6 +28,8 @@ import MedicoesPage from "@/pages/contratos/Medicoes";
 import RelatoriosContratos from "@/pages/contratos/RelatoriosContratos";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Organograma from "@/pages/planejamento/Organograma";
+import RegistroFrequencia from "@/pages/rh/RegistroFrequencia";
+import DashboardFrequencia from "@/pages/rh/DashboardFrequencia";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
