@@ -293,6 +293,50 @@ export type Database = {
         }
         Relationships: []
       }
+      frequencia: {
+        Row: {
+          colaborador_id: string
+          created_at: string
+          data: string
+          id: string
+          observacao: string | null
+          registrado_por: string | null
+          registrado_por_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          colaborador_id: string
+          created_at?: string
+          data: string
+          id?: string
+          observacao?: string | null
+          registrado_por?: string | null
+          registrado_por_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          colaborador_id?: string
+          created_at?: string
+          data?: string
+          id?: string
+          observacao?: string | null
+          registrado_por?: string | null
+          registrado_por_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "frequencia_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medicoes: {
         Row: {
           contrato_id: string

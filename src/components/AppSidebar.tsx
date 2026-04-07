@@ -48,6 +48,8 @@ const modules = [
       { title: "Gestão RH", url: "/rh/gestao-rh" },
       { title: "Solicitação de Vaga", url: "/rh/solicitacao-de-vaga" },
       { title: "Aprovação de Vaga", url: "/rh/aprovacao-vaga" },
+      { title: "Registro de Frequência", url: "/rh/registro-frequencia" },
+      { title: "Dashboard Frequência", url: "/rh/dashboard-frequencia" },
     ],
   },
   {

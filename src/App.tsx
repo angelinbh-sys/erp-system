@@ -28,6 +28,8 @@ import MedicoesPage from "@/pages/contratos/Medicoes";
 import RelatoriosContratos from "@/pages/contratos/RelatoriosContratos";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Organograma from "@/pages/planejamento/Organograma";
+import RegistroFrequencia from "@/pages/rh/RegistroFrequencia";
+import DashboardFrequencia from "@/pages/rh/DashboardFrequencia";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +67,8 @@ const App = () => (
               <Route path="/rh/gestao-rh" element={<GestaoRH />} />
               <Route path="/rh/solicitacao-de-vaga" element={<AberturaDeVaga />} />
               <Route path="/rh/aprovacao-vaga" element={<AprovacaoVagas />} />
+              <Route path="/rh/registro-frequencia" element={<RegistroFrequencia />} />
+              <Route path="/rh/dashboard-frequencia" element={<DashboardFrequencia />} />
               <Route path="/departamento-pessoal/alteracao-funcao" element={<AlteracaoFuncao />} />
               <Route path="/departamento-pessoal/solicitacao-ferias" element={<SolicitacaoFerias />} />
               <Route path="/departamento-pessoal/admissao" element={<Admissao />} />
