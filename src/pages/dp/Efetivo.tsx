@@ -115,8 +115,10 @@ const Efetivo = () => {
     data_admissao: "", status: "Ativo",
   });
 
-  const selectedCC = centrosCusto.find((c) => c.id === newForm.centro_custo_id);
-  const sitesForCC = selectedCC?.sites ?? [];
+  // Build flat list of all sites with their parent CC info
+  const allSites = centrosCusto.flatMap((cc) =>
+    (cc.sites ?? []).map((s) => ({ siteId: s.id, siteNome: s.nome, ccId: cc.id, ccNome: cc.nome, ccCodigo: cc.codigo }))
+  );
   const [savingNew, setSavingNew] = useState(false);
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
@@ -448,8 +450,34 @@ const Efetivo = () => {
           <div className="space-y-4">
             <div><Label>Nome</Label><Input value={editForm.nome} onChange={(e) => setEditForm((p) => ({ ...p, nome: e.target.value }))} /></div>
             <div><Label>Cargo / Função</Label><Input value={editForm.cargo} onChange={(e) => setEditForm((p) => ({ ...p, cargo: e.target.value }))} /></div>
-            <div><Label>Centro de Custo</Label><Input value={editForm.centro_custo} onChange={(e) => setEditForm((p) => ({ ...p, centro_custo: e.target.value }))} /></div>
-            <div><Label>Site / Contrato</Label><Input value={editForm.site_contrato} onChange={(e) => setEditForm((p) => ({ ...p, site_contrato: e.target.value }))} /></div>
+            <div>
+              <Label>Site / Local de Trabalho</Label>
+              <Select
+                value={editForm.site_contrato}
+                onValueChange={(v) => {
+                  const site = allSites.find((s) => s.siteNome === v);
+                  setEditForm((p) => ({
+                    ...p,
+                    site_contrato: v,
+                    centro_custo: site ? (site.ccCodigo ? `${site.ccCodigo} - ${site.ccNome}` : site.ccNome) : p.centro_custo,
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o site" /></SelectTrigger>
+                <SelectContent>
+                  {allSites.map((s) => (
+                    <SelectItem key={s.siteId} value={s.siteNome}>
+                      {s.siteNome} ({s.ccCodigo || s.ccNome})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {editForm.centro_custo && (
+              <div className="bg-muted/50 rounded-md p-3 text-sm">
+                <span className="font-medium">Centro de Custo:</span> {editForm.centro_custo}
+              </div>
+            )}
             <div>
               <Label>Status</Label>
               <Select value={editForm.status} onValueChange={(v) => setEditForm((p) => ({ ...p, status: v }))}>
@@ -538,46 +566,39 @@ const Efetivo = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Centro de Custo *</Label>
-                <Select
-                  value={newForm.centro_custo_id}
-                  onValueChange={(v) => {
-                    const cc = centrosCusto.find((c) => c.id === v);
-                    setNewForm((p) => ({ ...p, centro_custo_id: v, centro_custo: cc?.nome ?? "", site_contrato: "" }));
-                  }}
-                >
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {centrosCusto.length === 0 ? (
-                      <div className="p-3 text-sm text-muted-foreground text-center">Nenhum centro de custo cadastrado.</div>
-                    ) : (
-                      centrosCusto.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.codigo ? `${c.codigo} - ${c.nome}` : c.nome}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Site / Contrato *</Label>
-                <Select
-                  value={newForm.site_contrato}
-                  onValueChange={(v) => setNewForm((p) => ({ ...p, site_contrato: v }))}
-                  disabled={sitesForCC.length === 0}
-                >
-                  <SelectTrigger><SelectValue placeholder={newForm.centro_custo_id ? "Selecione o site" : "Selecione o centro de custo primeiro"} /></SelectTrigger>
-                  <SelectContent>
-                    {sitesForCC.map((s) => (
-                      <SelectItem key={s.id} value={s.nome}>{s.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label>Site / Local de Trabalho *</Label>
+              <Select
+                value={newForm.site_contrato}
+                onValueChange={(v) => {
+                  const site = allSites.find((s) => s.siteNome === v);
+                  setNewForm((p) => ({
+                    ...p,
+                    site_contrato: v,
+                    centro_custo: site ? (site.ccCodigo ? `${site.ccCodigo} - ${site.ccNome}` : site.ccNome) : "",
+                    centro_custo_id: site?.ccId ?? "",
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o site" /></SelectTrigger>
+                <SelectContent>
+                  {allSites.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">Nenhum site cadastrado. Cadastre em Gestão RH → Centro de Custo.</div>
+                  ) : (
+                    allSites.map((s) => (
+                      <SelectItem key={s.siteId} value={s.siteNome}>
+                        {s.siteNome} ({s.ccCodigo || s.ccNome})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
+            {newForm.centro_custo && (
+              <div className="bg-muted/50 rounded-md p-3 text-sm">
+                <span className="font-medium">Centro de Custo:</span> {newForm.centro_custo}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Contrato</Label>
