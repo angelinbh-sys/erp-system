@@ -273,16 +273,24 @@ export default function DashboardFrequencia() {
                     Sem dados no período
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={340}>
                     <PieChart>
                       <Pie
                         data={pieData}
                         cx="50%"
                         cy="50%"
-                        outerRadius={100}
+                        outerRadius={90}
+                        innerRadius={40}
                         dataKey="value"
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                        labelLine={false}
+                        label={({ name, percent, x, y, midAngle }) => {
+                          const pct = (percent * 100).toFixed(0);
+                          return (
+                            <text x={x} y={y} textAnchor={midAngle > 180 ? "end" : "start"} dominantBaseline="central" className="fill-foreground" style={{ fontSize: 11 }}>
+                              {`${name} (${pct}%)`}
+                            </text>
+                          );
+                        }}
+                        labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
                       >
                         {pieData.map((d, i) => (
                           <Cell key={i} fill={d.color} />
