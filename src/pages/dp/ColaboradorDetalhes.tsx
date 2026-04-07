@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Download, User as UserIcon, FileText, History, Pencil, Save, X, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Download, User as UserIcon, FileText, History, Pencil, Save, X, ArrowRightLeft, Camera } from "lucide-react";
 import { formatFirstLastName } from "@/utils/formatName";
 import { useColaboradorHistorico, useUpdateColaborador, type Colaborador } from "@/hooks/useColaboradores";
 import { useAdmissaoDocumentos, DOCUMENTOS_OBRIGATORIOS } from "@/hooks/useAdmissaoDocumentos";
@@ -30,6 +30,7 @@ const ColaboradorDetalhes = () => {
   const [colaborador, setColaborador] = useState<Colaborador | null>(null);
   const [vaga, setVaga] = useState<any>(null);
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
+  const fotoInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [editingBlock, setEditingBlock] = useState<EditingBlock>(null);
   const [editForm, setEditForm] = useState<Record<string, string>>({});
@@ -245,6 +246,23 @@ const ColaboradorDetalhes = () => {
     }
   };
 
+  const handleFotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !colaborador) return;
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `colaboradores/${colaborador.id}/foto.${ext}`;
+      const { error } = await supabase.storage.from("admissao-documentos").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = await supabase.storage.from("admissao-documentos").createSignedUrl(path, 3600);
+      if (urlData?.signedUrl) setFotoUrl(urlData.signedUrl);
+      toast.success("Foto atualizada com sucesso!");
+    } catch {
+      toast.error("Erro ao enviar foto.");
+    }
+    if (fotoInputRef.current) fotoInputRef.current.value = "";
+  };
+
   const downloadFile = async (path: string, name: string) => {
     try {
       const bucket = path.includes("resultado-aso") ? "aso-documentos" : "admissao-documentos";
@@ -355,12 +373,31 @@ const ColaboradorDetalhes = () => {
             </div>
           ) : (
             <div className="flex items-start gap-6">
-              <Avatar className="h-48 w-48 shrink-0">
-                <AvatarImage src={fotoUrl || undefined} className="object-cover" />
-                <AvatarFallback className="text-4xl bg-muted">
-                  {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-20 w-20" />}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative group shrink-0">
+                <Avatar className="h-48 w-48">
+                  <AvatarImage src={fotoUrl || undefined} className="object-cover" />
+                  <AvatarFallback className="text-4xl bg-muted">
+                    {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-20 w-20" />}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  type="button"
+                  onClick={() => fotoInputRef.current?.click()}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <div className="flex flex-col items-center gap-1 text-white">
+                    <Camera className="h-8 w-8" />
+                    <span className="text-xs font-medium">Alterar foto</span>
+                  </div>
+                </button>
+                <input
+                  ref={fotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFotoUpload}
+                />
+              </div>
               <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4">
                 <InfoField label="Nome Completo" value={colaborador.nome} />
                 <InfoField label="Cargo / Função" value={colaborador.cargo} />
