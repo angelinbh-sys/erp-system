@@ -42,6 +42,7 @@ export default function RegistroFrequencia() {
   const [busca, setBusca] = useState("");
   const [registros, setRegistros] = useState<Record<string, StatusFrequencia>>({});
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [modoEdicao, setModoEdicao] = useState(false);
 
   const dataStr = format(dataSelecionada, "yyyy-MM-dd");
   const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
