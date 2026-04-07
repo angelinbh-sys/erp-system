@@ -124,6 +124,7 @@ export type Database = {
           cpf: string | null
           created_at: string
           data_admissao: string
+          data_desligamento: string | null
           data_nascimento: string | null
           digito_agencia: string | null
           digito_conta: string | null
@@ -154,6 +155,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           data_admissao?: string
+          data_desligamento?: string | null
           data_nascimento?: string | null
           digito_agencia?: string | null
           digito_conta?: string | null
@@ -184,6 +186,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           data_admissao?: string
+          data_desligamento?: string | null
           data_nascimento?: string | null
           digito_agencia?: string | null
           digito_conta?: string | null

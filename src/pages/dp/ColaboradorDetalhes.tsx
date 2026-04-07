@@ -92,6 +92,7 @@ const ColaboradorDetalhes = () => {
         cargo: colaborador.cargo,
         status: colaborador.status,
         telefone: colaborador.telefone || "",
+        data_desligamento: colaborador.data_desligamento || "",
       };
     } else if (block === "endereco" && vaga) {
       form = {
@@ -165,6 +166,10 @@ const ColaboradorDetalhes = () => {
       toast.error("O motivo da alteração é obrigatório.");
       return;
     }
+    if (editingBlock === "pessoais" && editForm.status === "Inativo" && !editForm.data_desligamento) {
+      toast.error("A data de desligamento é obrigatória ao inativar o colaborador.");
+      return;
+    }
     setSaving(true);
     const alteradoPor = formatFirstLastName(profile?.nome) || "Sistema";
 
@@ -177,6 +182,7 @@ const ColaboradorDetalhes = () => {
           { key: "cargo", label: "Cargo" },
           { key: "status", label: "Status" },
           { key: "telefone", label: "Telefone" },
+          { key: "data_desligamento", label: "Data de Desligamento" },
         ];
         for (const f of fields) {
           const oldVal = colaborador[f.key as keyof Colaborador] as string | null;
@@ -328,7 +334,7 @@ const ColaboradorDetalhes = () => {
                 <div><Label>Telefone</Label><Input value={editForm.telefone} onChange={e => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
                 <div>
                   <Label>Status</Label>
-                  <Select value={editForm.status} onValueChange={v => setEditForm(p => ({ ...p, status: v }))}>
+                  <Select value={editForm.status} onValueChange={v => setEditForm(p => ({ ...p, status: v, ...(v !== "Inativo" ? { data_desligamento: "" } : {}) }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Ativo">Ativo</SelectItem>
@@ -338,6 +344,12 @@ const ColaboradorDetalhes = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                {editForm.status === "Inativo" && (
+                  <div>
+                    <Label>Data de Desligamento *</Label>
+                    <Input type="date" value={editForm.data_desligamento} onChange={e => setEditForm(p => ({ ...p, data_desligamento: e.target.value }))} />
+                  </div>
+                )}
               </div>
               {editBlockFooter}
             </div>
@@ -355,6 +367,7 @@ const ColaboradorDetalhes = () => {
                 <InfoField label="Status" value={colaborador.status} />
                 <InfoField label="Data de Admissão" value={new Date(colaborador.data_admissao).toLocaleDateString("pt-BR")} />
                 {colaborador.data_nascimento && <InfoField label="Data de Nascimento" value={new Date(colaborador.data_nascimento).toLocaleDateString("pt-BR")} />}
+                {colaborador.data_desligamento && <InfoField label="Data de Desligamento" value={new Date(colaborador.data_desligamento + "T00:00:00").toLocaleDateString("pt-BR")} />}
                 {colaborador.telefone && <InfoField label="Telefone" value={colaborador.telefone} />}
                 {vaga?.cpf && <InfoField label="CPF" value={vaga.cpf} />}
                 {vaga?.sexo && <InfoField label="Sexo" value={vaga.sexo} />}
