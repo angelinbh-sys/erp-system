@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isBefore, startOfDay } from "date-fns";
+import { format, startOfMonth, endOfMonth, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, BarChart3, TrendingDown, Users } from "lucide-react";
 
@@ -147,46 +147,32 @@ export default function DashboardFrequencia() {
     return items.map((d) => ({ ...d, percent: total > 0 ? d.value / total : 0 }));
   }, [totaisPorStatus]);
 
-  // Bar chart: por dia
-  const barData = useMemo(() => {
-    if (!dataInicio || !dataFim) return [];
-    const end = dataFim > hoje ? hoje : dataFim;
-    const days = eachDayOfInterval({ start: dataInicio, end });
-    return days.map((day) => {
-      const dayStr = format(day, "yyyy-MM-dd");
-      const dayFreqs = freqFiltradas.filter((f) => f.data === dayStr);
-      const row: any = { dia: format(day, "dd/MM") };
-      STATUS_ANALISE.forEach((s) => {
-        row[s] = dayFreqs.filter((f) => f.status === s).length;
-      });
-      return row;
-    });
-  }, [freqFiltradas, dataInicio, dataFim]);
 
-  // Ausentes no período
-  const ausentesNoPeriodo = useMemo(() => {
+  // Horizontal bar data for today
+  const hojeStr = format(hoje, "yyyy-MM-dd");
+  const horizontalBarData = useMemo(() => {
+    const hojeFreqs = freqFiltradas.filter((f) => f.data === hojeStr);
+    return STATUS_ANALISE.map((s) => ({
+      status: s,
+      quantidade: hojeFreqs.filter((f) => f.status === s).length,
+      fill: COLORS[s],
+    })).filter((d) => d.quantidade > 0);
+  }, [freqFiltradas, hojeStr]);
+
+  // Ausentes hoje
+  const ausentesHoje = useMemo(() => {
     const statusAusencia = ["Falta Não Comunicada", "Falta Comunicada", "Atestado Médico ou Afastamento"];
-    const ausMap: Record<string, { nome: string; cargo: string; contrato: string; dias: number; status: string[] }> = {};
-    freqFiltradas.forEach((f) => {
-      if (statusAusencia.includes(f.status)) {
-        if (!ausMap[f.colaborador_id]) {
-          const colab = colabsFiltrados.find((c) => c.id === f.colaborador_id);
-          ausMap[f.colaborador_id] = {
-            nome: colab?.nome || "—",
-            cargo: colab?.cargo || "—",
-            contrato: colab?.site_contrato || "—",
-            dias: 0,
-            status: [],
-          };
-        }
-        ausMap[f.colaborador_id].dias++;
-        if (!ausMap[f.colaborador_id].status.includes(f.status)) {
-          ausMap[f.colaborador_id].status.push(f.status);
-        }
-      }
-    });
-    return Object.values(ausMap).sort((a, b) => b.dias - a.dias);
-  }, [freqFiltradas, colabsFiltrados]);
+    const hojeFreqs = freqFiltradas.filter((f) => f.data === hojeStr && statusAusencia.includes(f.status));
+    return hojeFreqs.map((f) => {
+      const colab = colabsFiltrados.find((c) => c.id === f.colaborador_id);
+      return {
+        nome: colab?.nome || "—",
+        cargo: colab?.cargo || "—",
+        contrato: colab?.site_contrato || "—",
+        status: f.status,
+      };
+    }).sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [freqFiltradas, colabsFiltrados, hojeStr]);
 
   // Ranking faltas
   const rankingFaltas = useMemo(() => {
@@ -363,46 +349,52 @@ export default function DashboardFrequencia() {
               </CardContent>
             </Card>
 
-            {/* Bar chart - por dia + ausentes */}
+            {/* Horizontal bar chart - Frequência do Dia (hoje) + ausentes */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
-                  Frequência por Dia
+                  Frequência do Dia — {format(hoje, "dd/MM/yyyy")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {barData.length === 0 ? (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    Sem dados no período
+                {horizontalBarData.length === 0 ? (
+                  <div className="h-[260px] flex items-center justify-center text-muted-foreground">
+                    Sem dados para hoje
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={340}>
-                    <BarChart data={barData}>
+                  <ResponsiveContainer width="100%" height={Math.max(260, horizontalBarData.length * 48)}>
+                    <BarChart data={horizontalBarData} layout="vertical" margin={{ left: 20, right: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="dia" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                      <YAxis fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                      <ReTooltip content={<CustomLineTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} iconType="square" />
-                      {STATUS_ANALISE.map((s) => (
-                        <Bar
-                          key={s}
-                          dataKey={s}
-                          fill={COLORS[s]}
-                          stackId="freq"
-                          radius={0}
-                        />
-                      ))}
+                      <XAxis type="number" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                      <YAxis type="category" dataKey="status" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} width={180} />
+                      <ReTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0].payload;
+                          return (
+                            <div className="bg-popover border border-border rounded-lg shadow-lg px-3 py-2 text-sm">
+                              <p className="font-medium" style={{ color: d.fill }}>{d.status}</p>
+                              <p className="text-foreground">Quantidade: <strong>{d.quantidade}</strong></p>
+                            </div>
+                          );
+                        }}
+                      />
+                      <Bar dataKey="quantidade" radius={[0, 4, 4, 0]}>
+                        {horizontalBarData.map((d, i) => (
+                          <Cell key={i} fill={d.fill} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 )}
 
-                {/* Lista de ausentes */}
-                {ausentesNoPeriodo.length > 0 && (
+                {/* Lista de ausentes do dia */}
+                {ausentesHoje.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                       <Users className="h-4 w-4 text-destructive" />
-                      Colaboradores Ausentes no Período
+                      Colaboradores Ausentes Hoje
                     </h4>
                     <div className="max-h-[250px] overflow-y-auto">
                       <Table>
@@ -411,24 +403,26 @@ export default function DashboardFrequencia() {
                             <TableHead>Nome</TableHead>
                             <TableHead>Cargo</TableHead>
                             <TableHead>Contrato</TableHead>
-                            <TableHead>Motivo</TableHead>
-                            <TableHead className="text-right">Dias</TableHead>
+                            <TableHead>Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {ausentesNoPeriodo.map((a, i) => (
+                          {ausentesHoje.map((a, i) => (
                             <TableRow key={i}>
                               <TableCell className="font-medium">{a.nome}</TableCell>
                               <TableCell>{a.cargo}</TableCell>
                               <TableCell>{a.contrato}</TableCell>
-                              <TableCell className="text-xs">{a.status.join(", ")}</TableCell>
-                              <TableCell className="text-right font-bold text-destructive">{a.dias}</TableCell>
+                              <TableCell className="text-xs text-destructive font-medium">{a.status}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
                       </Table>
                     </div>
                   </div>
+                )}
+
+                {ausentesHoje.length === 0 && horizontalBarData.length > 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhum colaborador ausente hoje.</p>
                 )}
               </CardContent>
             </Card>

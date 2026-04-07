@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Save, CheckCircle2 } from "lucide-react";
+import { CalendarIcon, Save, CheckCircle2, Pencil, AlertCircle } from "lucide-react";
 import { toast } from "@/lib/toast";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useFrequenciaByDate, useUpsertFrequencia, STATUS_FREQUENCIA, type StatusFrequencia } from "@/hooks/useFrequencia";
@@ -41,6 +42,7 @@ export default function RegistroFrequencia() {
   const [busca, setBusca] = useState("");
   const [registros, setRegistros] = useState<Record<string, StatusFrequencia>>({});
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [modoEdicao, setModoEdicao] = useState(false);
 
   const dataStr = format(dataSelecionada, "yyyy-MM-dd");
   const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
@@ -69,6 +71,8 @@ export default function RegistroFrequencia() {
     return list.sort((a, b) => a.nome.localeCompare(b.nome));
   }, [colaboradoresAtivos, filtroContrato, busca]);
 
+  const jaTemRegistro = frequencias.length > 0;
+
   useEffect(() => {
     if (frequencias.length > 0) {
       const map: Record<string, StatusFrequencia> = {};
@@ -79,6 +83,7 @@ export default function RegistroFrequencia() {
     } else {
       setRegistros({});
     }
+    setModoEdicao(false);
   }, [frequencias]);
 
   const getStatus = (colabId: string): StatusFrequencia =>
@@ -134,11 +139,40 @@ export default function RegistroFrequencia() {
             Registre a frequência diária dos colaboradores
           </p>
         </div>
-        <Button onClick={handleSalvar} disabled={upsert.isPending || isLoading}>
-          <Save className="h-4 w-4 mr-2" />
-          {upsert.isPending ? "Salvando..." : "Salvar Frequência"}
-        </Button>
+        <div className="flex gap-2">
+          {jaTemRegistro && !modoEdicao && (
+            <Button variant="outline" onClick={() => setModoEdicao(true)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar Frequência
+            </Button>
+          )}
+          <Button
+            onClick={handleSalvar}
+            disabled={upsert.isPending || isLoading || (jaTemRegistro && !modoEdicao)}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {upsert.isPending ? "Salvando..." : "Salvar Frequência"}
+          </Button>
+        </div>
       </div>
+
+      {jaTemRegistro && !modoEdicao && (
+        <Alert>
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertDescription>
+            Frequência já registrada para este dia. Clique em <strong>Editar Frequência</strong> para alterar.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {modoEdicao && (
+        <Alert className="border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20">
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+            Modo de edição ativado para este dia.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Filtros */}
       <Card>
@@ -187,7 +221,7 @@ export default function RegistroFrequencia() {
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Marcar todos como</label>
-              <Select onValueChange={(v) => handleMarcarTodos(v as StatusFrequencia)}>
+              <Select onValueChange={(v) => handleMarcarTodos(v as StatusFrequencia)} disabled={jaTemRegistro && !modoEdicao}>
                 <SelectTrigger className="w-[220px]">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
@@ -249,6 +283,7 @@ export default function RegistroFrequencia() {
                       <Select
                         value={getStatus(c.id)}
                         onValueChange={(v) => setStatus(c.id, v as StatusFrequencia)}
+                        disabled={jaTemRegistro && !modoEdicao}
                       >
                         <SelectTrigger className={cn("text-xs h-9", statusColors[getStatus(c.id)])}>
                           <SelectValue />
