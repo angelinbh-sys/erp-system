@@ -393,7 +393,7 @@ export default function DashboardFrequencia() {
                           <TableCell className="font-medium">{r.nome}</TableCell>
                           <TableCell>{r.cargo}</TableCell>
                           <TableCell>{r.contrato}</TableCell>
-                          <TableCell className="text-right font-bold text-yellow-600">{r.total}</TableCell>
+                          <TableCell className="text-right font-bold text-accent-foreground">{r.total}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

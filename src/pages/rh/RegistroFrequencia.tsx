@@ -44,7 +44,6 @@ export default function RegistroFrequencia() {
   const dataStr = format(dataSelecionada, "yyyy-MM-dd");
   const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
   const { data: frequencias = [], isLoading: loadingFreq } = useFrequenciaByDate(dataStr);
-  const { data: contratos = [] } = useContratos();
   const upsert = useUpsertFrequencia();
 
   const colaboradoresAtivos = useMemo(
