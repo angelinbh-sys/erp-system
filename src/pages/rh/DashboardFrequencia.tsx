@@ -147,8 +147,8 @@ export default function DashboardFrequencia() {
     return items.map((d) => ({ ...d, percent: total > 0 ? d.value / total : 0 }));
   }, [totaisPorStatus]);
 
-  // Line chart: por dia
-  const lineData = useMemo(() => {
+  // Bar chart: por dia
+  const barData = useMemo(() => {
     if (!dataInicio || !dataFim) return [];
     const end = dataFim > hoje ? hoje : dataFim;
     const days = eachDayOfInterval({ start: dataInicio, end });
@@ -162,6 +162,31 @@ export default function DashboardFrequencia() {
       return row;
     });
   }, [freqFiltradas, dataInicio, dataFim]);
+
+  // Ausentes no período
+  const ausentesNoPeriodo = useMemo(() => {
+    const statusAusencia = ["Falta Não Comunicada", "Falta Comunicada", "Atestado Médico ou Afastamento"];
+    const ausMap: Record<string, { nome: string; cargo: string; contrato: string; dias: number; status: string[] }> = {};
+    freqFiltradas.forEach((f) => {
+      if (statusAusencia.includes(f.status)) {
+        if (!ausMap[f.colaborador_id]) {
+          const colab = colabsFiltrados.find((c) => c.id === f.colaborador_id);
+          ausMap[f.colaborador_id] = {
+            nome: colab?.nome || "—",
+            cargo: colab?.cargo || "—",
+            contrato: colab?.site_contrato || "—",
+            dias: 0,
+            status: [],
+          };
+        }
+        ausMap[f.colaborador_id].dias++;
+        if (!ausMap[f.colaborador_id].status.includes(f.status)) {
+          ausMap[f.colaborador_id].status.push(f.status);
+        }
+      }
+    });
+    return Object.values(ausMap).sort((a, b) => b.dias - a.dias);
+  }, [freqFiltradas, colabsFiltrados]);
 
   // Ranking faltas
   const rankingFaltas = useMemo(() => {
