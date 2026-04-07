@@ -373,12 +373,31 @@ const ColaboradorDetalhes = () => {
             </div>
           ) : (
             <div className="flex items-start gap-6">
-              <Avatar className="h-48 w-48 shrink-0">
-                <AvatarImage src={fotoUrl || undefined} className="object-cover" />
-                <AvatarFallback className="text-4xl bg-muted">
-                  {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-20 w-20" />}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative group shrink-0">
+                <Avatar className="h-48 w-48">
+                  <AvatarImage src={fotoUrl || undefined} className="object-cover" />
+                  <AvatarFallback className="text-4xl bg-muted">
+                    {fotoUrl ? getInitials(colaborador.nome) : <UserIcon className="h-20 w-20" />}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  type="button"
+                  onClick={() => fotoInputRef.current?.click()}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <div className="flex flex-col items-center gap-1 text-white">
+                    <Camera className="h-8 w-8" />
+                    <span className="text-xs font-medium">Alterar foto</span>
+                  </div>
+                </button>
+                <input
+                  ref={fotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFotoUpload}
+                />
+              </div>
               <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4">
                 <InfoField label="Nome Completo" value={colaborador.nome} />
                 <InfoField label="Cargo / Função" value={colaborador.cargo} />
