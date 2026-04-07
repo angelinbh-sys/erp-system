@@ -67,6 +67,8 @@ const App = () => (
               <Route path="/rh/gestao-rh" element={<GestaoRH />} />
               <Route path="/rh/solicitacao-de-vaga" element={<AberturaDeVaga />} />
               <Route path="/rh/aprovacao-vaga" element={<AprovacaoVagas />} />
+              <Route path="/rh/registro-frequencia" element={<RegistroFrequencia />} />
+              <Route path="/rh/dashboard-frequencia" element={<DashboardFrequencia />} />
               <Route path="/departamento-pessoal/alteracao-funcao" element={<AlteracaoFuncao />} />
               <Route path="/departamento-pessoal/solicitacao-ferias" element={<SolicitacaoFerias />} />
               <Route path="/departamento-pessoal/admissao" element={<Admissao />} />
