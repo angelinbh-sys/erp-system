@@ -139,11 +139,40 @@ export default function RegistroFrequencia() {
             Registre a frequência diária dos colaboradores
           </p>
         </div>
-        <Button onClick={handleSalvar} disabled={upsert.isPending || isLoading}>
-          <Save className="h-4 w-4 mr-2" />
-          {upsert.isPending ? "Salvando..." : "Salvar Frequência"}
-        </Button>
+        <div className="flex gap-2">
+          {jaTemRegistro && !modoEdicao && (
+            <Button variant="outline" onClick={() => setModoEdicao(true)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar Frequência
+            </Button>
+          )}
+          <Button
+            onClick={handleSalvar}
+            disabled={upsert.isPending || isLoading || (jaTemRegistro && !modoEdicao)}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {upsert.isPending ? "Salvando..." : "Salvar Frequência"}
+          </Button>
+        </div>
       </div>
+
+      {jaTemRegistro && !modoEdicao && (
+        <Alert>
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertDescription>
+            Frequência já registrada para este dia. Clique em <strong>Editar Frequência</strong> para alterar.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {modoEdicao && (
+        <Alert className="border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20">
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+            Modo de edição ativado para este dia.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Filtros */}
       <Card>
