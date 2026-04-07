@@ -95,14 +95,15 @@ export default function DashboardFrequencia() {
 
   const totalRegistros = freqFiltradas.length;
 
-  // Pie chart data
+  const STATUS_EXCLUIDOS_PIE = ["Feriado", "Descanso Remunerado"];
+
   const pieData = useMemo(
     () =>
       STATUS_FREQUENCIA.map((s, i) => ({
         name: s,
         value: totaisPorStatus[s] || 0,
         color: COLORS[i],
-      })).filter((d) => d.value > 0),
+      })).filter((d) => d.value > 0 && !STATUS_EXCLUIDOS_PIE.includes(d.name)),
     [totaisPorStatus]
   );
 
