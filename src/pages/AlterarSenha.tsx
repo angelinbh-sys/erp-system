@@ -56,15 +56,7 @@ const AlterarSenha = () => {
       if (profile) {
         await supabase
           .from("profiles")
-          .update({ must_change_password: false } as Record<string, unknown>)
-          .eq("user_id", profile.user_id);
-      }
-
-      // Update profile in DB first, then refetch to update local state
-      if (profile) {
-        await supabase
-          .from("profiles")
-          .update({ must_change_password: false } as Record<string, unknown>)
+          .update({ must_change_password: false } as any)
           .eq("user_id", profile.user_id);
       }
 

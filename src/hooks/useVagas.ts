@@ -40,7 +40,7 @@ export function useUpdateVagaStatus() {
     mutationFn: async ({ id, status, observacao }: { id: string; status: string; observacao?: string }) => {
       const update: Record<string, string> = { status };
       if (observacao !== undefined) update.observacao_reprovacao = observacao;
-      const { error } = await supabase.from("vagas").update(update).eq("id", id);
+      const { error } = await supabase.from("vagas").update(update as any).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
