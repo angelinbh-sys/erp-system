@@ -31,6 +31,7 @@ const COLORS = [
   "hsl(217, 91%, 60%)", // Férias - blue
   "hsl(0, 0%, 64%)",    // Desligamento - gray
   "hsl(271, 91%, 65%)", // Feriado - purple
+  "hsl(168, 76%, 42%)", // Descanso Remunerado - teal
 ];
 
 export default function DashboardFrequencia() {
