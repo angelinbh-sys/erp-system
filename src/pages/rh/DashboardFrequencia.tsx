@@ -163,30 +163,31 @@ export default function DashboardFrequencia() {
     });
   }, [freqFiltradas, dataInicio, dataFim]);
 
-  // Ausentes no período
-  const ausentesNoPeriodo = useMemo(() => {
+  // Horizontal bar data for today
+  const hojeStr = format(hoje, "yyyy-MM-dd");
+  const horizontalBarData = useMemo(() => {
+    const hojeFreqs = freqFiltradas.filter((f) => f.data === hojeStr);
+    return STATUS_ANALISE.map((s) => ({
+      status: s,
+      quantidade: hojeFreqs.filter((f) => f.status === s).length,
+      fill: COLORS[s],
+    })).filter((d) => d.quantidade > 0);
+  }, [freqFiltradas, hojeStr]);
+
+  // Ausentes hoje
+  const ausentesHoje = useMemo(() => {
     const statusAusencia = ["Falta Não Comunicada", "Falta Comunicada", "Atestado Médico ou Afastamento"];
-    const ausMap: Record<string, { nome: string; cargo: string; contrato: string; dias: number; status: string[] }> = {};
-    freqFiltradas.forEach((f) => {
-      if (statusAusencia.includes(f.status)) {
-        if (!ausMap[f.colaborador_id]) {
-          const colab = colabsFiltrados.find((c) => c.id === f.colaborador_id);
-          ausMap[f.colaborador_id] = {
-            nome: colab?.nome || "—",
-            cargo: colab?.cargo || "—",
-            contrato: colab?.site_contrato || "—",
-            dias: 0,
-            status: [],
-          };
-        }
-        ausMap[f.colaborador_id].dias++;
-        if (!ausMap[f.colaborador_id].status.includes(f.status)) {
-          ausMap[f.colaborador_id].status.push(f.status);
-        }
-      }
-    });
-    return Object.values(ausMap).sort((a, b) => b.dias - a.dias);
-  }, [freqFiltradas, colabsFiltrados]);
+    const hojeFreqs = freqFiltradas.filter((f) => f.data === hojeStr && statusAusencia.includes(f.status));
+    return hojeFreqs.map((f) => {
+      const colab = colabsFiltrados.find((c) => c.id === f.colaborador_id);
+      return {
+        nome: colab?.nome || "—",
+        cargo: colab?.cargo || "—",
+        contrato: colab?.site_contrato || "—",
+        status: f.status,
+      };
+    }).sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [freqFiltradas, colabsFiltrados, hojeStr]);
 
   // Ranking faltas
   const rankingFaltas = useMemo(() => {
