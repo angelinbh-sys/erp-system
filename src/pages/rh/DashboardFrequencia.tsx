@@ -390,13 +390,13 @@ export default function DashboardFrequencia() {
                 )}
 
                 {/* Lista de ausentes do dia */}
-                {ausentesHoje.length > 0 && (
+                {naoPresentesHoje.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                       <Users className="h-4 w-4 text-destructive" />
-                      Colaboradores Ausentes Hoje
+                      Colaboradores Não Presentes Hoje ({naoPresentesHoje.length})
                     </h4>
-                    <div className="max-h-[250px] overflow-y-auto">
+                    <ScrollArea className="max-h-[300px]">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -407,7 +407,7 @@ export default function DashboardFrequencia() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {ausentesHoje.map((a, i) => (
+                          {naoPresentesHoje.map((a, i) => (
                             <TableRow key={i}>
                               <TableCell className="font-medium">{a.nome}</TableCell>
                               <TableCell>{a.cargo}</TableCell>
