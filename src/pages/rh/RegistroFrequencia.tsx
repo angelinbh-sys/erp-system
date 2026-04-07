@@ -283,6 +283,7 @@ export default function RegistroFrequencia() {
                       <Select
                         value={getStatus(c.id)}
                         onValueChange={(v) => setStatus(c.id, v as StatusFrequencia)}
+                        disabled={jaTemRegistro && !modoEdicao}
                       >
                         <SelectTrigger className={cn("text-xs h-9", statusColors[getStatus(c.id)])}>
                           <SelectValue />
