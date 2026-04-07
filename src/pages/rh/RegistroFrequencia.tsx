@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
-import { format, parseISO } from "date-fns";
+import { format, startOfDay, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Save, CheckCircle2, Pencil, AlertCircle } from "lucide-react";
 import { toast } from "@/lib/toast";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -18,8 +18,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
-import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
+import { useColaboradores } from "@/hooks/useColaboradores";
 import { useFrequenciaByDate, useUpsertFrequencia, STATUS_FREQUENCIA, type StatusFrequencia } from "@/hooks/useFrequencia";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -44,6 +48,11 @@ export default function RegistroFrequencia() {
   const [registros, setRegistros] = useState<Record<string, StatusFrequencia>>({});
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
+  const [justificativaDialog, setJustificativaDialog] = useState(false);
+  const [justificativa, setJustificativa] = useState("");
+
+  const hoje = startOfDay(new Date());
+  const dataFutura = isAfter(startOfDay(dataSelecionada), hoje);
 
   const dataStr = format(dataSelecionada, "yyyy-MM-dd");
   const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
@@ -85,6 +94,7 @@ export default function RegistroFrequencia() {
       setRegistros({});
     }
     setModoEdicao(false);
+    setJustificativa("");
   }, [frequencias]);
 
   const getStatus = (colabId: string): StatusFrequencia =>
@@ -95,20 +105,41 @@ export default function RegistroFrequencia() {
   };
 
   const handleSalvar = async () => {
+    if (dataFutura) {
+      toast.error("Não é permitido registrar frequência para datas futuras.");
+      return;
+    }
+
     const records = colaboradoresFiltrados.map((c) => ({
       colaborador_id: c.id,
       data: dataStr,
       status: getStatus(c.id),
       registrado_por: profile?.nome || "Sistema",
       registrado_por_id: profile?.user_id || null,
+      observacao: modoEdicao ? `[Edição] Justificativa: ${justificativa}` : null,
     }));
 
     try {
       await upsert.mutateAsync(records);
       toast.success("Frequência salva com sucesso!");
+      setModoEdicao(false);
+      setJustificativa("");
     } catch (e: any) {
       toast.error("Erro ao salvar frequência: " + e.message);
     }
+  };
+
+  const handleEditarClick = () => {
+    setJustificativaDialog(true);
+  };
+
+  const handleConfirmarEdicao = () => {
+    if (!justificativa.trim()) {
+      toast.error("É necessário informar uma justificativa para editar a frequência.");
+      return;
+    }
+    setJustificativaDialog(false);
+    setModoEdicao(true);
   };
 
   const handleMarcarTodos = (status: StatusFrequencia) => {
@@ -130,6 +161,7 @@ export default function RegistroFrequencia() {
   }, [colaboradoresFiltrados, registros]);
 
   const isLoading = loadingColab || loadingFreq;
+  const bloqueado = dataFutura || (jaTemRegistro && !modoEdicao);
 
   return (
     <div className="space-y-6">
@@ -141,15 +173,15 @@ export default function RegistroFrequencia() {
           </p>
         </div>
         <div className="flex gap-2">
-          {jaTemRegistro && !modoEdicao && (
-            <Button variant="outline" onClick={() => setModoEdicao(true)}>
+          {jaTemRegistro && !modoEdicao && !dataFutura && (
+            <Button variant="outline" onClick={handleEditarClick}>
               <Pencil className="h-4 w-4 mr-2" />
               Editar Frequência
             </Button>
           )}
           <Button
             onClick={handleSalvar}
-            disabled={upsert.isPending || isLoading || (jaTemRegistro && !modoEdicao)}
+            disabled={upsert.isPending || isLoading || bloqueado}
           >
             <Save className="h-4 w-4 mr-2" />
             {upsert.isPending ? "Salvando..." : "Salvar Frequência"}
@@ -157,7 +189,16 @@ export default function RegistroFrequencia() {
         </div>
       </div>
 
-      {jaTemRegistro && !modoEdicao && (
+      {dataFutura && (
+        <Alert className="border-red-400 bg-red-50 dark:bg-red-950/20">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800 dark:text-red-200">
+            Não é permitido registrar frequência para datas futuras.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {jaTemRegistro && !modoEdicao && !dataFutura && (
         <Alert>
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>
@@ -170,7 +211,7 @@ export default function RegistroFrequencia() {
         <Alert className="border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20">
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800 dark:text-yellow-200">
-            Modo de edição ativado para este dia.
+            Modo de edição ativado para este dia. Justificativa: <strong>{justificativa}</strong>
           </AlertDescription>
         </Alert>
       )}
@@ -194,6 +235,8 @@ export default function RegistroFrequencia() {
                     selected={dataSelecionada}
                     onSelect={(d) => { if (d) { setDataSelecionada(d); setCalendarOpen(false); } }}
                     locale={ptBR}
+                    disabled={(date) => isAfter(startOfDay(date), hoje)}
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
@@ -222,7 +265,7 @@ export default function RegistroFrequencia() {
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Marcar todos como</label>
-              <Select onValueChange={(v) => handleMarcarTodos(v as StatusFrequencia)} disabled={jaTemRegistro && !modoEdicao}>
+              <Select onValueChange={(v) => handleMarcarTodos(v as StatusFrequencia)} disabled={bloqueado}>
                 <SelectTrigger className="w-[220px]">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
@@ -284,7 +327,7 @@ export default function RegistroFrequencia() {
                       <Select
                         value={getStatus(c.id)}
                         onValueChange={(v) => setStatus(c.id, v as StatusFrequencia)}
-                        disabled={jaTemRegistro && !modoEdicao}
+                        disabled={bloqueado}
                       >
                         <SelectTrigger className={cn("text-xs h-9", statusColors[getStatus(c.id)])}>
                           <SelectValue />
@@ -305,6 +348,36 @@ export default function RegistroFrequencia() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de justificativa para edição */}
+      <Dialog open={justificativaDialog} onOpenChange={setJustificativaDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Justificativa para Edição</DialogTitle>
+            <DialogDescription>
+              Informe o motivo da edição da frequência do dia {format(dataSelecionada, "dd/MM/yyyy")}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="justificativa">Justificativa *</Label>
+            <Textarea
+              id="justificativa"
+              placeholder="Descreva o motivo da edição..."
+              value={justificativa}
+              onChange={(e) => setJustificativa(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setJustificativaDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmarEdicao}>
+              Confirmar Edição
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
