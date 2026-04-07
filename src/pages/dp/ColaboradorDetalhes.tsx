@@ -391,10 +391,38 @@ const ColaboradorDetalhes = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><Label>Centro de Custo</Label><Input value={transferForm.centro_custo} onChange={e => setTransferForm(p => ({ ...p, centro_custo: e.target.value }))} /></div>
-              <div><Label>Site / Contrato</Label><Input value={transferForm.site_contrato} onChange={e => setTransferForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
+            <div>
+              <Label>Site / Local de Trabalho</Label>
+              <Select
+                value={transferForm.site_contrato}
+                onValueChange={(v) => {
+                  const site = allSitesTransfer.find((s) => s.siteNome === v);
+                  setTransferForm((p) => ({
+                    ...p,
+                    site_contrato: v,
+                    centro_custo: site ? (site.ccCodigo ? `${site.ccCodigo} - ${site.ccNome}` : site.ccNome) : p.centro_custo,
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o site" /></SelectTrigger>
+                <SelectContent>
+                  {allSitesTransfer.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">Nenhum site cadastrado.</div>
+                  ) : (
+                    allSitesTransfer.map((s) => (
+                      <SelectItem key={s.siteId} value={s.siteNome}>
+                        {s.siteNome} ({s.ccCodigo || s.ccNome})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
+            {transferForm.centro_custo && (
+              <div className="bg-muted/50 rounded-md p-3 text-sm">
+                <span className="font-medium">Centro de Custo:</span> {transferForm.centro_custo}
+              </div>
+            )}
             <div>
               <Label>Motivo da Transferência *</Label>
               <Textarea placeholder="Descreva o motivo da transferência" value={transferMotivo} onChange={e => setTransferMotivo(e.target.value)} />
