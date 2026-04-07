@@ -263,7 +263,7 @@ const ColaboradorDetalhes = () => {
     if (fotoInputRef.current) fotoInputRef.current.value = "";
   };
 
-
+  const downloadFile = async (path: string, name: string) => {
     try {
       const bucket = path.includes("resultado-aso") ? "aso-documentos" : "admissao-documentos";
       const { data } = await supabase.storage.from(bucket).download(path);
