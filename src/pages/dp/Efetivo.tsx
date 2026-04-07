@@ -115,8 +115,10 @@ const Efetivo = () => {
     data_admissao: "", status: "Ativo",
   });
 
-  const selectedCC = centrosCusto.find((c) => c.id === newForm.centro_custo_id);
-  const sitesForCC = selectedCC?.sites ?? [];
+  // Build flat list of all sites with their parent CC info
+  const allSites = centrosCusto.flatMap((cc) =>
+    (cc.sites ?? []).map((s) => ({ siteId: s.id, siteNome: s.nome, ccId: cc.id, ccNome: cc.nome, ccCodigo: cc.codigo }))
+  );
   const [savingNew, setSavingNew] = useState(false);
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
