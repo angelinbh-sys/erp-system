@@ -16,6 +16,7 @@ import { useVagaHistorico } from "@/hooks/useVagaHistorico";
 import { useAuthContext } from "@/contexts/AuthContext";
 import VagaTimeline from "@/components/VagaTimeline";
 import { toast } from "@/lib/toast";
+import { useCentrosCusto } from "@/hooks/useCadastros";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -37,6 +38,10 @@ const ColaboradorDetalhes = () => {
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferForm, setTransferForm] = useState({ centro_custo: "", site_contrato: "" });
   const [transferMotivo, setTransferMotivo] = useState("");
+  const { items: centrosCusto } = useCentrosCusto();
+  const allSitesTransfer = centrosCusto.flatMap((cc) =>
+    (cc.sites ?? []).map((s) => ({ siteId: s.id, siteNome: s.nome, ccId: cc.id, ccNome: cc.nome, ccCodigo: cc.codigo }))
+  );
   const updateColaborador = useUpdateColaborador();
 
   const { data: historico = [] } = useColaboradorHistorico(id || null);
@@ -390,10 +395,38 @@ const ColaboradorDetalhes = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><Label>Centro de Custo</Label><Input value={transferForm.centro_custo} onChange={e => setTransferForm(p => ({ ...p, centro_custo: e.target.value }))} /></div>
-              <div><Label>Site / Contrato</Label><Input value={transferForm.site_contrato} onChange={e => setTransferForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
+            <div>
+              <Label>Site / Local de Trabalho</Label>
+              <Select
+                value={transferForm.site_contrato}
+                onValueChange={(v) => {
+                  const site = allSitesTransfer.find((s) => s.siteNome === v);
+                  setTransferForm((p) => ({
+                    ...p,
+                    site_contrato: v,
+                    centro_custo: site ? (site.ccCodigo ? `${site.ccCodigo} - ${site.ccNome}` : site.ccNome) : p.centro_custo,
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o site" /></SelectTrigger>
+                <SelectContent>
+                  {allSitesTransfer.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">Nenhum site cadastrado.</div>
+                  ) : (
+                    allSitesTransfer.map((s) => (
+                      <SelectItem key={s.siteId} value={s.siteNome}>
+                        {s.siteNome} ({s.ccCodigo || s.ccNome})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
+            {transferForm.centro_custo && (
+              <div className="bg-muted/50 rounded-md p-3 text-sm">
+                <span className="font-medium">Centro de Custo:</span> {transferForm.centro_custo}
+              </div>
+            )}
             <div>
               <Label>Motivo da Transferência *</Label>
               <Textarea placeholder="Descreva o motivo da transferência" value={transferMotivo} onChange={e => setTransferMotivo(e.target.value)} />
