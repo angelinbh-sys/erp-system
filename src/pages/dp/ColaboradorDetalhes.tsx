@@ -367,6 +367,7 @@ const ColaboradorDetalhes = () => {
                 <InfoField label="Status" value={colaborador.status} />
                 <InfoField label="Data de Admissão" value={new Date(colaborador.data_admissao).toLocaleDateString("pt-BR")} />
                 {colaborador.data_nascimento && <InfoField label="Data de Nascimento" value={new Date(colaborador.data_nascimento).toLocaleDateString("pt-BR")} />}
+                {colaborador.data_desligamento && <InfoField label="Data de Desligamento" value={new Date(colaborador.data_desligamento + "T00:00:00").toLocaleDateString("pt-BR")} />}
                 {colaborador.telefone && <InfoField label="Telefone" value={colaborador.telefone} />}
                 {vaga?.cpf && <InfoField label="CPF" value={vaga.cpf} />}
                 {vaga?.sexo && <InfoField label="Sexo" value={vaga.sexo} />}
