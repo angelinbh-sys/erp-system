@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, BarChart3, TrendingDown, Users } from "lucide-react";
 
@@ -16,27 +16,58 @@ import {
 } from "@/components/ui/table";
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend, Tooltip,
 } from "recharts";
 
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useFrequenciaByRange, STATUS_FREQUENCIA } from "@/hooks/useFrequencia";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-const COLORS = [
-  "hsl(142, 71%, 45%)", // Presente - green
-  "hsl(0, 84%, 60%)",   // Falta Não Comunicada - red
-  "hsl(25, 95%, 53%)",  // Falta Comunicada - orange
-  "hsl(48, 96%, 53%)",  // Atestado - yellow
-  "hsl(217, 91%, 60%)", // Férias - blue
-  "hsl(0, 0%, 64%)",    // Desligamento - gray
-  "hsl(271, 91%, 65%)", // Feriado - purple
-  "hsl(168, 76%, 42%)", // Descanso Remunerado - teal
-];
+// Status excluídos da análise
+const STATUS_EXCLUIDOS = ["Feriado", "Descanso Remunerado"];
+const STATUS_ANALISE = STATUS_FREQUENCIA.filter((s) => !STATUS_EXCLUIDOS.includes(s));
+
+const COLORS: Record<string, string> = {
+  "Presente": "hsl(142, 71%, 45%)",
+  "Falta Não Comunicada": "hsl(0, 84%, 60%)",
+  "Falta Comunicada": "hsl(25, 95%, 53%)",
+  "Atestado Médico ou Afastamento": "hsl(48, 96%, 53%)",
+  "Férias": "hsl(217, 91%, 60%)",
+  "Desligamento": "hsl(0, 0%, 64%)",
+};
+
+const CustomPieTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0];
+  return (
+    <div className="bg-popover border border-border rounded-lg shadow-lg px-3 py-2 text-sm">
+      <p className="font-medium" style={{ color: d.payload.color }}>{d.name}</p>
+      <p className="text-foreground">Quantidade: <strong>{d.value}</strong></p>
+      <p className="text-foreground">Percentual: <strong>{((d.payload.percent || 0) * 100).toFixed(1)}%</strong></p>
+    </div>
+  );
+};
+
+const CustomLineTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-popover border border-border rounded-lg shadow-lg px-3 py-2 text-sm max-w-xs">
+      <p className="font-medium text-foreground mb-1">{label}</p>
+      {payload.filter((p: any) => p.value > 0).map((p: any) => (
+        <p key={p.name} className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: p.color }} />
+          <span className="text-muted-foreground">{p.name}:</span>
+          <strong className="text-foreground">{p.value}</strong>
+        </p>
+      ))}
+    </div>
+  );
+};
 
 export default function DashboardFrequencia() {
   const hoje = new Date();
-  const [periodo, setPeriodo] = useState<"mes" | "semana" | "custom">("mes");
   const [filtroContrato, setFiltroContrato] = useState<string>("todos");
 
   const [dataInicio, setDataInicio] = useState<Date>(startOfMonth(hoje));
@@ -44,15 +75,24 @@ export default function DashboardFrequencia() {
   const [calInicioOpen, setCalInicioOpen] = useState(false);
   const [calFimOpen, setCalFimOpen] = useState(false);
 
-  const handlePeriodo = (val: string) => {
-    setPeriodo(val as any);
-    if (val === "mes") {
-      setDataInicio(startOfMonth(hoje));
-      setDataFim(endOfMonth(hoje));
-    } else if (val === "semana") {
-      setDataInicio(subDays(hoje, 6));
-      setDataFim(hoje);
+  const handleDataInicio = (d: Date | undefined) => {
+    if (!d) return;
+    if (isBefore(dataFim, d)) {
+      toast.error("A data final não pode ser menor que a data inicial.");
+      return;
     }
+    setDataInicio(d);
+    setCalInicioOpen(false);
+  };
+
+  const handleDataFim = (d: Date | undefined) => {
+    if (!d) return;
+    if (isBefore(d, dataInicio)) {
+      toast.error("A data final não pode ser menor que a data inicial.");
+      return;
+    }
+    setDataFim(d);
+    setCalFimOpen(false);
   };
 
   const dataInicioStr = format(dataInicio, "yyyy-MM-dd");
@@ -78,15 +118,16 @@ export default function DashboardFrequencia() {
 
   const colabIds = useMemo(() => new Set(colabsFiltrados.map((c) => c.id)), [colabsFiltrados]);
 
+  // Frequências filtradas excluindo status que não entram na análise
   const freqFiltradas = useMemo(
-    () => frequencias.filter((f) => colabIds.has(f.colaborador_id)),
+    () => frequencias.filter((f) => colabIds.has(f.colaborador_id) && !STATUS_EXCLUIDOS.includes(f.status)),
     [frequencias, colabIds]
   );
 
-  // Totais por status
+  // Totais por status (apenas análise)
   const totaisPorStatus = useMemo(() => {
     const counts: Record<string, number> = {};
-    STATUS_FREQUENCIA.forEach((s) => (counts[s] = 0));
+    STATUS_ANALISE.forEach((s) => (counts[s] = 0));
     freqFiltradas.forEach((f) => {
       if (counts[f.status] !== undefined) counts[f.status]++;
     });
@@ -95,34 +136,34 @@ export default function DashboardFrequencia() {
 
   const totalRegistros = freqFiltradas.length;
 
-  const STATUS_EXCLUIDOS_PIE = ["Feriado", "Descanso Remunerado"];
+  // Pie data
+  const pieData = useMemo(() => {
+    const items = STATUS_ANALISE.map((s) => ({
+      name: s,
+      value: totaisPorStatus[s] || 0,
+      color: COLORS[s],
+    })).filter((d) => d.value > 0);
+    const total = items.reduce((a, b) => a + b.value, 0);
+    return items.map((d) => ({ ...d, percent: total > 0 ? d.value / total : 0 }));
+  }, [totaisPorStatus]);
 
-  const pieData = useMemo(
-    () =>
-      STATUS_FREQUENCIA.map((s, i) => ({
-        name: s,
-        value: totaisPorStatus[s] || 0,
-        color: COLORS[i],
-      })).filter((d) => d.value > 0 && !STATUS_EXCLUIDOS_PIE.includes(d.name)),
-    [totaisPorStatus]
-  );
-
-  // Bar chart: por dia
-  const barData = useMemo(() => {
+  // Line chart: por dia
+  const lineData = useMemo(() => {
     if (!dataInicio || !dataFim) return [];
-    const days = eachDayOfInterval({ start: dataInicio, end: dataFim > hoje ? hoje : dataFim });
+    const end = dataFim > hoje ? hoje : dataFim;
+    const days = eachDayOfInterval({ start: dataInicio, end });
     return days.map((day) => {
       const dayStr = format(day, "yyyy-MM-dd");
       const dayFreqs = freqFiltradas.filter((f) => f.data === dayStr);
       const row: any = { dia: format(day, "dd/MM") };
-      STATUS_FREQUENCIA.forEach((s) => {
+      STATUS_ANALISE.forEach((s) => {
         row[s] = dayFreqs.filter((f) => f.status === s).length;
       });
       return row;
     });
   }, [freqFiltradas, dataInicio, dataFim]);
 
-  // Ranking: colaboradores com mais faltas
+  // Ranking faltas
   const rankingFaltas = useMemo(() => {
     const faltaStatus = ["Falta Não Comunicada", "Falta Comunicada"];
     const counts: Record<string, number> = {};
@@ -140,7 +181,7 @@ export default function DashboardFrequencia() {
       .slice(0, 10);
   }, [freqFiltradas, colabsFiltrados]);
 
-  // Ranking: mais atestados
+  // Ranking atestados
   const rankingAtestados = useMemo(() => {
     const counts: Record<string, number> = {};
     freqFiltradas.forEach((f) => {
@@ -171,50 +212,33 @@ export default function DashboardFrequencia() {
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4 items-end">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Período</label>
-              <Select value={periodo} onValueChange={handlePeriodo}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="semana">Últimos 7 dias</SelectItem>
-                  <SelectItem value="mes">Mês atual</SelectItem>
-                  <SelectItem value="custom">Personalizado</SelectItem>
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium">Data inicial</label>
+              <Popover open={calInicioOpen} onOpenChange={setCalInicioOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[160px] justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(dataInicio, "dd/MM/yyyy")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={dataInicio} onSelect={handleDataInicio} locale={ptBR} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
             </div>
-            {periodo === "custom" && (
-              <>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">De</label>
-                  <Popover open={calInicioOpen} onOpenChange={setCalInicioOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-[160px] justify-start">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {format(dataInicio, "dd/MM/yyyy")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={dataInicio} onSelect={(d) => { if (d) { setDataInicio(d); setCalInicioOpen(false); } }} locale={ptBR} />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Até</label>
-                  <Popover open={calFimOpen} onOpenChange={setCalFimOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-[160px] justify-start">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {format(dataFim, "dd/MM/yyyy")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={dataFim} onSelect={(d) => { if (d) { setDataFim(d); setCalFimOpen(false); } }} locale={ptBR} />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </>
-            )}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Data final</label>
+              <Popover open={calFimOpen} onOpenChange={setCalFimOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[160px] justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(dataFim, "dd/MM/yyyy")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={dataFim} onSelect={handleDataFim} locale={ptBR} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="space-y-1.5 min-w-[200px]">
               <label className="text-sm font-medium">Contrato</label>
               <Select value={filtroContrato} onValueChange={setFiltroContrato}>
@@ -241,16 +265,16 @@ export default function DashboardFrequencia() {
         </div>
       ) : (
         <>
-          {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {STATUS_FREQUENCIA.map((s, i) => {
+          {/* KPIs - apenas status de análise */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {STATUS_ANALISE.map((s) => {
               const pct = totalRegistros > 0 ? ((totaisPorStatus[s] / totalRegistros) * 100).toFixed(1) : "0";
               return (
                 <Card key={s}>
                   <CardContent className="pt-4 pb-3 px-3 text-center">
                     <div className="text-2xl font-bold">{totaisPorStatus[s]}</div>
                     <div className="text-xs text-muted-foreground leading-tight mt-1">{s}</div>
-                    <div className="text-xs font-medium mt-1" style={{ color: COLORS[i] }}>{pct}%</div>
+                    <div className="text-xs font-medium mt-1" style={{ color: COLORS[s] }}>{pct}%</div>
                   </CardContent>
                 </Card>
               );
@@ -279,14 +303,16 @@ export default function DashboardFrequencia() {
                         data={pieData}
                         cx="50%"
                         cy="50%"
-                        outerRadius={90}
-                        innerRadius={40}
+                        outerRadius={100}
                         dataKey="value"
-                        label={({ name, percent, x, y, midAngle }) => {
-                          const pct = (percent * 100).toFixed(0);
+                        label={({ percent, cx, cy, midAngle, outerRadius: or }) => {
+                          const RADIAN = Math.PI / 180;
+                          const radius = or + 20;
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
                           return (
-                            <text x={x} y={y} textAnchor={midAngle > 180 ? "end" : "start"} dominantBaseline="central" className="fill-foreground" style={{ fontSize: 11 }}>
-                              {`${name} (${pct}%)`}
+                            <text x={x} y={y} textAnchor={x > cx ? "start" : "end"} dominantBaseline="central" className="fill-foreground" style={{ fontSize: 12, fontWeight: 600 }}>
+                              {`${(percent * 100).toFixed(1)}%`}
                             </text>
                           );
                         }}
@@ -296,14 +322,23 @@ export default function DashboardFrequencia() {
                           <Cell key={i} fill={d.color} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip content={<CustomPieTooltip />} />
+                      <Legend
+                        layout="vertical"
+                        align="right"
+                        verticalAlign="middle"
+                        iconType="circle"
+                        iconSize={10}
+                        wrapperStyle={{ fontSize: 12, paddingLeft: 16 }}
+                        formatter={(value: string) => <span className="text-foreground">{value}</span>}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
               </CardContent>
             </Card>
 
-            {/* Bar - diário */}
+            {/* Line chart - por dia */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -312,22 +347,30 @@ export default function DashboardFrequencia() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {barData.length === 0 ? (
+                {lineData.length === 0 ? (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                     Sem dados no período
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={barData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="dia" fontSize={11} />
-                      <YAxis fontSize={11} />
-                      <Tooltip />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
-                      {STATUS_FREQUENCIA.map((s, i) => (
-                        <Bar key={s} dataKey={s} stackId="a" fill={COLORS[i]} />
+                  <ResponsiveContainer width="100%" height={340}>
+                    <LineChart data={lineData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="dia" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                      <ReTooltip content={<CustomLineTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+                      {STATUS_ANALISE.map((s) => (
+                        <Line
+                          key={s}
+                          type="monotone"
+                          dataKey={s}
+                          stroke={COLORS[s]}
+                          strokeWidth={2}
+                          dot={{ r: 3, fill: COLORS[s] }}
+                          activeDot={{ r: 5 }}
+                        />
                       ))}
-                    </BarChart>
+                    </LineChart>
                   </ResponsiveContainer>
                 )}
               </CardContent>
@@ -336,7 +379,6 @@ export default function DashboardFrequencia() {
 
           {/* Rankings */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Ranking faltas */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -374,7 +416,6 @@ export default function DashboardFrequencia() {
               </CardContent>
             </Card>
 
-            {/* Ranking atestados */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -403,7 +444,7 @@ export default function DashboardFrequencia() {
                           <TableCell className="font-medium">{r.nome}</TableCell>
                           <TableCell>{r.cargo}</TableCell>
                           <TableCell>{r.contrato}</TableCell>
-                          <TableCell className="text-right font-bold text-accent-foreground">{r.total}</TableCell>
+                          <TableCell className="text-right font-bold text-destructive">{r.total}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
