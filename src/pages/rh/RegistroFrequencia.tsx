@@ -21,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useFrequenciaByDate, useUpsertFrequencia, STATUS_FREQUENCIA, type StatusFrequencia } from "@/hooks/useFrequencia";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { useContratos } from "@/hooks/useContratos";
 import { cn } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
