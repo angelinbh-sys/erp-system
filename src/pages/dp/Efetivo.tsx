@@ -450,8 +450,34 @@ const Efetivo = () => {
           <div className="space-y-4">
             <div><Label>Nome</Label><Input value={editForm.nome} onChange={(e) => setEditForm((p) => ({ ...p, nome: e.target.value }))} /></div>
             <div><Label>Cargo / Função</Label><Input value={editForm.cargo} onChange={(e) => setEditForm((p) => ({ ...p, cargo: e.target.value }))} /></div>
-            <div><Label>Centro de Custo</Label><Input value={editForm.centro_custo} onChange={(e) => setEditForm((p) => ({ ...p, centro_custo: e.target.value }))} /></div>
-            <div><Label>Site / Contrato</Label><Input value={editForm.site_contrato} onChange={(e) => setEditForm((p) => ({ ...p, site_contrato: e.target.value }))} /></div>
+            <div>
+              <Label>Site / Local de Trabalho</Label>
+              <Select
+                value={editForm.site_contrato}
+                onValueChange={(v) => {
+                  const site = allSites.find((s) => s.siteNome === v);
+                  setEditForm((p) => ({
+                    ...p,
+                    site_contrato: v,
+                    centro_custo: site ? (site.ccCodigo ? `${site.ccCodigo} - ${site.ccNome}` : site.ccNome) : p.centro_custo,
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o site" /></SelectTrigger>
+                <SelectContent>
+                  {allSites.map((s) => (
+                    <SelectItem key={s.siteId} value={s.siteNome}>
+                      {s.siteNome} ({s.ccCodigo || s.ccNome})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {editForm.centro_custo && (
+              <div className="bg-muted/50 rounded-md p-3 text-sm">
+                <span className="font-medium">Centro de Custo:</span> {editForm.centro_custo}
+              </div>
+            )}
             <div>
               <Label>Status</Label>
               <Select value={editForm.status} onValueChange={(v) => setEditForm((p) => ({ ...p, status: v }))}>
