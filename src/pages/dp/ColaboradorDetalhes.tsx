@@ -30,6 +30,7 @@ const ColaboradorDetalhes = () => {
   const [colaborador, setColaborador] = useState<Colaborador | null>(null);
   const [vaga, setVaga] = useState<any>(null);
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
+  const fotoInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [editingBlock, setEditingBlock] = useState<EditingBlock>(null);
   const [editForm, setEditForm] = useState<Record<string, string>>({});
