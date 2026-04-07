@@ -417,12 +417,12 @@ export default function DashboardFrequencia() {
                           ))}
                         </TableBody>
                       </Table>
-                    </div>
+                    </ScrollArea>
                   </div>
                 )}
 
-                {ausentesHoje.length === 0 && horizontalBarData.length > 0 && (
-                  <p className="text-sm text-muted-foreground">Nenhum colaborador ausente hoje.</p>
+                {naoPresentesHoje.length === 0 && horizontalBarData.length > 0 && (
+                  <p className="text-sm text-muted-foreground">Todos os colaboradores estão presentes hoje.</p>
                 )}
               </CardContent>
             </Card>
