@@ -38,7 +38,7 @@ export function OrgNodeCard({ node, depth, onClick }: OrgNodeCardProps) {
         </>
       ) : (
         <>
-          <div className="text-sm font-semibold text-foreground leading-tight truncate">
+          <div className="text-sm font-semibold text-foreground leading-tight break-words">
             {node.cargo}
           </div>
           <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 mt-1">
