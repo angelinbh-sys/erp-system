@@ -116,7 +116,7 @@ function CollapsibleGroup({
         <div className="relative flex items-start">
           {visibleItems.length > 1 && (
             <div
-              className="absolute top-0 h-px bg-border"
+              className="absolute top-0 h-[2px] bg-muted-foreground/40"
               style={{
                 left: `calc(${100 / (visibleItems.length * 2)}%)`,
                 right: `calc(${100 / (visibleItems.length * 2)}%)`,
@@ -126,7 +126,7 @@ function CollapsibleGroup({
           <div className="flex gap-5 items-start">
             {visibleItems.map((child) => (
               <div key={child.node.id} className="flex flex-col items-center">
-                {visibleItems.length > 1 && <div className="w-px h-5 bg-border" />}
+                {visibleItems.length > 1 && <div className="w-[2px] h-5 bg-muted-foreground/40" />}
                 <TreeBranch data={child} depth={depth} onNodeClick={onNodeClick} />
               </div>
             ))}
@@ -167,7 +167,7 @@ function TreeBranch({
       {hasChildren && (
         <div className="flex flex-col items-center">
           {/* Vertical connector from parent */}
-          <div className="w-px h-7 bg-border" />
+          <div className="w-[2px] h-7 bg-muted-foreground/40" />
 
           {groups.length === 1 && groups[0].items.length === 1 ? (
             // Single child — straight line
@@ -178,7 +178,7 @@ function TreeBranch({
               <div className="relative flex items-start">
                 {groups.length > 1 && (
                   <div
-                    className="absolute top-0 h-px bg-border"
+                    className="absolute top-0 h-[2px] bg-muted-foreground/40"
                     style={{
                       left: `calc(${100 / (groups.length * 2)}%)`,
                       right: `calc(${100 / (groups.length * 2)}%)`,
@@ -188,7 +188,7 @@ function TreeBranch({
                 <div className="flex gap-6 items-start">
                   {groups.map((group, gi) => (
                     <div key={gi} className="flex flex-col items-center">
-                      {groups.length > 1 && <div className="w-px h-5 bg-border" />}
+                      {groups.length > 1 && <div className="w-[2px] h-5 bg-muted-foreground/40" />}
                       <CollapsibleGroup group={group} depth={depth + 1} onNodeClick={onNodeClick} />
                     </div>
                   ))}
