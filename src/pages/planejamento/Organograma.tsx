@@ -90,8 +90,10 @@ export default function Organograma() {
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
-        windowWidth: captureEl.scrollWidth + 100,
-        windowHeight: captureEl.scrollHeight + 100,
+        windowWidth: captureEl.scrollWidth + 200,
+        windowHeight: captureEl.scrollHeight + 200,
+        width: captureEl.scrollWidth + 100,
+        height: captureEl.scrollHeight + 100,
       });
 
       // Restore styles

@@ -24,21 +24,21 @@ export function OrgNodeCard({ node, depth, onClick }: OrgNodeCardProps) {
   return (
     <button
       onClick={() => onClick(node)}
-      className={`group relative min-w-[200px] max-w-[240px] rounded-xl border-2 ${style.border} ${style.bg} px-4 py-3 shadow-md hover:shadow-lg transition-all text-left cursor-pointer overflow-hidden`}
+      className={`group relative min-w-[220px] max-w-[300px] rounded-xl border-2 ${style.border} ${style.bg} px-4 py-3 shadow-md hover:shadow-lg transition-all text-left cursor-pointer`}
     >
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.accent}`} />
       {hasColaborador ? (
         <>
-          <div className="text-sm font-semibold text-foreground leading-tight truncate">
+          <div className="text-sm font-semibold text-foreground leading-tight break-words">
             {node.nome_colaborador}
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5 truncate">
+          <div className="text-xs text-muted-foreground mt-0.5 break-words">
             {node.cargo}
           </div>
         </>
       ) : (
         <>
-          <div className="text-sm font-semibold text-foreground leading-tight truncate">
+          <div className="text-sm font-semibold text-foreground leading-tight break-words">
             {node.cargo}
           </div>
           <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 mt-1">

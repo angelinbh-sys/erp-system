@@ -62,8 +62,6 @@ export function OrgTable({ nodes, projetoNome, siteContrato }: OrgTableProps) {
           <TableHead>Função / Cargo</TableHead>
           <TableHead>Colaborador</TableHead>
           <TableHead>Superior Direto</TableHead>
-          <TableHead>Projeto / Contrato</TableHead>
-          <TableHead>Site</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -90,8 +88,6 @@ export function OrgTable({ nodes, projetoNome, siteContrato }: OrgTableProps) {
                 )}
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">{r.superiorName}</TableCell>
-              <TableCell className="text-sm text-muted-foreground">{projetoNome || "—"}</TableCell>
-              <TableCell className="text-sm text-muted-foreground">{siteContrato || "—"}</TableCell>
             </TableRow>
           );
         })}
