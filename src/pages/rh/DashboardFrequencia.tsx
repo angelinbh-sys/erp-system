@@ -332,6 +332,7 @@ export default function DashboardFrequencia() {
     };
 
     // Header
+    const maxW = pageW - marginL - marginR;
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.text("Relatório de Frequência", pageW / 2, y, { align: "center" });
