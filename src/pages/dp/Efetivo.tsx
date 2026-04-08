@@ -541,10 +541,33 @@ const Efetivo = () => {
       <ImportColaboradoresDialog open={showImport} onOpenChange={setShowImport} />
 
       {/* Add New Dialog */}
-      <Dialog open={showAddNew} onOpenChange={(v) => { setShowAddNew(v); if (!v) setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", centro_custo_id: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" }); }}>
+      <Dialog open={showAddNew} onOpenChange={(v) => { setShowAddNew(v); if (!v) { setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", centro_custo_id: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" }); setNewFotoFile(null); setNewFotoPreview(null); } }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Novo Colaborador</DialogTitle></DialogHeader>
           <div className="space-y-4">
+            {/* Foto do colaborador */}
+            <div className="flex flex-col items-center gap-2">
+              <Avatar className="h-24 w-24 cursor-pointer border-2 border-dashed border-muted-foreground/30 hover:border-primary transition-colors" onClick={() => document.getElementById("new-colab-foto")?.click()}>
+                <AvatarImage src={newFotoPreview || undefined} />
+                <AvatarFallback className="bg-muted">
+                  <Camera className="h-8 w-8 text-muted-foreground" />
+                </AvatarFallback>
+              </Avatar>
+              <input
+                id="new-colab-foto"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setNewFotoFile(file);
+                    setNewFotoPreview(URL.createObjectURL(file));
+                  }
+                }}
+              />
+              <span className="text-xs text-muted-foreground">Foto (opcional) — clique para selecionar</span>
+            </div>
             <div><Label>Nome Completo *</Label><Input value={newForm.nome} onChange={(e) => setNewForm((p) => ({ ...p, nome: e.target.value }))} placeholder="Nome completo" /></div>
             <div className="grid grid-cols-2 gap-4">
               <div><Label>CPF</Label><Input value={newForm.cpf} onChange={(e) => setNewForm((p) => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
