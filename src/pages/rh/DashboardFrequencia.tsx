@@ -211,19 +211,128 @@ export default function DashboardFrequencia() {
       .slice(0, 10);
   }, [freqFiltradas, colabsFiltrados]);
 
+  // Helper: convert HSL string to RGB for jsPDF
+  const hslToRgb = (hslStr: string): [number, number, number] => {
+    const match = hslStr.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+    if (!match) return [100, 100, 100];
+    const h = parseInt(match[1]) / 360;
+    const s = parseInt(match[2]) / 100;
+    const l = parseInt(match[3]) / 100;
+    let r: number, g: number, b: number;
+    if (s === 0) { r = g = b = l; } else {
+      const hue2rgb = (p: number, q: number, t: number) => {
+        if (t < 0) t += 1; if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  };
+
   // PDF report generation
   const gerarRelatorioPDF = useCallback(() => {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     const marginL = 14;
     const marginR = 14;
-    const maxW = pageW - marginL - marginR;
     let y = 18;
 
     const addPage = () => { doc.addPage(); y = 18; };
     const checkPage = (need: number) => { if (y + need > 280) addPage(); };
 
+    // --- Draw pie chart helper ---
+    const drawPieChart = (data: { name: string; value: number; color: string }[], cx: number, cy: number, radius: number) => {
+      const total = data.reduce((a, b) => a + b.value, 0);
+      if (total === 0) return;
+      let startAngle = -Math.PI / 2;
+      data.forEach((item) => {
+        const sliceAngle = (item.value / total) * 2 * Math.PI;
+        const [r, g, b] = hslToRgb(item.color);
+        doc.setFillColor(r, g, b);
+        // Draw slice as filled triangle fan
+        const steps = Math.max(20, Math.ceil(sliceAngle / 0.05));
+        const points: [number, number][] = [[cx, cy]];
+        for (let i = 0; i <= steps; i++) {
+          const angle = startAngle + (sliceAngle * i) / steps;
+          points.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)]);
+        }
+        // Use triangle method for each sub-triangle
+        for (let i = 1; i < points.length - 1; i++) {
+          doc.triangle(
+            points[0][0], points[0][1],
+            points[i][0], points[i][1],
+            points[i + 1][0], points[i + 1][1],
+            "F"
+          );
+        }
+        // Draw percentage label
+        const midAngle = startAngle + sliceAngle / 2;
+        const labelR = radius + 12;
+        const lx = cx + labelR * Math.cos(midAngle);
+        const ly = cy + labelR * Math.sin(midAngle);
+        const pct = ((item.value / total) * 100).toFixed(1);
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(60, 60, 60);
+        doc.text(`${pct}%`, lx, ly, { align: lx > cx ? "left" : "right", baseline: "middle" });
+        startAngle += sliceAngle;
+      });
+      doc.setTextColor(0, 0, 0);
+    };
+
+    // --- Draw horizontal bar chart helper ---
+    const drawHBarChart = (data: { label: string; value: number; color: string }[], x: number, yStart: number, chartW: number, barH: number) => {
+      const maxVal = Math.max(...data.map((d) => d.value), 1);
+      let cy = yStart;
+      data.forEach((item) => {
+        // Label
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(60, 60, 60);
+        const labelMaxW = 55;
+        const truncLabel = item.label.length > 28 ? item.label.substring(0, 26) + "…" : item.label;
+        doc.text(truncLabel, x + labelMaxW - 2, cy + barH / 2, { align: "right", baseline: "middle" });
+        // Bar
+        const barW = (item.value / maxVal) * (chartW - labelMaxW - 15);
+        const [r, g, b] = hslToRgb(item.color);
+        doc.setFillColor(r, g, b);
+        doc.roundedRect(x + labelMaxW, cy, barW, barH, 1.5, 1.5, "F");
+        // Value
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${item.value}`, x + labelMaxW + barW + 3, cy + barH / 2, { baseline: "middle" });
+        cy += barH + 3;
+      });
+      doc.setTextColor(0, 0, 0);
+      return cy;
+    };
+
+    // --- Draw legend helper ---
+    const drawLegend = (data: { name: string; color: string }[], x: number, yStart: number) => {
+      let ly = yStart;
+      data.forEach((item) => {
+        const [r, g, b] = hslToRgb(item.color);
+        doc.setFillColor(r, g, b);
+        doc.rect(x, ly - 2.5, 3, 3, "F");
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(60, 60, 60);
+        doc.text(item.name, x + 5, ly, { baseline: "middle" });
+        ly += 5;
+      });
+      doc.setTextColor(0, 0, 0);
+      return ly;
+    };
+
     // Header
+    const maxW = pageW - marginL - marginR;
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.text("Relatório de Frequência", pageW / 2, y, { align: "center" });
@@ -261,7 +370,7 @@ export default function DashboardFrequencia() {
       doc.text(`Total de colaboradores ativos: ${colabsContrato.length}`, marginL, y);
       y += 8;
 
-      // ---- FREQUÊNCIA DO DIA (hoje) ----
+      // ---- FREQUÊNCIA DO DIA (hoje) - GRÁFICO DE BARRAS ----
       checkPage(20);
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
@@ -273,15 +382,22 @@ export default function DashboardFrequencia() {
       STATUS_ANALISE.forEach((s) => (statusCountHoje[s] = 0));
       freqHojeContrato.forEach((f) => { if (statusCountHoje[f.status] !== undefined) statusCountHoje[f.status]++; });
 
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      STATUS_ANALISE.forEach((s) => {
-        if (statusCountHoje[s] > 0) {
-          checkPage(5);
-          doc.text(`  ${s}: ${statusCountHoje[s]}`, marginL, y);
-          y += 5;
-        }
-      });
+      const barDataHoje = STATUS_ANALISE
+        .filter((s) => statusCountHoje[s] > 0)
+        .map((s) => ({ label: s, value: statusCountHoje[s], color: COLORS[s] }));
+
+      if (barDataHoje.length > 0) {
+        const barH = 6;
+        const chartHeight = barDataHoje.length * (barH + 3) + 5;
+        checkPage(chartHeight + 5);
+        y = drawHBarChart(barDataHoje, marginL, y, maxW, barH);
+        y += 3;
+      } else {
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "italic");
+        doc.text("Sem dados para hoje.", marginL, y);
+        y += 5;
+      }
 
       // Ausentes do dia
       const ausentesHoje = freqHojeContrato.filter((f) => f.status !== "Presente");
@@ -289,10 +405,10 @@ export default function DashboardFrequencia() {
         y += 3;
         checkPage(14);
         doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
         doc.text("Colaboradores não presentes:", marginL, y);
         y += 5;
 
-        // Table header
         doc.setFontSize(8);
         doc.setFont("helvetica", "bold");
         const colWidths = [60, 50, 70];
@@ -316,28 +432,40 @@ export default function DashboardFrequencia() {
 
       y += 6;
 
-      // ---- RESUMO DO MÊS ----
-      checkPage(20);
+      // ---- RESUMO DO MÊS - GRÁFICO DE PIZZA ----
+      checkPage(80);
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.text(`Resumo do Mês (${format(dataInicio, "MMMM/yyyy", { locale: ptBR })})`, marginL, y);
-      y += 6;
+      y += 4;
 
       const statusCountMes: Record<string, number> = {};
       STATUS_ANALISE.forEach((s) => (statusCountMes[s] = 0));
       freqContrato.forEach((f) => { if (statusCountMes[f.status] !== undefined) statusCountMes[f.status]++; });
       const totalMes = freqContrato.length;
 
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      STATUS_ANALISE.forEach((s) => {
-        if (statusCountMes[s] > 0) {
-          checkPage(5);
-          const pct = totalMes > 0 ? ((statusCountMes[s] / totalMes) * 100).toFixed(1) : "0";
-          doc.text(`  ${s}: ${statusCountMes[s]}  (${pct}%)`, marginL, y);
-          y += 5;
-        }
-      });
+      const pieDataPdf = STATUS_ANALISE
+        .filter((s) => statusCountMes[s] > 0)
+        .map((s) => ({ name: s, value: statusCountMes[s], color: COLORS[s] }));
+
+      if (pieDataPdf.length > 0) {
+        const pieRadius = 28;
+        const pieCx = marginL + 45;
+        const pieCy = y + pieRadius + 5;
+        drawPieChart(pieDataPdf, pieCx, pieCy, pieRadius);
+        // Legend to the right of pie
+        const legendX = pieCx + pieRadius + 25;
+        drawLegend(
+          pieDataPdf.map((d) => ({ name: `${d.name}: ${d.value} (${totalMes > 0 ? ((d.value / totalMes) * 100).toFixed(1) : 0}%)`, color: d.color })),
+          legendX, y + 8
+        );
+        y = pieCy + pieRadius + 12;
+      } else {
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "italic");
+        doc.text("Sem dados no período.", marginL, y + 4);
+        y += 10;
+      }
 
       y += 4;
 
