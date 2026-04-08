@@ -26,7 +26,7 @@ export function OrgNodeCard({ node, depth, onClick }: OrgNodeCardProps) {
       onClick={() => onClick(node)}
       className={`group relative min-w-[220px] max-w-[300px] rounded-xl border-2 ${style.border} ${style.bg} px-4 py-3 shadow-md hover:shadow-lg transition-all text-left cursor-pointer`}
     >
-      <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.accent}`} />
+      <div className={`absolute left-0 top-2 bottom-2 w-[3px] rounded-full ${style.accent}`} />
       {hasColaborador ? (
         <>
           <div className="text-sm font-semibold text-foreground leading-tight break-words">

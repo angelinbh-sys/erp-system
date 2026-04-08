@@ -112,25 +112,24 @@ function CollapsibleGroup({
       </button>
 
       <div className="flex flex-col items-center">
-        {/* Vertical connector */}
-        <div className="relative flex items-start">
-          {visibleItems.length > 1 && (
-            <div
-              className="absolute top-0 h-[2px] bg-muted-foreground/40"
-              style={{
-                left: `calc(${100 / (visibleItems.length * 2)}%)`,
-                right: `calc(${100 / (visibleItems.length * 2)}%)`,
-              }}
-            />
-          )}
-          <div className="flex gap-5 items-start">
-            {visibleItems.map((child) => (
-              <div key={child.node.id} className="flex flex-col items-center">
-                {visibleItems.length > 1 && <div className="w-[2px] h-5 bg-muted-foreground/40" />}
+        <div className="flex gap-5 items-start">
+          {visibleItems.map((child, i) => {
+            const isFirst = i === 0;
+            const isLast = i === visibleItems.length - 1;
+            const multipleItems = visibleItems.length > 1;
+            return (
+              <div key={child.node.id} className="flex flex-col items-center relative">
+                {multipleItems && (
+                  <div className="w-full h-5 relative">
+                    <div className="absolute left-1/2 top-0 bottom-0 w-[2px] -translate-x-1/2 bg-muted-foreground/40" />
+                    {!isFirst && <div className="absolute top-0 h-[2px] bg-muted-foreground/40" style={{ left: '-10px', right: '50%' }} />}
+                    {!isLast && <div className="absolute top-0 h-[2px] bg-muted-foreground/40" style={{ left: '50%', right: '-10px' }} />}
+                  </div>
+                )}
                 <TreeBranch data={child} depth={depth} onNodeClick={onNodeClick} />
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
         {/* +X itens button */}
@@ -173,27 +172,24 @@ function TreeBranch({
             // Single child — straight line
             <TreeBranch data={groups[0].items[0]} depth={depth + 1} onNodeClick={onNodeClick} />
           ) : (
-            <div className="flex flex-col items-center">
-              {/* Horizontal rail + children */}
-              <div className="relative flex items-start">
-                {groups.length > 1 && (
-                  <div
-                    className="absolute top-0 h-[2px] bg-muted-foreground/40"
-                    style={{
-                      left: `calc(${100 / (groups.length * 2)}%)`,
-                      right: `calc(${100 / (groups.length * 2)}%)`,
-                    }}
-                  />
-                )}
-                <div className="flex gap-6 items-start">
-                  {groups.map((group, gi) => (
-                    <div key={gi} className="flex flex-col items-center">
-                      {groups.length > 1 && <div className="w-[2px] h-5 bg-muted-foreground/40" />}
-                      <CollapsibleGroup group={group} depth={depth + 1} onNodeClick={onNodeClick} />
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="flex gap-6 items-start">
+              {groups.map((group, gi) => {
+                const isFirst = gi === 0;
+                const isLast = gi === groups.length - 1;
+                const multipleGroups = groups.length > 1;
+                return (
+                  <div key={gi} className="flex flex-col items-center relative">
+                    {multipleGroups && (
+                      <div className="w-full h-5 relative">
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[2px] -translate-x-1/2 bg-muted-foreground/40" />
+                        {!isFirst && <div className="absolute top-0 h-[2px] bg-muted-foreground/40" style={{ left: '-12px', right: '50%' }} />}
+                        {!isLast && <div className="absolute top-0 h-[2px] bg-muted-foreground/40" style={{ left: '50%', right: '-12px' }} />}
+                      </div>
+                    )}
+                    <CollapsibleGroup group={group} depth={depth + 1} onNodeClick={onNodeClick} />
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
