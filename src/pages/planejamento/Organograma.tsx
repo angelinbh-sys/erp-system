@@ -50,7 +50,6 @@ export default function Organograma() {
     if (!treeRef.current) return;
     setExporting(true);
     try {
-      // A3 dimensions in mm
       const A3_W = 420;
       const A3_H = 297;
       const margin = 15;
@@ -63,15 +62,50 @@ export default function Organograma() {
       pdf.text(`Organograma — ${projetoNome}`, margin, margin + 6);
       let cursorY = margin + 14;
 
-      // 1) Capture visual tree
-      const treeCanvas = await html2canvas(treeRef.current, {
-        scale: 2,
+      // 1) Capture the inner content element at natural size (no transform)
+      // Find the actual content div inside the tree container
+      const containerEl = treeRef.current;
+      const contentEl = containerEl.querySelector("[class*='py-10']") as HTMLElement | null;
+      const captureEl = contentEl || containerEl;
+
+      // Temporarily reset transforms and overflow for clean capture
+      const origContainerOverflow = containerEl.style.overflow;
+      const origContainerHeight = containerEl.style.height;
+      const origContainerMinHeight = containerEl.style.minHeight;
+      containerEl.style.overflow = "visible";
+      containerEl.style.height = "auto";
+      containerEl.style.minHeight = "auto";
+
+      let origTransform = "";
+      let origTransition = "";
+      if (contentEl) {
+        origTransform = contentEl.style.transform;
+        origTransition = contentEl.style.transition;
+        contentEl.style.transform = "none";
+        contentEl.style.transition = "none";
+      }
+
+      const treeCanvas = await html2canvas(captureEl, {
+        scale: 3,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
+        windowWidth: captureEl.scrollWidth + 100,
+        windowHeight: captureEl.scrollHeight + 100,
       });
+
+      // Restore styles
+      containerEl.style.overflow = origContainerOverflow;
+      containerEl.style.height = origContainerHeight;
+      containerEl.style.minHeight = origContainerMinHeight;
+      if (contentEl) {
+        contentEl.style.transform = origTransform;
+        contentEl.style.transition = origTransition;
+      }
+
       const treeImgData = treeCanvas.toDataURL("image/png");
-      const treeRatio = Math.min(usableW / treeCanvas.width, (A3_H - cursorY - margin - 10) / treeCanvas.height);
+      const maxTreeH = A3_H - cursorY - margin - 10;
+      const treeRatio = Math.min(usableW / treeCanvas.width, maxTreeH / treeCanvas.height);
       const treeDrawW = treeCanvas.width * treeRatio;
       const treeDrawH = treeCanvas.height * treeRatio;
       const treeOffsetX = margin + (usableW - treeDrawW) / 2;
@@ -82,7 +116,7 @@ export default function Organograma() {
       // 2) Capture table
       if (tableRef.current) {
         const tableCanvas = await html2canvas(tableRef.current, {
-          scale: 2,
+          scale: 3,
           useCORS: true,
           backgroundColor: "#ffffff",
           logging: false,
@@ -92,7 +126,6 @@ export default function Organograma() {
         const tableDrawW = tableCanvas.width * tableRatio;
         const tableDrawH = tableCanvas.height * tableRatio;
 
-        // Check if table fits on current page
         if (cursorY + tableDrawH > A3_H - margin) {
           pdf.addPage("a3", "landscape");
           cursorY = margin;
