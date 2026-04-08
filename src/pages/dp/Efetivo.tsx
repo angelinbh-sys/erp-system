@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, History, User as UserIcon, Upload, Download, FileDown, Plus, Trash2 } from "lucide-react";
+import { Pencil, History, User as UserIcon, Upload, Download, FileDown, Plus, Trash2, Camera } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { capitalizeName } from "@/utils/formatName";
 
