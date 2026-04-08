@@ -211,13 +211,210 @@ export default function DashboardFrequencia() {
       .slice(0, 10);
   }, [freqFiltradas, colabsFiltrados]);
 
+  // PDF report generation
+  const gerarRelatorioPDF = useCallback(() => {
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    const marginL = 14;
+    const marginR = 14;
+    const maxW = pageW - marginL - marginR;
+    let y = 18;
+
+    const addPage = () => { doc.addPage(); y = 18; };
+    const checkPage = (need: number) => { if (y + need > 280) addPage(); };
+
+    // Header
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Relatório de Frequência", pageW / 2, y, { align: "center" });
+    y += 8;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Período: ${format(dataInicio, "dd/MM/yyyy")} a ${format(dataFim, "dd/MM/yyyy")}`, pageW / 2, y, { align: "center" });
+    y += 5;
+    doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, pageW / 2, y, { align: "center" });
+    y += 5;
+    if (filtroContrato !== "todos") {
+      doc.text(`Contrato: ${filtroContrato}`, pageW / 2, y, { align: "center" });
+      y += 5;
+    }
+    y += 4;
+    doc.setDrawColor(180);
+    doc.line(marginL, y, pageW - marginR, y);
+    y += 8;
+
+    // For each contract
+    const contratos = filtroContrato !== "todos" ? [filtroContrato] : contratosUnicos;
+
+    contratos.forEach((contrato) => {
+      const colabsContrato = colabsFiltrados.filter((c) => c.site_contrato === contrato);
+      const colabIdsContrato = new Set(colabsContrato.map((c) => c.id));
+      const freqContrato = freqFiltradas.filter((f) => colabIdsContrato.has(f.colaborador_id));
+
+      checkPage(30);
+      doc.setFontSize(13);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Contrato: ${contrato}`, marginL, y);
+      y += 6;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Total de colaboradores ativos: ${colabsContrato.length}`, marginL, y);
+      y += 8;
+
+      // ---- FREQUÊNCIA DO DIA (hoje) ----
+      checkPage(20);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Frequência do Dia — ${format(hoje, "dd/MM/yyyy")}`, marginL, y);
+      y += 6;
+
+      const freqHojeContrato = freqContrato.filter((f) => f.data === hojeStr);
+      const statusCountHoje: Record<string, number> = {};
+      STATUS_ANALISE.forEach((s) => (statusCountHoje[s] = 0));
+      freqHojeContrato.forEach((f) => { if (statusCountHoje[f.status] !== undefined) statusCountHoje[f.status]++; });
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      STATUS_ANALISE.forEach((s) => {
+        if (statusCountHoje[s] > 0) {
+          checkPage(5);
+          doc.text(`  ${s}: ${statusCountHoje[s]}`, marginL, y);
+          y += 5;
+        }
+      });
+
+      // Ausentes do dia
+      const ausentesHoje = freqHojeContrato.filter((f) => f.status !== "Presente");
+      if (ausentesHoje.length > 0) {
+        y += 3;
+        checkPage(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("Colaboradores não presentes:", marginL, y);
+        y += 5;
+
+        // Table header
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        const colWidths = [60, 50, 70];
+        doc.text("Nome", marginL, y);
+        doc.text("Cargo", marginL + colWidths[0], y);
+        doc.text("Motivo", marginL + colWidths[0] + colWidths[1], y);
+        y += 1;
+        doc.line(marginL, y, pageW - marginR, y);
+        y += 4;
+
+        doc.setFont("helvetica", "normal");
+        ausentesHoje.forEach((f) => {
+          checkPage(5);
+          const colab = colabsContrato.find((c) => c.id === f.colaborador_id);
+          doc.text((colab?.nome || "—").substring(0, 30), marginL, y);
+          doc.text((colab?.cargo || "—").substring(0, 25), marginL + colWidths[0], y);
+          doc.text(f.status.substring(0, 35), marginL + colWidths[0] + colWidths[1], y);
+          y += 5;
+        });
+      }
+
+      y += 6;
+
+      // ---- RESUMO DO MÊS ----
+      checkPage(20);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Resumo do Mês (${format(dataInicio, "MMMM/yyyy", { locale: ptBR })})`, marginL, y);
+      y += 6;
+
+      const statusCountMes: Record<string, number> = {};
+      STATUS_ANALISE.forEach((s) => (statusCountMes[s] = 0));
+      freqContrato.forEach((f) => { if (statusCountMes[f.status] !== undefined) statusCountMes[f.status]++; });
+      const totalMes = freqContrato.length;
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      STATUS_ANALISE.forEach((s) => {
+        if (statusCountMes[s] > 0) {
+          checkPage(5);
+          const pct = totalMes > 0 ? ((statusCountMes[s] / totalMes) * 100).toFixed(1) : "0";
+          doc.text(`  ${s}: ${statusCountMes[s]}  (${pct}%)`, marginL, y);
+          y += 5;
+        }
+      });
+
+      y += 4;
+
+      // ---- RANKING FALTAS DO CONTRATO ----
+      const faltaStatus = ["Falta Não Comunicada", "Falta Comunicada"];
+      const faltasMap: Record<string, number> = {};
+      freqContrato.forEach((f) => {
+        if (faltaStatus.includes(f.status)) faltasMap[f.colaborador_id] = (faltasMap[f.colaborador_id] || 0) + 1;
+      });
+      const topFaltas = Object.entries(faltasMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+      if (topFaltas.length > 0) {
+        checkPage(14);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("Maiores Índices de Faltas:", marginL, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        topFaltas.forEach(([id, total]) => {
+          checkPage(5);
+          const colab = colabsContrato.find((c) => c.id === id);
+          doc.text(`  ${colab?.nome || "—"} — ${total} falta(s)`, marginL, y);
+          y += 5;
+        });
+        y += 3;
+      }
+
+      // ---- RANKING ATESTADOS DO CONTRATO ----
+      const atestMap: Record<string, number> = {};
+      freqContrato.forEach((f) => {
+        if (f.status === "Atestado Médico ou Afastamento") atestMap[f.colaborador_id] = (atestMap[f.colaborador_id] || 0) + 1;
+      });
+      const topAtest = Object.entries(atestMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+      if (topAtest.length > 0) {
+        checkPage(14);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("Maiores Índices de Atestados / Afastamentos:", marginL, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        topAtest.forEach(([id, total]) => {
+          checkPage(5);
+          const colab = colabsContrato.find((c) => c.id === id);
+          doc.text(`  ${colab?.nome || "—"} — ${total} ocorrência(s)`, marginL, y);
+          y += 5;
+        });
+        y += 3;
+      }
+
+      // Separador entre contratos
+      y += 4;
+      checkPage(4);
+      doc.setDrawColor(200);
+      doc.line(marginL, y, pageW - marginR, y);
+      y += 8;
+    });
+
+    doc.save(`relatorio-frequencia-${format(hoje, "yyyy-MM-dd")}.pdf`);
+    toast.success("Relatório PDF gerado com sucesso!");
+  }, [dataInicio, dataFim, filtroContrato, contratosUnicos, colabsFiltrados, freqFiltradas, hojeStr, hoje]);
+
   const isLoading = loadColab || loadFreq;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard de Frequência</h1>
-        <p className="text-muted-foreground text-sm">Análise de frequência dos colaboradores</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard de Frequência</h1>
+          <p className="text-muted-foreground text-sm">Análise de frequência dos colaboradores</p>
+        </div>
+        <Button onClick={gerarRelatorioPDF} disabled={isLoading} className="gap-2">
+          <FileText className="h-4 w-4" />
+          Emitir Relatório
+        </Button>
       </div>
 
       {/* Filtros */}
