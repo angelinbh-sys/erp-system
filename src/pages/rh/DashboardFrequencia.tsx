@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
-import { format, startOfMonth, endOfMonth, isBefore } from "date-fns";
+import { useState, useMemo, useCallback } from "react";
+import { format, startOfMonth, endOfMonth, isBefore, eachDayOfInterval, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, BarChart3, TrendingDown, Users } from "lucide-react";
+import { CalendarIcon, BarChart3, TrendingDown, Users, FileText } from "lucide-react";
+import jsPDF from "jspdf";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
