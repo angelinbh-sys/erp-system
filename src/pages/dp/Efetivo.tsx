@@ -259,8 +259,16 @@ const Efetivo = () => {
         data_admissao: newForm.data_admissao || new Date().toISOString().slice(0, 10),
         status: newForm.status,
       };
-      const { error } = await supabase.from("colaboradores").insert(record as any);
+      const { data: inserted, error } = await supabase.from("colaboradores").insert(record as any).select("id").single();
       if (error) throw error;
+
+      // Upload foto if provided
+      if (newFotoFile && inserted?.id) {
+        const ext = newFotoFile.name.split(".").pop();
+        const path = `colaboradores/${inserted.id}/foto.${ext}`;
+        await supabase.storage.from("admissao-documentos").upload(path, newFotoFile, { upsert: true });
+      }
+
       await logAction({
         modulo: "Dep. Pessoal", pagina: "Efetivo", acao: "criacao",
         descricao: `Cadastrou manualmente o colaborador ${record.nome}.`,
@@ -269,6 +277,8 @@ const Efetivo = () => {
       toast.success("Colaborador cadastrado com sucesso!");
       setShowAddNew(false);
       setNewForm({ nome: "", cpf: "", data_nascimento: "", sexo: "", telefone: "", cargo: "", centro_custo: "", centro_custo_id: "", contrato: "", site_contrato: "", data_admissao: "", status: "Ativo" });
+      setNewFotoFile(null);
+      setNewFotoPreview(null);
     } catch {
       toast.error("Erro ao cadastrar colaborador.");
     } finally {
