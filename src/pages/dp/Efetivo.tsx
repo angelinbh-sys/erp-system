@@ -120,6 +120,8 @@ const Efetivo = () => {
     (cc.sites ?? []).map((s) => ({ siteId: s.id, siteNome: s.nome, ccId: cc.id, ccNome: cc.nome, ccCodigo: cc.codigo }))
   );
   const [savingNew, setSavingNew] = useState(false);
+  const [newFotoFile, setNewFotoFile] = useState<File | null>(null);
+  const [newFotoPreview, setNewFotoPreview] = useState<string | null>(null);
 
   const [editColaborador, setEditColaborador] = useState<Colaborador | null>(null);
   const [editForm, setEditForm] = useState({ nome: "", cargo: "", centro_custo: "", site_contrato: "", status: "" });
