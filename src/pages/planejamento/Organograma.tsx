@@ -92,8 +92,8 @@ export default function Organograma() {
         logging: false,
         windowWidth: captureEl.scrollWidth + 200,
         windowHeight: captureEl.scrollHeight + 200,
-        width: captureEl.scrollWidth + 100,
-        height: captureEl.scrollHeight + 100,
+        width: captureEl.scrollWidth + 200,
+        height: captureEl.scrollHeight + 200,
       });
 
       // Restore styles

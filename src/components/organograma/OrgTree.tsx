@@ -317,7 +317,7 @@ export const OrgTree = forwardRef<HTMLDivElement, OrgTreeProps>(({ nodes, onNode
             transformOrigin: "top center",
             transition: dragging ? "none" : "transform 0.2s ease-out",
           }}
-          className="py-10 px-8"
+          className="py-10 px-16"
         >
           <div ref={ref} className="inline-flex flex-col gap-0 items-center w-full">
             {tree.map((root) => (
