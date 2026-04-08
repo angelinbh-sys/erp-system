@@ -29,10 +29,10 @@ export function OrgNodeCard({ node, depth, onClick }: OrgNodeCardProps) {
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.accent}`} />
       {hasColaborador ? (
         <>
-          <div className="text-sm font-semibold text-foreground leading-tight truncate">
+          <div className="text-sm font-semibold text-foreground leading-tight break-words">
             {node.nome_colaborador}
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5 truncate">
+          <div className="text-xs text-muted-foreground mt-0.5 break-words">
             {node.cargo}
           </div>
         </>
