@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
-import { format, startOfDay, isAfter } from "date-fns";
+import { format, startOfDay, isAfter, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Save, CheckCircle2, Pencil, AlertCircle } from "lucide-react";
+import { Save, CheckCircle2, Pencil, AlertCircle, ArrowLeft } from "lucide-react";
 import { toast } from "@/lib/toast";
 
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,6 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -24,9 +22,17 @@ import {
 import { Label } from "@/components/ui/label";
 
 import { useColaboradores } from "@/hooks/useColaboradores";
-import { useFrequenciaByDate, useUpsertFrequencia, STATUS_FREQUENCIA, type StatusFrequencia } from "@/hooks/useFrequencia";
+import {
+  useFrequenciaByDate,
+  useFrequenciaByRange,
+  useUpsertFrequencia,
+  STATUS_FREQUENCIA,
+  type StatusFrequencia,
+} from "@/hooks/useFrequencia";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+
+import FrequenciaCalendar from "@/components/frequencia/FrequenciaCalendar";
 
 const statusColors: Record<string, string> = {
   "Presente": "bg-green-100 text-green-800 border-green-300",
@@ -42,19 +48,33 @@ const statusColors: Record<string, string> = {
 
 export default function RegistroFrequencia() {
   const { profile } = useAuthContext();
-  const [dataSelecionada, setDataSelecionada] = useState<Date>(new Date());
+  const [mesAtual, setMesAtual] = useState<Date>(startOfMonth(new Date()));
+  const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
   const [filtroContrato, setFiltroContrato] = useState<string>("todos");
   const [busca, setBusca] = useState("");
   const [registros, setRegistros] = useState<Record<string, StatusFrequencia>>({});
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [justificativaDialog, setJustificativaDialog] = useState(false);
   const [justificativa, setJustificativa] = useState("");
+  const [diasPreenchendo, setDiasPreenchendo] = useState<Set<string>>(new Set());
 
   const hoje = startOfDay(new Date());
-  const dataFutura = isAfter(startOfDay(dataSelecionada), hoje);
 
-  const dataStr = format(dataSelecionada, "yyyy-MM-dd");
+  // Range query for the whole month to determine day statuses
+  const mesInicioStr = format(startOfMonth(mesAtual), "yyyy-MM-dd");
+  const mesFimStr = format(endOfMonth(mesAtual), "yyyy-MM-dd");
+  const { data: frequenciasMes = [] } = useFrequenciaByRange(mesInicioStr, mesFimStr);
+
+  // Compute which days have saved records
+  const diasFinalizados = useMemo(() => {
+    const set = new Set<string>();
+    frequenciasMes.forEach((f) => set.add(f.data));
+    return set;
+  }, [frequenciasMes]);
+
+  // Query for the selected day
+  const dataStr = dataSelecionada ? format(dataSelecionada, "yyyy-MM-dd") : null;
+  const dataFutura = dataSelecionada ? isAfter(startOfDay(dataSelecionada), hoje) : false;
   const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
   const { data: frequencias = [], isLoading: loadingFreq } = useFrequenciaByDate(dataStr);
   const upsert = useUpsertFrequencia();
@@ -105,14 +125,14 @@ export default function RegistroFrequencia() {
   };
 
   const handleSalvar = async () => {
-    if (dataFutura) {
+    if (!dataSelecionada || dataFutura) {
       toast.error("Não é permitido registrar frequência para datas futuras.");
       return;
     }
 
     const records = colaboradoresFiltrados.map((c) => ({
       colaborador_id: c.id,
-      data: dataStr,
+      data: dataStr!,
       status: getStatus(c.id),
       registrado_por: profile?.nome || "Sistema",
       registrado_por_id: profile?.user_id || null,
@@ -124,6 +144,12 @@ export default function RegistroFrequencia() {
       toast.success("Frequência salva com sucesso!");
       setModoEdicao(false);
       setJustificativa("");
+      // Remove from "preenchendo" and it will show as "finalizado" after refetch
+      setDiasPreenchendo((prev) => {
+        const next = new Set(prev);
+        next.delete(dataStr!);
+        return next;
+      });
     } catch (e: any) {
       toast.error("Erro ao salvar frequência: " + e.message);
     }
@@ -150,6 +176,23 @@ export default function RegistroFrequencia() {
     setRegistros(map);
   };
 
+  const handleDayClick = (day: Date) => {
+    setDataSelecionada(day);
+    const key = format(day, "yyyy-MM-dd");
+    // Mark as "preenchendo" if not already finalized
+    if (!diasFinalizados.has(key)) {
+      setDiasPreenchendo((prev) => new Set(prev).add(key));
+    }
+  };
+
+  const handleVoltarCalendario = () => {
+    setDataSelecionada(null);
+    setBusca("");
+    setFiltroContrato("todos");
+    setModoEdicao(false);
+    setJustificativa("");
+  };
+
   const totalPorStatus = useMemo(() => {
     const counts: Record<string, number> = {};
     STATUS_FREQUENCIA.forEach((s) => (counts[s] = 0));
@@ -163,14 +206,48 @@ export default function RegistroFrequencia() {
   const isLoading = loadingColab || loadingFreq;
   const bloqueado = dataFutura || (jaTemRegistro && !modoEdicao);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  // === CALENDAR VIEW (no day selected) ===
+  if (!dataSelecionada) {
+    return (
+      <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Registro de Frequência</h1>
           <p className="text-muted-foreground text-sm">
-            Registre a frequência diária dos colaboradores
+            Clique em um dia do calendário para registrar a frequência
           </p>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <FrequenciaCalendar
+              mesAtual={mesAtual}
+              onMesChange={setMesAtual}
+              onDayClick={handleDayClick}
+              diaSelecionado={dataSelecionada}
+              diasFinalizados={diasFinalizados}
+              diasPreenchendo={diasPreenchendo}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // === DAY DETAIL VIEW (day selected) ===
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={handleVoltarCalendario}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Frequência — {format(dataSelecionada, "dd/MM/yyyy (EEEE)", { locale: ptBR })}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Registre a frequência dos colaboradores para este dia
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           {jaTemRegistro && !modoEdicao && !dataFutura && (
@@ -211,36 +288,15 @@ export default function RegistroFrequencia() {
         <Alert className="border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20">
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800 dark:text-yellow-200">
-            Modo de edição ativado para este dia. Justificativa: <strong>{justificativa}</strong>
+            Modo de edição ativado. Justificativa: <strong>{justificativa}</strong>
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Filtros */}
+      {/* Filtros (sem filtro de data) */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4 items-end">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Data</label>
-              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-[200px] justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(dataSelecionada, "dd/MM/yyyy")}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dataSelecionada}
-                    onSelect={(d) => { if (d) { setDataSelecionada(d); setCalendarOpen(false); } }}
-                    locale={ptBR}
-                    disabled={(date) => isAfter(startOfDay(date), hoje)}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
             <div className="space-y-1.5 min-w-[200px]">
               <label className="text-sm font-medium">Contrato</label>
               <Select value={filtroContrato} onValueChange={setFiltroContrato}>
