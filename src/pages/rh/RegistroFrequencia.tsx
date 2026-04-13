@@ -60,14 +60,31 @@ export default function RegistroFrequencia() {
 
   const hoje = startOfDay(new Date());
 
+  // Query for the selected day
+  const dataStr = dataSelecionada ? format(dataSelecionada, "yyyy-MM-dd") : null;
+  const dataFutura = dataSelecionada ? isAfter(startOfDay(dataSelecionada), hoje) : false;
+  const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
+  const { data: frequencias = [], isLoading: loadingFreq } = useFrequenciaByDate(dataStr);
+  const upsert = useUpsertFrequencia();
+
   // Range query for the whole month to determine day statuses
   const mesInicioStr = format(startOfMonth(mesAtual), "yyyy-MM-dd");
   const mesFimStr = format(endOfMonth(mesAtual), "yyyy-MM-dd");
   const { data: frequenciasMes = [] } = useFrequenciaByRange(mesInicioStr, mesFimStr);
 
+  const colaboradoresAtivos = useMemo(
+    () => colaboradores.filter((c) => c.status === "Ativo"),
+    [colaboradores]
+  );
+
+  const contratosUnicos = useMemo(() => {
+    const set = new Set(colaboradoresAtivos.map((c) => c.site_contrato));
+    return Array.from(set).sort();
+  }, [colaboradoresAtivos]);
+
   // IDs of collaborators matching the current contract filter
   const colabIdsFiltrados = useMemo(() => {
-    if (filtroContrato === "todos") return null; // null = don't filter
+    if (filtroContrato === "todos") return null;
     const set = new Set(
       colaboradoresAtivos
         .filter((c) => c.site_contrato === filtroContrato)
@@ -85,23 +102,6 @@ export default function RegistroFrequencia() {
     filtered.forEach((f) => set.add(f.data));
     return set;
   }, [frequenciasMes, colabIdsFiltrados]);
-
-  // Query for the selected day
-  const dataStr = dataSelecionada ? format(dataSelecionada, "yyyy-MM-dd") : null;
-  const dataFutura = dataSelecionada ? isAfter(startOfDay(dataSelecionada), hoje) : false;
-  const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
-  const { data: frequencias = [], isLoading: loadingFreq } = useFrequenciaByDate(dataStr);
-  const upsert = useUpsertFrequencia();
-
-  const colaboradoresAtivos = useMemo(
-    () => colaboradores.filter((c) => c.status === "Ativo"),
-    [colaboradores]
-  );
-
-  const contratosUnicos = useMemo(() => {
-    const set = new Set(colaboradoresAtivos.map((c) => c.site_contrato));
-    return Array.from(set).sort();
-  }, [colaboradoresAtivos]);
 
   const colaboradoresFiltrados = useMemo(() => {
     let list = colaboradoresAtivos;
