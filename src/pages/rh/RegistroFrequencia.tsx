@@ -65,12 +65,26 @@ export default function RegistroFrequencia() {
   const mesFimStr = format(endOfMonth(mesAtual), "yyyy-MM-dd");
   const { data: frequenciasMes = [] } = useFrequenciaByRange(mesInicioStr, mesFimStr);
 
-  // Compute which days have saved records
+  // IDs of collaborators matching the current contract filter
+  const colabIdsFiltrados = useMemo(() => {
+    if (filtroContrato === "todos") return null; // null = don't filter
+    const set = new Set(
+      colaboradoresAtivos
+        .filter((c) => c.site_contrato === filtroContrato)
+        .map((c) => c.id)
+    );
+    return set;
+  }, [colaboradoresAtivos, filtroContrato]);
+
+  // Compute which days have saved records (filtered by contract)
   const diasFinalizados = useMemo(() => {
     const set = new Set<string>();
-    frequenciasMes.forEach((f) => set.add(f.data));
+    const filtered = colabIdsFiltrados
+      ? frequenciasMes.filter((f) => colabIdsFiltrados.has(f.colaborador_id))
+      : frequenciasMes;
+    filtered.forEach((f) => set.add(f.data));
     return set;
-  }, [frequenciasMes]);
+  }, [frequenciasMes, colabIdsFiltrados]);
 
   // Query for the selected day
   const dataStr = dataSelecionada ? format(dataSelecionada, "yyyy-MM-dd") : null;
