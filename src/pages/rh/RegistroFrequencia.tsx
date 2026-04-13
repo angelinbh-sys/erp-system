@@ -231,7 +231,23 @@ export default function RegistroFrequencia() {
           </p>
         </div>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="space-y-1.5 min-w-[200px]">
+                <label className="text-sm font-medium">Contrato</label>
+                <Select value={filtroContrato} onValueChange={setFiltroContrato}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os contratos</SelectItem>
+                    {contratosUnicos.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <FrequenciaCalendar
               mesAtual={mesAtual}
               onMesChange={setMesAtual}
