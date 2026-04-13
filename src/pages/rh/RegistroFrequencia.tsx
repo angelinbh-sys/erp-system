@@ -60,24 +60,17 @@ export default function RegistroFrequencia() {
 
   const hoje = startOfDay(new Date());
 
-  // Range query for the whole month to determine day statuses
-  const mesInicioStr = format(startOfMonth(mesAtual), "yyyy-MM-dd");
-  const mesFimStr = format(endOfMonth(mesAtual), "yyyy-MM-dd");
-  const { data: frequenciasMes = [] } = useFrequenciaByRange(mesInicioStr, mesFimStr);
-
-  // Compute which days have saved records
-  const diasFinalizados = useMemo(() => {
-    const set = new Set<string>();
-    frequenciasMes.forEach((f) => set.add(f.data));
-    return set;
-  }, [frequenciasMes]);
-
   // Query for the selected day
   const dataStr = dataSelecionada ? format(dataSelecionada, "yyyy-MM-dd") : null;
   const dataFutura = dataSelecionada ? isAfter(startOfDay(dataSelecionada), hoje) : false;
   const { data: colaboradores = [], isLoading: loadingColab } = useColaboradores();
   const { data: frequencias = [], isLoading: loadingFreq } = useFrequenciaByDate(dataStr);
   const upsert = useUpsertFrequencia();
+
+  // Range query for the whole month to determine day statuses
+  const mesInicioStr = format(startOfMonth(mesAtual), "yyyy-MM-dd");
+  const mesFimStr = format(endOfMonth(mesAtual), "yyyy-MM-dd");
+  const { data: frequenciasMes = [] } = useFrequenciaByRange(mesInicioStr, mesFimStr);
 
   const colaboradoresAtivos = useMemo(
     () => colaboradores.filter((c) => c.status === "Ativo"),
@@ -88,6 +81,27 @@ export default function RegistroFrequencia() {
     const set = new Set(colaboradoresAtivos.map((c) => c.site_contrato));
     return Array.from(set).sort();
   }, [colaboradoresAtivos]);
+
+  // IDs of collaborators matching the current contract filter
+  const colabIdsFiltrados = useMemo(() => {
+    if (filtroContrato === "todos") return null;
+    const set = new Set(
+      colaboradoresAtivos
+        .filter((c) => c.site_contrato === filtroContrato)
+        .map((c) => c.id)
+    );
+    return set;
+  }, [colaboradoresAtivos, filtroContrato]);
+
+  // Compute which days have saved records (filtered by contract)
+  const diasFinalizados = useMemo(() => {
+    const set = new Set<string>();
+    const filtered = colabIdsFiltrados
+      ? frequenciasMes.filter((f) => colabIdsFiltrados.has(f.colaborador_id))
+      : frequenciasMes;
+    filtered.forEach((f) => set.add(f.data));
+    return set;
+  }, [frequenciasMes, colabIdsFiltrados]);
 
   const colaboradoresFiltrados = useMemo(() => {
     let list = colaboradoresAtivos;
@@ -217,7 +231,23 @@ export default function RegistroFrequencia() {
           </p>
         </div>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="space-y-1.5 min-w-[200px]">
+                <label className="text-sm font-medium">Contrato</label>
+                <Select value={filtroContrato} onValueChange={setFiltroContrato}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os contratos</SelectItem>
+                    {contratosUnicos.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <FrequenciaCalendar
               mesAtual={mesAtual}
               onMesChange={setMesAtual}
