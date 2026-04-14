@@ -115,7 +115,12 @@ export default function RegistroFrequencia() {
     return list.sort((a, b) => a.nome.localeCompare(b.nome));
   }, [colaboradoresAtivos, filtroContrato, busca]);
 
-  const jaTemRegistro = frequencias.length > 0;
+  // Check if there are existing records for the FILTERED collaborators (not all)
+  const jaTemRegistro = useMemo(() => {
+    if (frequencias.length === 0) return false;
+    const colabIds = new Set(colaboradoresFiltrados.map((c) => c.id));
+    return frequencias.some((f) => colabIds.has(f.colaborador_id));
+  }, [frequencias, colaboradoresFiltrados]);
 
   useEffect(() => {
     if (frequencias.length > 0) {
