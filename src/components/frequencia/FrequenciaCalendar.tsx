@@ -60,7 +60,7 @@ function getDayStatus(
   // Check if late: past day, not weekend, not finalized, and > 48 business hours (2 business days)
   if (isBefore(startOfDay(day), hoje) && !isWeekend(day)) {
     const bizDays = countBusinessDaysBetween(day, hoje);
-    if (bizDays > 2) return "atrasado";
+    if (bizDays >= 2) return "atrasado";
   }
 
   return "vazio";
