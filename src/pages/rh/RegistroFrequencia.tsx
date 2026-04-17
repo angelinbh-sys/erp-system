@@ -331,23 +331,13 @@ export default function RegistroFrequencia() {
         </Alert>
       )}
 
-      {/* Filtros (sem filtro de data) */}
+      {/* Filtros (sem filtro de contrato — definido na tela do calendário) */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4 items-end">
-            <div className="space-y-1.5 min-w-[200px]">
+            <div className="space-y-1.5 min-w-[220px]">
               <label className="text-sm font-medium">Contrato</label>
-              <Select value={filtroContrato} onValueChange={setFiltroContrato}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os contratos</SelectItem>
-                  {contratosUnicos.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input value={filtroContrato} disabled />
             </div>
             <div className="space-y-1.5 flex-1">
               <label className="text-sm font-medium">Buscar</label>
