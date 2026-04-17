@@ -196,6 +196,10 @@ export default function RegistroFrequencia() {
   };
 
   const handleDayClick = (day: Date) => {
+    if (filtroContrato === "todos") {
+      toast.error("Selecione um contrato antes de registrar a frequência.");
+      return;
+    }
     setDataSelecionada(day);
     const key = format(day, "yyyy-MM-dd");
     // Mark as "preenchendo" if not already finalized
@@ -207,7 +211,6 @@ export default function RegistroFrequencia() {
   const handleVoltarCalendario = () => {
     setDataSelecionada(null);
     setBusca("");
-    setFiltroContrato("todos");
     setModoEdicao(false);
     setJustificativa("");
   };
