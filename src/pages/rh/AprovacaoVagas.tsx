@@ -123,10 +123,17 @@ const AprovacaoVagas = () => {
     return isCreator(vaga) && (sp === STATUS_PROCESSO.RASCUNHO || sp === STATUS_PROCESSO.AGUARDANDO_DIRETORIA);
   };
 
-  // Cancelar vaga: apenas o criador
+  // Cancelar vaga: somente em status iniciais; super admin pode em qualquer status (exceto cancelada/efetivada)
   const canCancelVaga = (vaga: Vaga) => {
     const sp = (vaga as any).status_processo;
-    return isCreator(vaga) && sp !== STATUS_PROCESSO.VAGA_CANCELADA && sp !== STATUS_PROCESSO.EFETIVADO;
+    if (sp === STATUS_PROCESSO.VAGA_CANCELADA || sp === STATUS_PROCESSO.EFETIVADO) return false;
+    const allowedStatusForCriador = [
+      STATUS_PROCESSO.AGUARDANDO_DIRETORIA,
+      STATUS_PROCESSO.DEVOLVIDO_RH,
+      STATUS_PROCESSO.REPROVADO_DIRETORIA,
+    ];
+    if (isSuperAdmin) return true;
+    return isCreator(vaga) && allowedStatusForCriador.includes(sp);
   };
 
   const handleSaveEdit = async () => {
