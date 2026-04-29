@@ -43,13 +43,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
       return;
     }
     try {
-      const { error } = await supabase.from("vagas").update({
-        status_processo: STATUS_PROCESSO.ADMITIDO,
-        responsavel_etapa: "Dep. Pessoal",
-        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
-      } as any).eq("id", detailVaga.id);
-      if (error) throw error;
-
+      // Atomic: cria colaborador PRIMEIRO; só atualiza a vaga se sucesso
       const { error: colabError } = await supabase.from("colaboradores").insert({
         nome: detailVaga.nome_candidato,
         cargo: detailVaga.cargo,
@@ -60,7 +54,18 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
         vaga_id: detailVaga.id,
         status: "Ativo",
       });
-      if (colabError) console.error("Erro ao criar colaborador:", colabError);
+      if (colabError) {
+        console.error("Erro ao criar colaborador:", colabError);
+        toast.error("Erro ao criar colaborador no efetivo.");
+        return;
+      }
+
+      const { error } = await supabase.from("vagas").update({
+        status_processo: STATUS_PROCESSO.ADMITIDO,
+        responsavel_etapa: "Dep. Pessoal",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
+      } as any).eq("id", detailVaga.id);
+      if (error) throw error;
 
       await supabase.from("vagas_historico" as any).insert({
         vaga_id: detailVaga.id, acao: "Admissão concluída", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
@@ -220,8 +225,10 @@ const Admissao = () => {
   const [detailVaga, setDetailVaga] = useState<any>(null);
   const { logAction } = useAuditLog();
   const { profile } = useAuthContext();
+  const [showConcluidas, setShowConcluidas] = useState(false);
 
   const vagas = allVagas.filter((v: any) => v.status_processo !== STATUS_PROCESSO.ADMITIDO && v.status_processo !== STATUS_PROCESSO.EFETIVADO);
+  const admitidas = allVagas.filter((v: any) => v.status_processo === STATUS_PROCESSO.ADMITIDO);
 
   const getStatusLabel = (vaga: any) => {
     const sp = vaga.status_processo;
@@ -271,6 +278,48 @@ const Admissao = () => {
                 })}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {admitidas.length > 0 && (
+        <Card className="mt-6">
+          <CardContent className="pt-6">
+            <button
+              type="button"
+              onClick={() => setShowConcluidas((s) => !s)}
+              className="flex items-center justify-between w-full text-left mb-2"
+            >
+              <h3 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-teal-600" />
+                Admissões Concluídas ({admitidas.length})
+              </h3>
+              <span className="text-sm text-muted-foreground">{showConcluidas ? "Recolher ▲" : "Expandir ▼"}</span>
+            </button>
+            {showConcluidas && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Cargo</TableHead>
+                    <TableHead>Centro de Custo</TableHead>
+                    <TableHead>Site / Contrato</TableHead>
+                    <TableHead>Concluída em</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {admitidas.map((v: any) => (
+                    <TableRow key={v.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetailVaga(v)}>
+                      <TableCell className="font-medium">{v.nome_candidato}</TableCell>
+                      <TableCell>{v.cargo}</TableCell>
+                      <TableCell>{v.centro_custo_nome}</TableCell>
+                      <TableCell>{v.site_contrato}</TableCell>
+                      <TableCell>{v.updated_at ? new Date(v.updated_at).toLocaleDateString("pt-BR") : "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       )}

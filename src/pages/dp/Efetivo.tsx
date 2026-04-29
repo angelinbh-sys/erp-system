@@ -468,10 +468,15 @@ const Efetivo = () => {
                 value={editForm.site_contrato}
                 onValueChange={(v) => {
                   const site = allSites.find((s) => s.siteNome === v);
+                  if (!site) {
+                    toast.warning("Site não encontrado na lista. Verifique os cadastros em Gestão RH.");
+                    setEditForm((p) => ({ ...p, site_contrato: v, centro_custo: "" }));
+                    return;
+                  }
                   setEditForm((p) => ({
                     ...p,
                     site_contrato: v,
-                    centro_custo: site ? (site.ccCodigo ? `${site.ccCodigo} - ${site.ccNome}` : site.ccNome) : p.centro_custo,
+                    centro_custo: site.ccCodigo ? `${site.ccCodigo} - ${site.ccNome}` : site.ccNome,
                   }));
                 }}
               >
