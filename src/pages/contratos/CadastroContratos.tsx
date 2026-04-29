@@ -46,6 +46,7 @@ export default function CadastroContratos() {
   const openNew = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setDataError("");
     setDialogOpen(true);
   };
 
@@ -62,6 +63,7 @@ export default function CadastroContratos() {
       responsavel: c.responsavel,
       status: c.status,
     });
+    setDataError("");
     setDialogOpen(true);
   };
 
