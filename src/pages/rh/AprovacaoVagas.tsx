@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "@/lib/toast";
 import { Check, X, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil, Ban } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatFirstLastName, capitalizeName } from "@/utils/formatName";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
@@ -29,6 +30,7 @@ import { useCreateNotificacao } from "@/hooks/useNotificacoes";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { useCentrosCusto } from "@/hooks/useCadastros";
 import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 import { STATUS_PROCESSO, STATUS_PROCESSO_CONFIG, getResponsavelEtapa } from "@/utils/statusProcesso";
 
@@ -44,7 +46,13 @@ const AprovacaoVagas = () => {
   const createNotificacao = useCreateNotificacao();
   const { profile, user } = useAuthContext();
   const { logAction } = useAuditLog();
+  const { items: centrosCusto } = useCentrosCusto();
   const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+
+  const refreshVagas = () => {
+    queryClient.invalidateQueries({ queryKey: ["vagas"] });
+  };
 
   const isSuperAdmin = profile?.super_admin;
   const grupoLower = profile?.grupo_permissao?.toLowerCase() || "";
@@ -90,18 +98,24 @@ const AprovacaoVagas = () => {
     return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.DEVOLVIDO_RH || sp === STATUS_PROCESSO.REPROVADO_DIRETORIA);
   };
 
-  const getEditFormFromVaga = (vaga: Vaga): Record<string, string> => ({
-    nome_candidato: vaga.nome_candidato || "",
-    cargo: vaga.cargo || "",
-    salario: vaga.salario || "",
-    telefone: vaga.telefone || "",
-    cpf: (vaga as any).cpf || "",
-    sexo: (vaga as any).sexo || "",
-    centro_custo_nome: vaga.centro_custo_nome || "",
-    site_contrato: vaga.site_contrato || "",
-    local_trabalho: (vaga as any).local_trabalho || "",
-    data_nascimento: (vaga as any).data_nascimento || "",
-  });
+  const getEditFormFromVaga = (vaga: Vaga): Record<string, string> => {
+    // Try to resolve CC id from the saved name
+    const ccMatch = centrosCusto.find((c) => c.nome === vaga.centro_custo_nome);
+    return {
+      nome_candidato: vaga.nome_candidato || "",
+      cargo: vaga.cargo || "",
+      salario: vaga.salario || "",
+      telefone: vaga.telefone || "",
+      cpf: (vaga as any).cpf || "",
+      sexo: (vaga as any).sexo || "",
+      centro_custo_id: ccMatch?.id || "",
+      centro_custo_nome: vaga.centro_custo_nome || "",
+      centro_custo_codigo: ccMatch?.codigo || (vaga as any).centro_custo_codigo || "",
+      site_contrato: vaga.site_contrato || "",
+      local_trabalho: (vaga as any).local_trabalho || "",
+      data_nascimento: (vaga as any).data_nascimento || "",
+    };
+  };
 
   const openEditDialog = (vaga: Vaga) => {
     setEditVaga(vaga);
@@ -115,10 +129,17 @@ const AprovacaoVagas = () => {
     return isCreator(vaga) && (sp === STATUS_PROCESSO.RASCUNHO || sp === STATUS_PROCESSO.AGUARDANDO_DIRETORIA);
   };
 
-  // Cancelar vaga: apenas o criador
+  // Cancelar vaga: somente em status iniciais; super admin pode em qualquer status (exceto cancelada/efetivada)
   const canCancelVaga = (vaga: Vaga) => {
     const sp = (vaga as any).status_processo;
-    return isCreator(vaga) && sp !== STATUS_PROCESSO.VAGA_CANCELADA && sp !== STATUS_PROCESSO.EFETIVADO;
+    if (sp === STATUS_PROCESSO.VAGA_CANCELADA || sp === STATUS_PROCESSO.EFETIVADO) return false;
+    const allowedStatusForCriador = [
+      STATUS_PROCESSO.AGUARDANDO_DIRETORIA,
+      STATUS_PROCESSO.DEVOLVIDO_RH,
+      STATUS_PROCESSO.REPROVADO_DIRETORIA,
+    ];
+    if (isSuperAdmin) return true;
+    return isCreator(vaga) && allowedStatusForCriador.includes(sp);
   };
 
   const handleSaveEdit = async () => {
@@ -133,6 +154,7 @@ const AprovacaoVagas = () => {
         cpf: editForm.cpf,
         sexo: editForm.sexo,
         centro_custo_nome: editForm.centro_custo_nome,
+        centro_custo_codigo: editForm.centro_custo_codigo,
         site_contrato: editForm.site_contrato,
         local_trabalho: editForm.local_trabalho,
         data_nascimento: editForm.data_nascimento,
@@ -153,7 +175,7 @@ const AprovacaoVagas = () => {
 
       toast.success("Dados da vaga atualizados com sucesso.");
       setEditVaga(null);
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao salvar alterações.");
     } finally {
@@ -197,7 +219,7 @@ const AprovacaoVagas = () => {
       });
 
       toast.success("Vaga reenviada para aprovação da Diretoria.");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao reenviar vaga.");
     }
@@ -231,7 +253,7 @@ const AprovacaoVagas = () => {
       });
 
       toast.success("Vaga aprovada com sucesso!");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao aprovar vaga.");
     }
@@ -264,7 +286,7 @@ const AprovacaoVagas = () => {
       setShowReprovar(false);
       setSelectedVaga(null);
       setObservacao("");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao reprovar vaga.");
     }
@@ -313,7 +335,7 @@ const AprovacaoVagas = () => {
       toast.success("Vaga devolvida para correção.");
       setDevolverVaga(null);
       setDevolverMotivo("");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao devolver vaga.");
     } finally {
@@ -343,7 +365,7 @@ const AprovacaoVagas = () => {
       toast.success("Vaga excluída com sucesso.");
       setDeleteVaga(null);
       setDeleteMotivo("");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao excluir vaga.");
     } finally {
@@ -379,7 +401,7 @@ const AprovacaoVagas = () => {
       toast.success("Vaga cancelada com sucesso.");
       setCancelVaga(null);
       setCancelMotivo("");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao cancelar vaga.");
     } finally {
@@ -400,7 +422,7 @@ const AprovacaoVagas = () => {
       });
 
       toast.success(`Status do candidato alterado para "${newStatus}".`);
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao alterar status do candidato.");
     }
@@ -490,6 +512,13 @@ const AprovacaoVagas = () => {
                             onClick={() => { setDeleteVaga(vaga); setDeleteMotivo(""); }}
                             className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canCancelVaga(vaga) && (
+                          <Button variant="ghost" size="icon" title="Cancelar vaga"
+                            onClick={() => { setCancelVaga(vaga); setCancelMotivo(""); }}
+                            className="text-orange-700 hover:text-orange-700">
+                            <Ban className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -624,8 +653,59 @@ const AprovacaoVagas = () => {
             <div><Label>Nome do Candidato</Label><Input value={editForm.nome_candidato || ""} onChange={(e) => setEditForm(p => ({ ...p, nome_candidato: e.target.value }))} /></div>
             <div><Label>Cargo / Função</Label><Input value={editForm.cargo || ""} onChange={(e) => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
             <div><Label>Salário</Label><Input value={editForm.salario || ""} onChange={(e) => setEditForm(p => ({ ...p, salario: e.target.value }))} /></div>
-            <div><Label>Centro de Custo</Label><Input value={editForm.centro_custo_nome || ""} onChange={(e) => setEditForm(p => ({ ...p, centro_custo_nome: e.target.value }))} /></div>
-            <div><Label>Site / Contrato</Label><Input value={editForm.site_contrato || ""} onChange={(e) => setEditForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
+            <div>
+              <Label>Centro de Custo</Label>
+              <Select
+                value={editForm.centro_custo_id || ""}
+                onValueChange={(v) => {
+                  const cc = centrosCusto.find((c) => c.id === v);
+                  setEditForm((p) => ({
+                    ...p,
+                    centro_custo_id: v,
+                    centro_custo_nome: cc?.nome || "",
+                    centro_custo_codigo: cc?.codigo || "",
+                    site_contrato: "",
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o centro de custo" /></SelectTrigger>
+                <SelectContent>
+                  {centrosCusto.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">Nenhum CC cadastrado.</div>
+                  ) : (
+                    centrosCusto.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.codigo ? `${c.codigo} - ${c.nome}` : c.nome}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Site / Contrato</Label>
+              <Select
+                value={editForm.site_contrato || ""}
+                onValueChange={(v) => setEditForm((p) => ({ ...p, site_contrato: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o site" /></SelectTrigger>
+                <SelectContent>
+                  {(() => {
+                    const cc = centrosCusto.find((c) => c.id === editForm.centro_custo_id);
+                    const sites = cc?.sites ?? [];
+                    if (!editForm.centro_custo_id) {
+                      return <div className="p-3 text-sm text-muted-foreground text-center">Selecione um Centro de Custo primeiro.</div>;
+                    }
+                    if (sites.length === 0) {
+                      return <div className="p-3 text-sm text-muted-foreground text-center">Nenhum site para este CC.</div>;
+                    }
+                    return sites.map((s) => (
+                      <SelectItem key={s.id} value={s.nome}>{s.nome}</SelectItem>
+                    ));
+                  })()}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Local de Trabalho</Label><Input value={editForm.local_trabalho || ""} onChange={(e) => setEditForm(p => ({ ...p, local_trabalho: e.target.value }))} /></div>
             <div><Label>Data de Nascimento</Label><Input type="date" value={editForm.data_nascimento || ""} onChange={(e) => setEditForm(p => ({ ...p, data_nascimento: e.target.value }))} /></div>
             <div><Label>Telefone</Label><Input value={editForm.telefone || ""} onChange={(e) => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>

@@ -81,7 +81,9 @@ export default function DashboardFrequencia() {
   const handleDataInicio = (d: Date | undefined) => {
     if (!d) return;
     if (isBefore(dataFim, d)) {
-      toast.error("A data final não pode ser menor que a data inicial.");
+      toast.error("A data inicial não pode ser maior que a data final.");
+      // Reverte: mantém o valor anterior válido
+      setCalInicioOpen(false);
       return;
     }
     setDataInicio(d);
@@ -92,6 +94,8 @@ export default function DashboardFrequencia() {
     if (!d) return;
     if (isBefore(d, dataInicio)) {
       toast.error("A data final não pode ser menor que a data inicial.");
+      // Reverte: mantém o valor anterior válido
+      setCalFimOpen(false);
       return;
     }
     setDataFim(d);
@@ -618,6 +622,15 @@ export default function DashboardFrequencia() {
               );
             })}
           </div>
+
+          {totalRegistros === 0 && (
+            <Card>
+              <CardContent className="py-10 flex flex-col items-center justify-center text-center text-muted-foreground gap-2">
+                <FileText className="h-10 w-10 opacity-40" />
+                <p className="text-sm">Nenhum registro encontrado para o período selecionado.</p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Gráficos */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

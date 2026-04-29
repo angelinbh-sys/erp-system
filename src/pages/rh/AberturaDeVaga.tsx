@@ -143,6 +143,7 @@ const AberturaDeVaga = () => {
   const selectedCCId = form.watch("centroCusto");
   const selectedCC = centrosCusto.find((c) => c.id === selectedCCId);
   const sitesForCC = selectedCC?.sites ?? [];
+  const selectedSite = form.watch("tipoContrato");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -191,6 +192,22 @@ const AberturaDeVaga = () => {
       const { data: sessionData } = await supabase.auth.getSession();
       const currentUserId = sessionData?.session?.user?.id || null;
 
+      // Upload do currículo e do documento ao Storage
+      const safeName = (n: string) => n.replace(/[^a-zA-Z0-9._-]+/g, "_");
+      const ts = Date.now();
+      const curriculoPath = `curriculos/${ts}_${safeName(file.name)}`;
+      const documentoPath = `documentos/${ts}_${safeName(docFile.name)}`;
+
+      const { error: upCurrErr } = await supabase.storage
+        .from("vagas-arquivos")
+        .upload(curriculoPath, file, { upsert: false, contentType: file.type });
+      if (upCurrErr) throw upCurrErr;
+
+      const { error: upDocErr } = await supabase.storage
+        .from("vagas-arquivos")
+        .upload(documentoPath, docFile, { upsert: false, contentType: docFile.type });
+      if (upDocErr) throw upDocErr;
+
       const vagaData: Record<string, unknown> = {
         cargo: data.cargo,
         salario: data.salario,
@@ -205,7 +222,9 @@ const AberturaDeVaga = () => {
         telefone: data.telefone,
         beneficios: JSON.parse(JSON.stringify(beneficios)),
         curriculo_nome: file.name,
+        curriculo_path: curriculoPath,
         documento_nome: docFile.name,
+        documento_path: documentoPath,
         status: "Aguardando Aprovação",
         status_processo: "Aguardando Diretoria",
         responsavel_etapa: "Diretoria",
@@ -274,8 +293,8 @@ const AberturaDeVaga = () => {
   };
 
   const isDirty = useMemo(() => {
-    return form.formState.isDirty || !!file || !!docFile ||
-      Object.values(beneficios).some((v) => v !== false && v !== "");
+    const beneficiosDirty = JSON.stringify(beneficios) !== JSON.stringify(defaultBeneficios);
+    return form.formState.isDirty || !!file || !!docFile || beneficiosDirty;
   }, [form.formState.isDirty, file, docFile, beneficios]);
 
   const unsaved = useUnsavedChanges(isDirty);
@@ -350,9 +369,15 @@ const AberturaDeVaga = () => {
                       <FormLabel>Centro de Custo *</FormLabel>
                       <Select
                         onValueChange={(v) => {
+                          const previousSite = form.getValues("tipoContrato");
                           field.onChange(v);
                           // Reset site when CC changes
-                          form.setValue("tipoContrato", "");
+                          if (previousSite) {
+                            form.setValue("tipoContrato", "");
+                            toast.info("Site/Contrato foi resetado pois o Centro de Custo foi alterado.");
+                          } else {
+                            form.setValue("tipoContrato", "");
+                          }
                         }}
                         value={field.value}
                       >
@@ -450,6 +475,11 @@ const AberturaDeVaga = () => {
                           )}
                         </SelectContent>
                       </Select>
+                      {!selectedCCId && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Selecione um Centro de Custo para ver os sites disponíveis.
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
