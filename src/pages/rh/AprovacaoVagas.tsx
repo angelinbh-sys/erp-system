@@ -46,7 +46,13 @@ const AprovacaoVagas = () => {
   const createNotificacao = useCreateNotificacao();
   const { profile, user } = useAuthContext();
   const { logAction } = useAuditLog();
+  const { items: centrosCusto } = useCentrosCusto();
   const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+
+  const refreshVagas = () => {
+    queryClient.invalidateQueries({ queryKey: ["vagas"] });
+  };
 
   const isSuperAdmin = profile?.super_admin;
   const grupoLower = profile?.grupo_permissao?.toLowerCase() || "";
