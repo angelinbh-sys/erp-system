@@ -475,6 +475,11 @@ const AberturaDeVaga = () => {
                           )}
                         </SelectContent>
                       </Select>
+                      {!selectedCCId && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Selecione um Centro de Custo para ver os sites disponíveis.
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
