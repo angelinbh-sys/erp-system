@@ -51,6 +51,7 @@ export default function RegistroFrequencia() {
   const [mesAtual, setMesAtual] = useState<Date>(startOfMonth(new Date()));
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
   const [filtroContrato, setFiltroContrato] = useState<string>("todos");
+  const [contratoErro, setContratoErro] = useState(false);
   const [busca, setBusca] = useState("");
   const [registros, setRegistros] = useState<Record<string, StatusFrequencia>>({});
   const [modoEdicao, setModoEdicao] = useState(false);
