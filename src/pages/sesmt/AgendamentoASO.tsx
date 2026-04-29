@@ -74,6 +74,11 @@ const AgendamentoASO = () => {
     await logAction({ modulo: "SESMT", pagina: "Agendamento de ASO", acao: "edicao", descricao: `Salvou datas do ASO: ${vaga.nome_candidato} (${vaga.cargo})`, registro_id: vaga.id, registro_ref: `${vaga.cargo} - ${vaga.nome_candidato}` });
     toast.success("Datas salvas com sucesso.");
     queryClient.invalidateQueries({ queryKey: ["vagas"] });
+    setLocalData((prev) => {
+      const next = { ...prev };
+      delete next[vaga.id];
+      return next;
+    });
   };
 
   const uploadArquivo = async (vaga: any) => {
@@ -212,7 +217,6 @@ const AgendamentoASO = () => {
                             onChange={(e) => setLocal(vaga.id, "dataAgendamento", e.target.value)}
                             className="mt-1"
                             disabled={!canEdit}
-                            readOnly={!canEdit}
                           />
                         </div>
                         <div>
@@ -223,7 +227,6 @@ const AgendamentoASO = () => {
                             onChange={(e) => setLocal(vaga.id, "dataEntrega", e.target.value)}
                             className="mt-1"
                             disabled={!canEdit}
-                            readOnly={!canEdit}
                             min={local.dataAgendamento || vaga.data_agendamento_aso || undefined}
                             max={today}
                           />
@@ -313,6 +316,9 @@ const AgendamentoASO = () => {
         <DialogContent>
           <DialogHeader><DialogTitle>Devolver para RH</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">Devolver a vaga <strong>{devolverVaga?.cargo}</strong> do candidato <strong>{devolverVaga?.nome_candidato}</strong> para o RH.</p>
+          <p className="text-xs text-destructive font-medium">
+            Atenção: as datas de agendamento, data de entrega e o arquivo do resultado do ASO serão apagados ao confirmar a devolução.
+          </p>
           <div className="space-y-2">
             <Label>Motivo da Devolução *</Label>
             <Textarea placeholder="Informe o motivo da devolução" value={motivoDevolucao} onChange={(e) => setMotivoDevolucao(e.target.value)} />
