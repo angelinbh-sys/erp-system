@@ -43,13 +43,7 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
       return;
     }
     try {
-      const { error } = await supabase.from("vagas").update({
-        status_processo: STATUS_PROCESSO.ADMITIDO,
-        responsavel_etapa: "Dep. Pessoal",
-        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
-      } as any).eq("id", detailVaga.id);
-      if (error) throw error;
-
+      // Atomic: cria colaborador PRIMEIRO; só atualiza a vaga se sucesso
       const { error: colabError } = await supabase.from("colaboradores").insert({
         nome: detailVaga.nome_candidato,
         cargo: detailVaga.cargo,
@@ -60,7 +54,18 @@ function AdmissaoDetailDialog({ detailVaga, setDetailVaga, queryClient, logActio
         vaga_id: detailVaga.id,
         status: "Ativo",
       });
-      if (colabError) console.error("Erro ao criar colaborador:", colabError);
+      if (colabError) {
+        console.error("Erro ao criar colaborador:", colabError);
+        toast.error("Erro ao criar colaborador no efetivo.");
+        return;
+      }
+
+      const { error } = await supabase.from("vagas").update({
+        status_processo: STATUS_PROCESSO.ADMITIDO,
+        responsavel_etapa: "Dep. Pessoal",
+        atualizado_por: formatFirstLastName(profile?.nome) || "Sistema",
+      } as any).eq("id", detailVaga.id);
+      if (error) throw error;
 
       await supabase.from("vagas_historico" as any).insert({
         vaga_id: detailVaga.id, acao: "Admissão concluída", usuario_nome: formatFirstLastName(profile?.nome) || "Sistema",
