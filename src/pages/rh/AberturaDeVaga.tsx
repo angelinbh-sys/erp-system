@@ -293,8 +293,8 @@ const AberturaDeVaga = () => {
   };
 
   const isDirty = useMemo(() => {
-    return form.formState.isDirty || !!file || !!docFile ||
-      Object.values(beneficios).some((v) => v !== false && v !== "");
+    const beneficiosDirty = JSON.stringify(beneficios) !== JSON.stringify(defaultBeneficios);
+    return form.formState.isDirty || !!file || !!docFile || beneficiosDirty;
   }, [form.formState.isDirty, file, docFile, beneficios]);
 
   const unsaved = useUnsavedChanges(isDirty);
