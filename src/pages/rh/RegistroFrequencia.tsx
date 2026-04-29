@@ -198,9 +198,11 @@ export default function RegistroFrequencia() {
 
   const handleDayClick = (day: Date) => {
     if (filtroContrato === "todos") {
+      setContratoErro(true);
       toast.error("Selecione um contrato antes de registrar a frequência.");
       return;
     }
+    setContratoErro(false);
     setDataSelecionada(day);
     const key = format(day, "yyyy-MM-dd");
     // Mark as "preenchendo" if not already finalized
@@ -211,6 +213,8 @@ export default function RegistroFrequencia() {
 
   const handleVoltarCalendario = () => {
     setDataSelecionada(null);
+    // Mantém o filtro de contrato (seleção principal do usuário) e
+    // reseta explicitamente apenas a busca para evitar filtro residual.
     setBusca("");
     setModoEdicao(false);
     setJustificativa("");
