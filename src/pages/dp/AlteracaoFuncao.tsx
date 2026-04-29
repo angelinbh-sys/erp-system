@@ -1,9 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "@/lib/toast";
-import { Plus, Pencil, Trash2, Eye, Upload, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Upload, X, Download } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { CriadoPorInfo } from "@/components/CriadoPorInfo";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,25 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 
 import { useCargos, useCentrosCusto } from "@/hooks/useCadastros";
@@ -37,15 +27,55 @@ import { useColaboradores } from "@/hooks/useColaboradores";
 
 interface AlteracaoRegistro {
   id: string;
-  nomeColaborador: string;
-  cargoAtual: string;
-  novoCargo: string;
-  centroCusto: string;
-  dataAlteracao: string;
+  nome_colaborador: string;
+  cargo_atual: string;
+  novo_cargo: string;
+  centro_custo: string;
+  data_alteracao: string;
   observacoes: string;
-  anexo?: string;
-  criadoPor?: string;
-  criadoEm?: string;
+  anexo_nome?: string | null;
+  anexo_path?: string | null;
+  criado_por?: string | null;
+  criado_em?: string | null;
+}
+
+// One-time migration from localStorage to Supabase
+let migrationAttempted = false;
+async function migrateLocalStorageData() {
+  if (migrationAttempted) return;
+  migrationAttempted = true;
+  try {
+    const raw = localStorage.getItem("erp_alteracoes_funcao");
+    if (!raw) return;
+    const items = JSON.parse(raw);
+    if (!Array.isArray(items) || items.length === 0) {
+      localStorage.removeItem("erp_alteracoes_funcao");
+      return;
+    }
+    const { count, error: countErr } = await supabase
+      .from("alteracoes_funcao" as any)
+      .select("*", { count: "exact", head: true });
+    if (countErr) throw countErr;
+    if ((count ?? 0) === 0) {
+      const payload = items.map((r: any) => ({
+        nome_colaborador: r.nomeColaborador ?? r.nome_colaborador ?? "",
+        cargo_atual: r.cargoAtual ?? r.cargo_atual ?? "",
+        novo_cargo: r.novoCargo ?? r.novo_cargo ?? "",
+        centro_custo: r.centroCusto ?? r.centro_custo ?? "",
+        data_alteracao: r.dataAlteracao ?? r.data_alteracao ?? new Date().toISOString().slice(0, 10),
+        observacoes: r.observacoes ?? "",
+        anexo_nome: r.anexo ?? null,
+        criado_por: r.criadoPor ?? null,
+        criado_em: r.criadoEm ?? null,
+      }));
+      const { error } = await supabase.from("alteracoes_funcao" as any).insert(payload as any);
+      if (!error) localStorage.removeItem("erp_alteracoes_funcao");
+    } else {
+      localStorage.removeItem("erp_alteracoes_funcao");
+    }
+  } catch (e) {
+    console.error("Erro ao migrar alteracoes_funcao:", e);
+  }
 }
 
 const AlteracaoFuncao = () => {
@@ -55,18 +85,30 @@ const AlteracaoFuncao = () => {
   const { profile } = useAuthContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { logAction } = useAuditLog();
+  const queryClient = useQueryClient();
+  const migrationRan = useRef(false);
 
-  const [registros, setRegistros] = useState<AlteracaoRegistro[]>(() => {
-    try {
-      const stored = localStorage.getItem("erp_alteracoes_funcao");
-      return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
+  useEffect(() => {
+    if (migrationRan.current) return;
+    migrationRan.current = true;
+    migrateLocalStorageData().then(() => {
+      queryClient.invalidateQueries({ queryKey: ["alteracoes_funcao"] });
+    });
+  }, [queryClient]);
+
+  const { data: registros = [] } = useQuery<AlteracaoRegistro[]>({
+    queryKey: ["alteracoes_funcao"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("alteracoes_funcao" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as any;
+    },
   });
 
-  const save = (items: AlteracaoRegistro[]) => {
-    setRegistros(items);
-    localStorage.setItem("erp_alteracoes_funcao", JSON.stringify(items));
-  };
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["alteracoes_funcao"] });
 
   const [form, setForm] = useState({
     nomeColaborador: "",
@@ -79,6 +121,7 @@ const AlteracaoFuncao = () => {
   const [anexo, setAnexo] = useState<File | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [viewItem, setViewItem] = useState<AlteracaoRegistro | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const emptyMsg = "Nenhum registro encontrado. Cadastre primeiro em Gestão RH.";
 
@@ -89,63 +132,120 @@ const AlteracaoFuncao = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSave = () => {
+  const sanitize = (n: string) => n.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+  const uploadAnexo = async (file: File): Promise<{ path: string; nome: string } | null> => {
+    const path = `alteracoes-funcao/${Date.now()}_${sanitize(file.name)}`;
+    const { error } = await supabase.storage.from("dp-arquivos").upload(path, file);
+    if (error) {
+      console.error("Erro upload anexo:", error);
+      toast.error("Erro ao enviar o anexo.");
+      return null;
+    }
+    return { path, nome: file.name };
+  };
+
+  const handleSave = async () => {
     if (!form.nomeColaborador.trim() || !form.cargoAtual || !form.novoCargo || !form.centroCusto || !form.dataAlteracao) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
-
-    if (editId) {
-      const updated = registros.map((r) =>
-        r.id === editId ? { ...r, ...form, anexo: anexo?.name || r.anexo } : r
-      );
-      save(updated);
-      logAction({
-        modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "edicao",
-        descricao: `Editou alteração de função: ${form.nomeColaborador} (${form.cargoAtual} → ${form.novoCargo})`,
-        registro_id: editId, registro_ref: form.nomeColaborador,
-      });
-      toast.success("Registro atualizado.");
-    } else {
-      const novo: AlteracaoRegistro = {
-        id: crypto.randomUUID(),
-        ...form,
-        anexo: anexo?.name,
-        criadoPor: profile?.nome || "Sistema",
-        criadoEm: new Date().toISOString(),
-      };
-      save([...registros, novo]);
-      logAction({
-        modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "criacao",
-        descricao: `Registrou alteração de função: ${form.nomeColaborador} (${form.cargoAtual} → ${form.novoCargo})`,
-        registro_id: novo.id, registro_ref: form.nomeColaborador,
-      });
-      toast.success("Alteração de função registrada.");
+    if (form.cargoAtual === form.novoCargo) {
+      toast.error("O novo cargo deve ser diferente do cargo atual.");
+      return;
     }
-    resetForm();
+
+    setSaving(true);
+    try {
+      let anexoData: { path: string; nome: string } | null = null;
+      if (anexo) {
+        anexoData = await uploadAnexo(anexo);
+        if (!anexoData) { setSaving(false); return; }
+      }
+
+      if (editId) {
+        const updates: any = {
+          nome_colaborador: form.nomeColaborador,
+          cargo_atual: form.cargoAtual,
+          novo_cargo: form.novoCargo,
+          centro_custo: form.centroCusto,
+          data_alteracao: form.dataAlteracao,
+          observacoes: form.observacoes,
+        };
+        if (anexoData) {
+          updates.anexo_path = anexoData.path;
+          updates.anexo_nome = anexoData.nome;
+        }
+        const { error } = await supabase.from("alteracoes_funcao" as any).update(updates).eq("id", editId);
+        if (error) throw error;
+        await logAction({
+          modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "edicao",
+          descricao: `Editou alteração de função: ${form.nomeColaborador} (${form.cargoAtual} → ${form.novoCargo})`,
+          registro_id: editId, registro_ref: form.nomeColaborador,
+        });
+        toast.success("Registro atualizado.");
+      } else {
+        const insert: any = {
+          nome_colaborador: form.nomeColaborador,
+          cargo_atual: form.cargoAtual,
+          novo_cargo: form.novoCargo,
+          centro_custo: form.centroCusto,
+          data_alteracao: form.dataAlteracao,
+          observacoes: form.observacoes,
+          anexo_path: anexoData?.path ?? null,
+          anexo_nome: anexoData?.nome ?? null,
+          criado_por: profile?.nome || "Sistema",
+          criado_em: new Date().toISOString(),
+        };
+        const { data: inserted, error } = await supabase.from("alteracoes_funcao" as any).insert(insert).select("id").single();
+        if (error) throw error;
+        await logAction({
+          modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "criacao",
+          descricao: `Registrou alteração de função: ${form.nomeColaborador} (${form.cargoAtual} → ${form.novoCargo})`,
+          registro_id: (inserted as any)?.id, registro_ref: form.nomeColaborador,
+        });
+        toast.success("Alteração de função registrada.");
+      }
+      invalidate();
+      resetForm();
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao salvar registro.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEdit = (item: AlteracaoRegistro) => {
     setEditId(item.id);
     setForm({
-      nomeColaborador: item.nomeColaborador,
-      cargoAtual: item.cargoAtual,
-      novoCargo: item.novoCargo,
-      centroCusto: item.centroCusto,
-      dataAlteracao: item.dataAlteracao,
+      nomeColaborador: item.nome_colaborador,
+      cargoAtual: item.cargo_atual,
+      novoCargo: item.novo_cargo,
+      centroCusto: item.centro_custo,
+      dataAlteracao: item.data_alteracao,
       observacoes: item.observacoes,
     });
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const item = registros.find(r => r.id === id);
-    save(registros.filter((r) => r.id !== id));
-    logAction({
+    const { error } = await supabase.from("alteracoes_funcao" as any).delete().eq("id", id);
+    if (error) { toast.error("Erro ao excluir registro."); return; }
+    await logAction({
       modulo: "Dep. Pessoal", pagina: "Alteração de Função / Cargo", acao: "exclusao",
-      descricao: `Excluiu alteração de função: ${item?.nomeColaborador || "—"}`,
-      registro_id: id, registro_ref: item?.nomeColaborador,
+      descricao: `Excluiu alteração de função: ${item?.nome_colaborador || "—"}`,
+      registro_id: id, registro_ref: item?.nome_colaborador,
     });
     toast.success("Registro excluído.");
+    invalidate();
+  };
+
+  const handleDownload = async (item: AlteracaoRegistro) => {
+    if (!item.anexo_path) return;
+    const { data, error } = await supabase.storage.from("dp-arquivos").createSignedUrl(item.anexo_path, 60);
+    if (error || !data?.signedUrl) { toast.error("Erro ao gerar link do anexo."); return; }
+    window.open(data.signedUrl, "_blank");
   };
 
   return (
@@ -266,9 +366,9 @@ const AlteracaoFuncao = () => {
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm">
+            <Button onClick={handleSave} size="sm" disabled={saving}>
               <Plus className="h-4 w-4 mr-1" />
-              {editId ? "Atualizar" : "Registrar"}
+              {saving ? "Salvando..." : editId ? "Atualizar" : "Registrar"}
             </Button>
             {editId && (
               <Button variant="outline" size="sm" onClick={resetForm}>Cancelar</Button>
@@ -294,10 +394,10 @@ const AlteracaoFuncao = () => {
               <TableBody>
                 {registros.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell>{r.nomeColaborador}</TableCell>
-                    <TableCell>{r.cargoAtual}</TableCell>
-                    <TableCell>{r.novoCargo}</TableCell>
-                    <TableCell>{r.dataAlteracao}</TableCell>
+                    <TableCell>{r.nome_colaborador}</TableCell>
+                    <TableCell>{r.cargo_atual}</TableCell>
+                    <TableCell>{r.novo_cargo}</TableCell>
+                    <TableCell>{r.data_alteracao}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" onClick={() => setViewItem(r)}>
@@ -326,14 +426,24 @@ const AlteracaoFuncao = () => {
           </DialogHeader>
           {viewItem && (
             <div className="space-y-2 text-sm">
-              <p><strong>Colaborador:</strong> {viewItem.nomeColaborador}</p>
-              <p><strong>Cargo Atual:</strong> {viewItem.cargoAtual}</p>
-              <p><strong>Novo Cargo:</strong> {viewItem.novoCargo}</p>
-              <p><strong>Centro de Custo:</strong> {viewItem.centroCusto}</p>
-              <p><strong>Data:</strong> {viewItem.dataAlteracao}</p>
+              <p><strong>Colaborador:</strong> {viewItem.nome_colaborador}</p>
+              <p><strong>Cargo Atual:</strong> {viewItem.cargo_atual}</p>
+              <p><strong>Novo Cargo:</strong> {viewItem.novo_cargo}</p>
+              <p><strong>Centro de Custo:</strong> {viewItem.centro_custo}</p>
+              <p><strong>Data:</strong> {viewItem.data_alteracao}</p>
               <p><strong>Observações:</strong> {viewItem.observacoes || "—"}</p>
-              <p><strong>Anexo:</strong> {viewItem.anexo || "Nenhum"}</p>
-              <CriadoPorInfo criadoPorNome={viewItem.criadoPor} criadoEm={viewItem.criadoEm} className="mt-3 pt-3 border-t border-border" />
+              <div className="flex items-center gap-2">
+                <strong>Anexo:</strong>
+                {viewItem.anexo_path ? (
+                  <Button variant="outline" size="sm" onClick={() => handleDownload(viewItem)}>
+                    <Download className="h-4 w-4 mr-1" />
+                    {viewItem.anexo_nome || "Baixar anexo"}
+                  </Button>
+                ) : (
+                  <span>{viewItem.anexo_nome || "Nenhum"}</span>
+                )}
+              </div>
+              <CriadoPorInfo criadoPorNome={viewItem.criado_por ?? undefined} criadoEm={viewItem.criado_em ?? undefined} className="mt-3 pt-3 border-t border-border" />
             </div>
           )}
         </DialogContent>
