@@ -192,6 +192,22 @@ const AberturaDeVaga = () => {
       const { data: sessionData } = await supabase.auth.getSession();
       const currentUserId = sessionData?.session?.user?.id || null;
 
+      // Upload do currículo e do documento ao Storage
+      const safeName = (n: string) => n.replace(/[^a-zA-Z0-9._-]+/g, "_");
+      const ts = Date.now();
+      const curriculoPath = `curriculos/${ts}_${safeName(file.name)}`;
+      const documentoPath = `documentos/${ts}_${safeName(docFile.name)}`;
+
+      const { error: upCurrErr } = await supabase.storage
+        .from("vagas-arquivos")
+        .upload(curriculoPath, file, { upsert: false, contentType: file.type });
+      if (upCurrErr) throw upCurrErr;
+
+      const { error: upDocErr } = await supabase.storage
+        .from("vagas-arquivos")
+        .upload(documentoPath, docFile, { upsert: false, contentType: docFile.type });
+      if (upDocErr) throw upDocErr;
+
       const vagaData: Record<string, unknown> = {
         cargo: data.cargo,
         salario: data.salario,
@@ -206,7 +222,9 @@ const AberturaDeVaga = () => {
         telefone: data.telefone,
         beneficios: JSON.parse(JSON.stringify(beneficios)),
         curriculo_nome: file.name,
+        curriculo_path: curriculoPath,
         documento_nome: docFile.name,
+        documento_path: documentoPath,
         status: "Aguardando Aprovação",
         status_processo: "Aguardando Diretoria",
         responsavel_etapa: "Diretoria",
