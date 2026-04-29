@@ -109,6 +109,57 @@ export type Database = {
         }
         Relationships: []
       }
+      cargos: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      centros_custo: {
+        Row: {
+          codigo: string
+          created_at: string
+          id: string
+          nome: string
+          sites: Json
+          updated_at: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          id?: string
+          nome: string
+          sites?: Json
+          updated_at?: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          sites?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       colaboradores: {
         Row: {
           agencia: string | null
