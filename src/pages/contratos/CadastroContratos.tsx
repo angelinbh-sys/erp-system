@@ -236,11 +236,12 @@ export default function CadastroContratos() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Data de Início *</Label>
-                <Input type="date" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} />
+                <Input type="date" value={form.data_inicio} onChange={(e) => { setForm({ ...form, data_inicio: e.target.value }); setDataError(""); }} />
               </div>
               <div>
                 <Label>Data de Término *</Label>
-                <Input type="date" value={form.data_termino} onChange={(e) => setForm({ ...form, data_termino: e.target.value })} />
+                <Input type="date" value={form.data_termino} onChange={(e) => { setForm({ ...form, data_termino: e.target.value }); setDataError(""); }} />
+                {dataError && <p className="text-sm text-destructive mt-1">{dataError}</p>}
               </div>
             </div>
             <div>
