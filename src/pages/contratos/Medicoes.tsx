@@ -168,13 +168,21 @@ export default function Medicoes() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja excluir esta medição?")) return;
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
     try {
-      await deleteMedicao.mutateAsync(id);
+      await deleteMedicao.mutateAsync(deletingId);
       toast.success("Medição excluída.");
     } catch {
       toast.error("Erro ao excluir medição.");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setDeletingId(null);
     }
   };
 
