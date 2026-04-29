@@ -98,18 +98,24 @@ const AprovacaoVagas = () => {
     return (isCreator(vaga) || isSuperAdmin) && (sp === STATUS_PROCESSO.DEVOLVIDO_RH || sp === STATUS_PROCESSO.REPROVADO_DIRETORIA);
   };
 
-  const getEditFormFromVaga = (vaga: Vaga): Record<string, string> => ({
-    nome_candidato: vaga.nome_candidato || "",
-    cargo: vaga.cargo || "",
-    salario: vaga.salario || "",
-    telefone: vaga.telefone || "",
-    cpf: (vaga as any).cpf || "",
-    sexo: (vaga as any).sexo || "",
-    centro_custo_nome: vaga.centro_custo_nome || "",
-    site_contrato: vaga.site_contrato || "",
-    local_trabalho: (vaga as any).local_trabalho || "",
-    data_nascimento: (vaga as any).data_nascimento || "",
-  });
+  const getEditFormFromVaga = (vaga: Vaga): Record<string, string> => {
+    // Try to resolve CC id from the saved name
+    const ccMatch = centrosCusto.find((c) => c.nome === vaga.centro_custo_nome);
+    return {
+      nome_candidato: vaga.nome_candidato || "",
+      cargo: vaga.cargo || "",
+      salario: vaga.salario || "",
+      telefone: vaga.telefone || "",
+      cpf: (vaga as any).cpf || "",
+      sexo: (vaga as any).sexo || "",
+      centro_custo_id: ccMatch?.id || "",
+      centro_custo_nome: vaga.centro_custo_nome || "",
+      centro_custo_codigo: ccMatch?.codigo || (vaga as any).centro_custo_codigo || "",
+      site_contrato: vaga.site_contrato || "",
+      local_trabalho: (vaga as any).local_trabalho || "",
+      data_nascimento: (vaga as any).data_nascimento || "",
+    };
+  };
 
   const openEditDialog = (vaga: Vaga) => {
     setEditVaga(vaga);
