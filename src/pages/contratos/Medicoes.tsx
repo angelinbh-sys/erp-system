@@ -7,6 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
@@ -41,6 +52,8 @@ export default function Medicoes() {
   const [form, setForm] = useState(emptyForm);
   const [activeTab, setActiveTab] = useState("todos");
   const [periodoError, setPeriodoError] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedCliente, setSelectedCliente] = useState("");
   const [filters, setFilters] = useState({
     periodo: "todos",
@@ -155,13 +168,21 @@ export default function Medicoes() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja excluir esta medição?")) return;
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
     try {
-      await deleteMedicao.mutateAsync(id);
+      await deleteMedicao.mutateAsync(deletingId);
       toast.success("Medição excluída.");
     } catch {
       toast.error("Erro ao excluir medição.");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setDeletingId(null);
     }
   };
 
@@ -413,12 +434,29 @@ export default function Medicoes() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={createMedicao.isPending || updateMedicao.isPending}>
+            <Button onClick={handleSave} disabled={!!periodoError || createMedicao.isPending || updateMedicao.isPending}>
               {editingId ? "Salvar" : "Registrar"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir medição</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja excluir esta medição? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingId(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className={buttonVariants({ variant: "destructive" })}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

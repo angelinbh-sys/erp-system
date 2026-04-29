@@ -6,6 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { buttonVariants } from "@/components/ui/button";
 import { useContratos, type Contrato } from "@/hooks/useContratos";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -28,10 +39,14 @@ export default function CadastroContratos() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [dataError, setDataError] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const openNew = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setDataError("");
     setDialogOpen(true);
   };
 
@@ -48,6 +63,7 @@ export default function CadastroContratos() {
       responsavel: c.responsavel,
       status: c.status,
     });
+    setDataError("");
     setDialogOpen(true);
   };
 
@@ -75,6 +91,12 @@ export default function CadastroContratos() {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
+    if (new Date(form.data_termino + "T00:00:00") <= new Date(form.data_inicio + "T00:00:00")) {
+      setDataError("A data de término deve ser posterior à data de início.");
+      toast.error("A data de término deve ser posterior à data de início.");
+      return;
+    }
+    setDataError("");
     try {
       const payload = {
         numero_contrato: form.numero_contrato,
@@ -99,13 +121,21 @@ export default function CadastroContratos() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja excluir este contrato? Todas as medições associadas também serão excluídas.")) return;
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
     try {
-      await deleteContrato.mutateAsync(id);
+      await deleteContrato.mutateAsync(deletingId);
       toast.success("Contrato excluído.");
     } catch {
       toast.error("Erro ao excluir contrato.");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setDeletingId(null);
     }
   };
 
@@ -206,11 +236,12 @@ export default function CadastroContratos() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Data de Início *</Label>
-                <Input type="date" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} />
+                <Input type="date" value={form.data_inicio} onChange={(e) => { setForm({ ...form, data_inicio: e.target.value }); setDataError(""); }} />
               </div>
               <div>
                 <Label>Data de Término *</Label>
-                <Input type="date" value={form.data_termino} onChange={(e) => setForm({ ...form, data_termino: e.target.value })} />
+                <Input type="date" value={form.data_termino} onChange={(e) => { setForm({ ...form, data_termino: e.target.value }); setDataError(""); }} />
+                {dataError && <p className="text-sm text-destructive mt-1">{dataError}</p>}
               </div>
             </div>
             <div>
@@ -232,6 +263,23 @@ export default function CadastroContratos() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir contrato</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja excluir este contrato? Todas as medições associadas também serão excluídas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingId(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className={buttonVariants({ variant: "destructive" })}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
