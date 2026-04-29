@@ -549,12 +549,14 @@ export type Database = {
           created_at: string
           criado_por: string | null
           curriculo_nome: string | null
+          curriculo_path: string | null
           data_agendamento_aso: string | null
           data_entrega_aso: string | null
           data_nascimento: string
           digito_agencia: string | null
           digito_conta: string | null
           documento_nome: string | null
+          documento_path: string | null
           enviado_admissao: boolean
           enviado_admissao_at: string | null
           estado: string | null
@@ -598,12 +600,14 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           curriculo_nome?: string | null
+          curriculo_path?: string | null
           data_agendamento_aso?: string | null
           data_entrega_aso?: string | null
           data_nascimento: string
           digito_agencia?: string | null
           digito_conta?: string | null
           documento_nome?: string | null
+          documento_path?: string | null
           enviado_admissao?: boolean
           enviado_admissao_at?: string | null
           estado?: string | null
@@ -647,12 +651,14 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           curriculo_nome?: string | null
+          curriculo_path?: string | null
           data_agendamento_aso?: string | null
           data_entrega_aso?: string | null
           data_nascimento?: string
           digito_agencia?: string | null
           digito_conta?: string | null
           documento_nome?: string | null
+          documento_path?: string | null
           enviado_admissao?: boolean
           enviado_admissao_at?: string | null
           estado?: string | null
