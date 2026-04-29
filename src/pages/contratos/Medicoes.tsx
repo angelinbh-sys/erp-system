@@ -434,7 +434,7 @@ export default function Medicoes() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={createMedicao.isPending || updateMedicao.isPending}>
+            <Button onClick={handleSave} disabled={!!periodoError || createMedicao.isPending || updateMedicao.isPending}>
               {editingId ? "Salvar" : "Registrar"}
             </Button>
           </DialogFooter>
