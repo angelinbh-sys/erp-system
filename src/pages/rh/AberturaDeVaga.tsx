@@ -369,9 +369,15 @@ const AberturaDeVaga = () => {
                       <FormLabel>Centro de Custo *</FormLabel>
                       <Select
                         onValueChange={(v) => {
+                          const previousSite = form.getValues("tipoContrato");
                           field.onChange(v);
                           // Reset site when CC changes
-                          form.setValue("tipoContrato", "");
+                          if (previousSite) {
+                            form.setValue("tipoContrato", "");
+                            toast.info("Site/Contrato foi resetado pois o Centro de Custo foi alterado.");
+                          } else {
+                            form.setValue("tipoContrato", "");
+                          }
                         }}
                         value={field.value}
                       >
