@@ -653,8 +653,59 @@ const AprovacaoVagas = () => {
             <div><Label>Nome do Candidato</Label><Input value={editForm.nome_candidato || ""} onChange={(e) => setEditForm(p => ({ ...p, nome_candidato: e.target.value }))} /></div>
             <div><Label>Cargo / Função</Label><Input value={editForm.cargo || ""} onChange={(e) => setEditForm(p => ({ ...p, cargo: e.target.value }))} /></div>
             <div><Label>Salário</Label><Input value={editForm.salario || ""} onChange={(e) => setEditForm(p => ({ ...p, salario: e.target.value }))} /></div>
-            <div><Label>Centro de Custo</Label><Input value={editForm.centro_custo_nome || ""} onChange={(e) => setEditForm(p => ({ ...p, centro_custo_nome: e.target.value }))} /></div>
-            <div><Label>Site / Contrato</Label><Input value={editForm.site_contrato || ""} onChange={(e) => setEditForm(p => ({ ...p, site_contrato: e.target.value }))} /></div>
+            <div>
+              <Label>Centro de Custo</Label>
+              <Select
+                value={editForm.centro_custo_id || ""}
+                onValueChange={(v) => {
+                  const cc = centrosCusto.find((c) => c.id === v);
+                  setEditForm((p) => ({
+                    ...p,
+                    centro_custo_id: v,
+                    centro_custo_nome: cc?.nome || "",
+                    centro_custo_codigo: cc?.codigo || "",
+                    site_contrato: "",
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o centro de custo" /></SelectTrigger>
+                <SelectContent>
+                  {centrosCusto.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center">Nenhum CC cadastrado.</div>
+                  ) : (
+                    centrosCusto.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.codigo ? `${c.codigo} - ${c.nome}` : c.nome}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Site / Contrato</Label>
+              <Select
+                value={editForm.site_contrato || ""}
+                onValueChange={(v) => setEditForm((p) => ({ ...p, site_contrato: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o site" /></SelectTrigger>
+                <SelectContent>
+                  {(() => {
+                    const cc = centrosCusto.find((c) => c.id === editForm.centro_custo_id);
+                    const sites = cc?.sites ?? [];
+                    if (!editForm.centro_custo_id) {
+                      return <div className="p-3 text-sm text-muted-foreground text-center">Selecione um Centro de Custo primeiro.</div>;
+                    }
+                    if (sites.length === 0) {
+                      return <div className="p-3 text-sm text-muted-foreground text-center">Nenhum site para este CC.</div>;
+                    }
+                    return sites.map((s) => (
+                      <SelectItem key={s.id} value={s.nome}>{s.nome}</SelectItem>
+                    ));
+                  })()}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Local de Trabalho</Label><Input value={editForm.local_trabalho || ""} onChange={(e) => setEditForm(p => ({ ...p, local_trabalho: e.target.value }))} /></div>
             <div><Label>Data de Nascimento</Label><Input type="date" value={editForm.data_nascimento || ""} onChange={(e) => setEditForm(p => ({ ...p, data_nascimento: e.target.value }))} /></div>
             <div><Label>Telefone</Label><Input value={editForm.telefone || ""} onChange={(e) => setEditForm(p => ({ ...p, telefone: e.target.value }))} /></div>
