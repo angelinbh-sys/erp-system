@@ -81,7 +81,9 @@ export default function DashboardFrequencia() {
   const handleDataInicio = (d: Date | undefined) => {
     if (!d) return;
     if (isBefore(dataFim, d)) {
-      toast.error("A data final não pode ser menor que a data inicial.");
+      toast.error("A data inicial não pode ser maior que a data final.");
+      // Reverte: mantém o valor anterior válido
+      setCalInicioOpen(false);
       return;
     }
     setDataInicio(d);
@@ -92,6 +94,8 @@ export default function DashboardFrequencia() {
     if (!d) return;
     if (isBefore(d, dataInicio)) {
       toast.error("A data final não pode ser menor que a data inicial.");
+      // Reverte: mantém o valor anterior válido
+      setCalFimOpen(false);
       return;
     }
     setDataFim(d);
