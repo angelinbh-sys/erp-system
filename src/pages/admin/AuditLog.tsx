@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Search, Filter, FileText } from "lucide-react";
-import { useAuditLogs, type AuditLogFilters } from "@/hooks/useAuditLog";
+import { Search, Filter, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { useAuditLogs, AUDIT_LOG_PAGE_SIZE, type AuditLogFilters } from "@/hooks/useAuditLog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,12 +20,20 @@ const MODULOS = [
 const AuditLog = () => {
   const [filters, setFilters] = useState<AuditLogFilters>({});
   const [appliedFilters, setAppliedFilters] = useState<AuditLogFilters>({});
-  const { data: logs = [], isLoading } = useAuditLogs(appliedFilters);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAuditLogs(appliedFilters, page);
+  const logs = data?.rows ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / AUDIT_LOG_PAGE_SIZE));
 
-  const handleSearch = () => setAppliedFilters({ ...filters });
+  const handleSearch = () => {
+    setPage(1);
+    setAppliedFilters({ ...filters });
+  };
   const handleClear = () => {
     setFilters({});
     setAppliedFilters({});
+    setPage(1);
   };
 
   return (
@@ -68,7 +76,10 @@ const AuditLog = () => {
             </div>
             <div>
               <Label className="text-xs">Módulo</Label>
-              <Select value={filters.modulo || ""} onValueChange={(v) => setFilters((p) => ({ ...p, modulo: v || undefined }))}>
+              <Select
+                value={filters.modulo || "__all__"}
+                onValueChange={(v) => setFilters((p) => ({ ...p, modulo: v === "__all__" ? undefined : v }))}
+              >
                 <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all__">Todos</SelectItem>
@@ -122,7 +133,9 @@ const AuditLog = () => {
       ) : (
         <Card>
           <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground mb-3">{logs.length} registro(s) encontrado(s)</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              {total} registro(s) encontrado(s) — exibindo {logs.length} nesta página
+            </p>
             <div className="overflow-auto">
               <Table>
                 <TableHeader>
@@ -156,6 +169,32 @@ const AuditLog = () => {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+              <p className="text-xs text-muted-foreground">
+                Página {page} de {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

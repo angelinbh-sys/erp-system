@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
 import { Plus, Pencil, UserX, UserCheck, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,11 +47,19 @@ interface Profile {
 }
 
 const AdminUsuarios = () => {
-  const [grupos] = useState<GrupoPermissao[]>(() => {
-    try {
-      const stored = localStorage.getItem("erp_grupos_permissao");
-      return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
+  const { data: grupos = [] } = useQuery<GrupoPermissao[]>({
+    queryKey: ["grupos_permissao"],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("grupos_permissao" as any) as any)
+        .select("*")
+        .order("nome");
+      if (error) throw error;
+      return ((data ?? []) as any[]).map((row) => ({
+        id: row.id,
+        nome: row.nome,
+        permissoes: (row.permissoes ?? {}) as any,
+      }));
+    },
   });
 
   const [usuarios, setUsuarios] = useState<Profile[]>([]);

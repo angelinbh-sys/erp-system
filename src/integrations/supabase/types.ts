@@ -436,6 +436,30 @@ export type Database = {
           },
         ]
       }
+      grupos_permissao: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          permissoes: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          permissoes?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          permissoes?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       medicoes: {
         Row: {
           contrato_id: string

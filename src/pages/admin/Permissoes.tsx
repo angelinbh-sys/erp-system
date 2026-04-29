@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
 import { Plus, Pencil, Trash2, Info, ChevronDown } from "lucide-react";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,18 +31,9 @@ const MODULOS_PAGINAS = [
     modulo: "SESMT",
     paginas: ["Agendamento de ASO"],
   },
-  {
-    modulo: "Financeiro",
-    paginas: ["Financeiro"],
-  },
-  {
-    modulo: "Logística",
-    paginas: ["Logística"],
-  },
-  {
-    modulo: "Qualidade",
-    paginas: ["Qualidade"],
-  },
+  { modulo: "Financeiro", paginas: ["Financeiro"] },
+  { modulo: "Logística", paginas: ["Logística"] },
+  { modulo: "Qualidade", paginas: ["Qualidade"] },
   {
     modulo: "Admin",
     paginas: ["Usuários", "Grupos de Permissão", "Log de Auditoria"],
@@ -56,7 +49,6 @@ const PERMISSAO_LABELS: Record<string, string> = {
   exclusao: "Exclusão",
 };
 
-// Key = "Modulo::Pagina", value = { acesso: bool, ... }
 type PaginaPermissoes = Record<string, boolean>;
 type GrupoPermissoes = Record<string, PaginaPermissoes>;
 
@@ -91,19 +83,98 @@ function getHighestPermIndex(modPerms: PaginaPermissoes): number {
   return -1;
 }
 
+// ─── localStorage → Supabase migration (one-time) ──────────────────
+let migrationAttempted = false;
+
+async function migrateLocalStorageData() {
+  if (migrationAttempted) return;
+  migrationAttempted = true;
+  try {
+    const raw = localStorage.getItem("erp_grupos_permissao");
+    if (!raw) return;
+    const items = JSON.parse(raw) as GrupoPermissao[];
+    if (!Array.isArray(items) || items.length === 0) {
+      localStorage.removeItem("erp_grupos_permissao");
+      return;
+    }
+    const { count, error: countError } = await supabase
+      .from("grupos_permissao" as any)
+      .select("*", { count: "exact", head: true });
+    if (countError) throw countError;
+    if ((count ?? 0) === 0) {
+      const payload = items.map((g) => ({
+        nome: g.nome,
+        permissoes: (g.permissoes ?? {}) as any,
+      }));
+      const { error } = await (supabase.from("grupos_permissao" as any) as any).insert(payload);
+      if (!error) localStorage.removeItem("erp_grupos_permissao");
+    } else {
+      localStorage.removeItem("erp_grupos_permissao");
+    }
+  } catch (e) {
+    console.error("Erro ao migrar grupos_permissao:", e);
+  }
+}
+
 const AdminPermissoes = () => {
   const { logAction } = useAuditLog();
-  const [grupos, setGrupos] = useState<GrupoPermissao[]>(() => {
-    try {
-      const stored = localStorage.getItem("erp_grupos_permissao");
-      return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
+  const queryClient = useQueryClient();
+  const ran = useRef(false);
+
+  useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
+    migrateLocalStorageData().then(() => {
+      queryClient.invalidateQueries({ queryKey: ["grupos_permissao"] });
+    });
+  }, [queryClient]);
+
+  const { data: grupos = [] } = useQuery<GrupoPermissao[]>({
+    queryKey: ["grupos_permissao"],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("grupos_permissao" as any) as any)
+        .select("*")
+        .order("nome");
+      if (error) throw error;
+      return ((data ?? []) as any[]).map((row) => ({
+        id: row.id,
+        nome: row.nome,
+        permissoes: (row.permissoes ?? {}) as GrupoPermissoes,
+      }));
+    },
   });
 
-  const save = (items: GrupoPermissao[]) => {
-    setGrupos(items);
-    localStorage.setItem("erp_grupos_permissao", JSON.stringify(items));
-  };
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["grupos_permissao"] });
+
+  const createMutation = useMutation({
+    mutationFn: async (item: { nome: string; permissoes: GrupoPermissoes }) => {
+      const { data, error } = await (supabase.from("grupos_permissao" as any) as any)
+        .insert({ nome: item.nome, permissoes: item.permissoes as any })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: invalidate,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, nome, permissoes }: { id: string; nome: string; permissoes: GrupoPermissoes }) => {
+      const { error } = await (supabase.from("grupos_permissao" as any) as any)
+        .update({ nome, permissoes: permissoes as any })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.from("grupos_permissao" as any) as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
 
   const [nome, setNome] = useState("");
   const [permissoes, setPermissoes] = useState<GrupoPermissoes>(criarPermissoesVazias);
@@ -118,19 +189,11 @@ const AdminPermissoes = () => {
     setPermissoes((prev) => {
       const current = { ...prev[key] };
       const permIndex = PERMISSOES.indexOf(perm as typeof PERMISSOES[number]);
-
       if (current[perm]) {
-        // Unchecking: uncheck ALL permissions
-        for (let i = 0; i < PERMISSOES.length; i++) {
-          current[PERMISSOES[i]] = false;
-        }
+        for (let i = 0; i < PERMISSOES.length; i++) current[PERMISSOES[i]] = false;
       } else {
-        // Checking: check this and all BELOW (lower permissions)
-        for (let i = 0; i <= permIndex; i++) {
-          current[PERMISSOES[i]] = true;
-        }
+        for (let i = 0; i <= permIndex; i++) current[PERMISSOES[i]] = true;
       }
-
       return { ...prev, [key]: current };
     });
   };
@@ -149,42 +212,46 @@ const AdminPermissoes = () => {
     setEditId(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!nome.trim()) {
       toast.error("Nome do grupo é obrigatório.");
       return;
     }
-    if (editId) {
-      save(grupos.map((g) => (g.id === editId ? { ...g, nome: nome.trim(), permissoes } : g)));
-      logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "edicao", descricao: `Editou grupo de permissão: ${nome.trim()}`, registro_id: editId, registro_ref: nome.trim() });
-      toast.success("Grupo atualizado.");
-    } else {
-      const newId = crypto.randomUUID();
-      save([...grupos, { id: newId, nome: nome.trim(), permissoes }]);
-      logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "criacao", descricao: `Criou grupo de permissão: ${nome.trim()}`, registro_id: newId, registro_ref: nome.trim() });
-      toast.success("Grupo de permissão criado.");
+    try {
+      if (editId) {
+        await updateMutation.mutateAsync({ id: editId, nome: nome.trim(), permissoes });
+        logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "edicao", descricao: `Editou grupo de permissão: ${nome.trim()}`, registro_id: editId, registro_ref: nome.trim() });
+        toast.success("Grupo atualizado.");
+      } else {
+        const created: any = await createMutation.mutateAsync({ nome: nome.trim(), permissoes });
+        logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "criacao", descricao: `Criou grupo de permissão: ${nome.trim()}`, registro_id: created?.id, registro_ref: nome.trim() });
+        toast.success("Grupo de permissão criado.");
+      }
+      resetForm();
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao salvar grupo.");
     }
-    resetForm();
   };
 
   const handleEdit = (g: GrupoPermissao) => {
     setEditId(g.id);
     setNome(g.nome);
-    // Merge stored permissions with current structure (handles new pages)
     const base = criarPermissoesVazias();
     Object.keys(g.permissoes).forEach((key) => {
-      if (base[key]) {
-        base[key] = { ...base[key], ...g.permissoes[key] };
-      }
+      if (base[key]) base[key] = { ...base[key], ...g.permissoes[key] };
     });
     setPermissoes(base);
   };
 
-  const handleDelete = (id: string) => {
-    const g = grupos.find(g => g.id === id);
-    save(grupos.filter((g) => g.id !== id));
-    logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "exclusao", descricao: `Excluiu grupo de permissão: ${g?.nome || "—"}`, registro_id: id, registro_ref: g?.nome });
-    toast.success("Grupo excluído.");
+  const handleDelete = async (id: string) => {
+    const g = grupos.find((g) => g.id === id);
+    try {
+      await deleteMutation.mutateAsync(id);
+      logAction({ modulo: "Admin", pagina: "Grupos de Permissão", acao: "exclusao", descricao: `Excluiu grupo de permissão: ${g?.nome || "—"}`, registro_id: id, registro_ref: g?.nome });
+      toast.success("Grupo excluído.");
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao excluir grupo.");
+    }
   };
 
   return (
@@ -289,7 +356,7 @@ const AdminPermissoes = () => {
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm">
+            <Button onClick={handleSave} size="sm" disabled={createMutation.isPending || updateMutation.isPending}>
               <Plus className="h-4 w-4 mr-1" />
               {editId ? "Atualizar" : "Criar Grupo"}
             </Button>

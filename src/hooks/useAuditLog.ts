@@ -67,25 +67,33 @@ export interface AuditLogFilters {
   acao?: string;
 }
 
-export function useAuditLogs(filters: AuditLogFilters) {
+export const AUDIT_LOG_PAGE_SIZE = 50;
+
+export function useAuditLogs(filters: AuditLogFilters, page: number = 1) {
   return useQuery({
-    queryKey: ["audit_logs", filters],
+    queryKey: ["audit_logs", filters, page],
     queryFn: async () => {
+      const from = (page - 1) * AUDIT_LOG_PAGE_SIZE;
+      const to = page * AUDIT_LOG_PAGE_SIZE - 1;
+
       let query = (supabase.from("audit_logs" as any) as any)
-        .select("*")
+        .select("*", { count: "exact" })
         .order("created_at", { ascending: false })
-        .limit(500);
+        .range(from, to);
 
       if (filters.startDate) query = query.gte("created_at", `${filters.startDate}T00:00:00`);
       if (filters.endDate) query = query.lte("created_at", `${filters.endDate}T23:59:59`);
       if (filters.usuario) query = query.ilike("user_name", `%${filters.usuario}%`);
-      if (filters.modulo) query = query.eq("modulo", filters.modulo);
-      if (filters.pagina) query = query.eq("pagina", filters.pagina);
+      if (filters.modulo && filters.modulo !== "__all__") query = query.eq("modulo", filters.modulo);
+      if (filters.pagina) query = query.ilike("pagina", `%${filters.pagina}%`);
       if (filters.acao) query = query.ilike("acao", `%${filters.acao}%`);
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       if (error) throw error;
-      return (data || []) as unknown as AuditLogEntry[];
+      return {
+        rows: (data || []) as unknown as AuditLogEntry[],
+        total: count ?? 0,
+      };
     },
   });
 }
