@@ -164,22 +164,27 @@ const Dashboard = () => {
   /* Atividades recentes (notificações) */
   const atividadesRecentes = useMemo(() => notificacoes.slice(0, 8), [notificacoes]);
 
-  /* Aniversariantes */
-  const aniversariantesDoDia = useMemo(
-    () => colaboradores.filter((c) => isBirthdayToday(c.data_nascimento)),
+  /* Aniversariantes (apenas colaboradores ativos) */
+  const colaboradoresAtivos = useMemo(
+    () => colaboradores.filter((c) => c.status === "Ativo"),
     [colaboradores]
+  );
+
+  const aniversariantesDoDia = useMemo(
+    () => colaboradoresAtivos.filter((c) => isBirthdayToday(c.data_nascimento)),
+    [colaboradoresAtivos]
   );
 
   const aniversariantesDoMes = useMemo(
     () =>
-      colaboradores
+      colaboradoresAtivos
         .filter((c) => isBirthdayThisMonth(c.data_nascimento))
         .sort((a, b) => {
           const dayA = new Date(a.data_nascimento + "T00:00:00").getDate();
           const dayB = new Date(b.data_nascimento + "T00:00:00").getDate();
           return dayA - dayB;
         }),
-    [colaboradores]
+    [colaboradoresAtivos]
   );
 
   const handleAprovar = (id: string) => {
