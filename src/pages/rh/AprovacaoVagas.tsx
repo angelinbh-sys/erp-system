@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "@/lib/toast";
 import { Check, X, Clock, CheckCircle2, XCircle, Trash2, Undo2, Pencil, Ban } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatFirstLastName, capitalizeName } from "@/utils/formatName";
 import VagaTimeline from "@/components/VagaTimeline";
 import { useVagaHistorico } from "@/hooks/useVagaHistorico";
@@ -29,6 +30,7 @@ import { useCreateNotificacao } from "@/hooks/useNotificacoes";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { useCentrosCusto } from "@/hooks/useCadastros";
 import { HistoricoRegistro } from "@/components/HistoricoRegistro";
 import { STATUS_PROCESSO, STATUS_PROCESSO_CONFIG, getResponsavelEtapa } from "@/utils/statusProcesso";
 
