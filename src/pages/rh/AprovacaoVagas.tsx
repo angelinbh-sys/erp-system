@@ -219,7 +219,7 @@ const AprovacaoVagas = () => {
       });
 
       toast.success("Vaga reenviada para aprovação da Diretoria.");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao reenviar vaga.");
     }
@@ -253,7 +253,7 @@ const AprovacaoVagas = () => {
       });
 
       toast.success("Vaga aprovada com sucesso!");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao aprovar vaga.");
     }
@@ -286,7 +286,7 @@ const AprovacaoVagas = () => {
       setShowReprovar(false);
       setSelectedVaga(null);
       setObservacao("");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao reprovar vaga.");
     }
@@ -335,7 +335,7 @@ const AprovacaoVagas = () => {
       toast.success("Vaga devolvida para correção.");
       setDevolverVaga(null);
       setDevolverMotivo("");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao devolver vaga.");
     } finally {
@@ -365,7 +365,7 @@ const AprovacaoVagas = () => {
       toast.success("Vaga excluída com sucesso.");
       setDeleteVaga(null);
       setDeleteMotivo("");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao excluir vaga.");
     } finally {
@@ -401,7 +401,7 @@ const AprovacaoVagas = () => {
       toast.success("Vaga cancelada com sucesso.");
       setCancelVaga(null);
       setCancelMotivo("");
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao cancelar vaga.");
     } finally {
@@ -422,7 +422,7 @@ const AprovacaoVagas = () => {
       });
 
       toast.success(`Status do candidato alterado para "${newStatus}".`);
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao alterar status do candidato.");
     }
