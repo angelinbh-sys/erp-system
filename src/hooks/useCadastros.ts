@@ -32,13 +32,21 @@ async function migrateLocalStorageData() {
     if (ccRaw) {
       const ccItems = JSON.parse(ccRaw) as CentroCusto[];
       if (Array.isArray(ccItems) && ccItems.length > 0) {
-        const payload = ccItems.map((c) => ({
-          nome: c.nome,
-          codigo: c.codigo,
-          sites: (c.sites ?? []) as any,
-        }));
-        const { error } = await supabase.from("centros_custo").insert(payload);
-        if (!error) localStorage.removeItem("erp_centros_custo");
+        const { count, error: countError } = await supabase
+          .from("centros_custo")
+          .select("*", { count: "exact", head: true });
+        if (countError) throw countError;
+        if ((count ?? 0) === 0) {
+          const payload = ccItems.map((c) => ({
+            nome: c.nome,
+            codigo: c.codigo,
+            sites: (c.sites ?? []) as any,
+          }));
+          const { error } = await supabase.from("centros_custo").insert(payload);
+          if (!error) localStorage.removeItem("erp_centros_custo");
+        } else {
+          localStorage.removeItem("erp_centros_custo");
+        }
       } else {
         localStorage.removeItem("erp_centros_custo");
       }
@@ -52,12 +60,20 @@ async function migrateLocalStorageData() {
     if (cargosRaw) {
       const cargosItems = JSON.parse(cargosRaw) as Cargo[];
       if (Array.isArray(cargosItems) && cargosItems.length > 0) {
-        const payload = cargosItems.map((c) => ({
-          nome: c.nome,
-          descricao: c.descricao ?? "",
-        }));
-        const { error } = await supabase.from("cargos").insert(payload);
-        if (!error) localStorage.removeItem("erp_cargos");
+        const { count, error: countError } = await supabase
+          .from("cargos")
+          .select("*", { count: "exact", head: true });
+        if (countError) throw countError;
+        if ((count ?? 0) === 0) {
+          const payload = cargosItems.map((c) => ({
+            nome: c.nome,
+            descricao: c.descricao ?? "",
+          }));
+          const { error } = await supabase.from("cargos").insert(payload);
+          if (!error) localStorage.removeItem("erp_cargos");
+        } else {
+          localStorage.removeItem("erp_cargos");
+        }
       } else {
         localStorage.removeItem("erp_cargos");
       }
@@ -224,7 +240,8 @@ export function useCargos() {
   const remove = (id: string) => removeMutation.mutate(id);
 
   const setItems = (_updater: (prev: Cargo[]) => Cargo[]) => {
-    // Não usado para cargos; mantido por compatibilidade de assinatura.
+    // Não utilizado para cargos; mantido por compatibilidade de assinatura.
+    console.warn("[useCargos] setItems não é suportado e não tem efeito.");
   };
 
   return { items, add, update, remove, setItems };
