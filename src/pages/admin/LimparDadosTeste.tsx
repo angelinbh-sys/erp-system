@@ -33,17 +33,25 @@ const LimparDadosTeste = () => {
 
   const handleCleanup = async () => {
     setDeleting(true);
+    const SENTINEL = "00000000-0000-0000-0000-000000000000";
+    const steps: Array<{ table: "vagas_historico" | "colaboradores_historico" | "colaboradores" | "notificacoes" | "vagas"; label: string }> = [
+      { table: "vagas_historico", label: "histórico de vagas" },
+      { table: "colaboradores_historico", label: "histórico de colaboradores" },
+      { table: "colaboradores", label: "colaboradores" },
+      { table: "notificacoes", label: "notificações" },
+      { table: "vagas", label: "vagas" },
+    ];
+
     try {
-      // Delete all vagas_historico
-      await supabase.from("vagas_historico").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      // Delete all colaboradores_historico
-      await supabase.from("colaboradores_historico").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      // Delete all colaboradores
-      await supabase.from("colaboradores").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      // Delete all notificacoes
-      await supabase.from("notificacoes").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      // Delete all vagas
-      await supabase.from("vagas").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      for (const step of steps) {
+        const { error } = await supabase.from(step.table).delete().neq("id", SENTINEL);
+        if (error) {
+          console.error(`Erro ao excluir ${step.table}:`, error);
+          toast.error(`Falha ao excluir ${step.label}: ${error.message}`);
+          setDeleting(false);
+          return;
+        }
+      }
 
       await logAction({
         modulo: "Admin",
@@ -55,8 +63,8 @@ const LimparDadosTeste = () => {
       toast.success("Todos os dados de teste foram excluídos com sucesso.");
       setShowConfirm(false);
     } catch (err) {
-      console.error(err);
-      toast.error("Erro ao excluir dados de teste.");
+      console.error("Erro inesperado ao limpar dados de teste:", err);
+      toast.error("Erro inesperado ao excluir dados de teste.");
     } finally {
       setDeleting(false);
     }
