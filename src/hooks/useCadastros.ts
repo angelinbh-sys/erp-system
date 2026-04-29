@@ -35,7 +35,7 @@ async function migrateLocalStorageData() {
         const payload = ccItems.map((c) => ({
           nome: c.nome,
           codigo: c.codigo,
-          sites: (c.sites ?? []) as unknown as object,
+          sites: (c.sites ?? []) as any,
         }));
         const { error } = await supabase.from("centros_custo").insert(payload);
         if (!error) localStorage.removeItem("erp_centros_custo");
@@ -106,7 +106,7 @@ export function useCentrosCusto() {
       const { error } = await supabase.from("centros_custo").insert({
         nome: item.nome,
         codigo: item.codigo,
-        sites: (item.sites ?? []) as unknown as object,
+        sites: (item.sites ?? []) as any,
       });
       if (error) throw error;
     },
@@ -120,7 +120,7 @@ export function useCentrosCusto() {
         .update({
           nome: data.nome,
           codigo: data.codigo,
-          sites: (data.sites ?? []) as unknown as object,
+          sites: (data.sites ?? []) as any,
         })
         .eq("id", id);
       if (error) throw error;
@@ -155,7 +155,7 @@ export function useCentrosCusto() {
       changed.map((c) =>
         supabase
           .from("centros_custo")
-          .update({ sites: (c.sites ?? []) as unknown as object })
+          .update({ sites: (c.sites ?? []) as any })
           .eq("id", c.id),
       ),
     );
