@@ -154,6 +154,7 @@ const AprovacaoVagas = () => {
         cpf: editForm.cpf,
         sexo: editForm.sexo,
         centro_custo_nome: editForm.centro_custo_nome,
+        centro_custo_codigo: editForm.centro_custo_codigo,
         site_contrato: editForm.site_contrato,
         local_trabalho: editForm.local_trabalho,
         data_nascimento: editForm.data_nascimento,
@@ -174,7 +175,7 @@ const AprovacaoVagas = () => {
 
       toast.success("Dados da vaga atualizados com sucesso.");
       setEditVaga(null);
-      window.location.reload();
+      refreshVagas();
     } catch {
       toast.error("Erro ao salvar alterações.");
     } finally {
