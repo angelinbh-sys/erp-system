@@ -64,6 +64,51 @@ export type Database = {
           },
         ]
       }
+      alteracoes_funcao: {
+        Row: {
+          anexo_nome: string | null
+          anexo_path: string | null
+          cargo_atual: string
+          centro_custo: string
+          created_at: string
+          criado_em: string | null
+          criado_por: string | null
+          data_alteracao: string
+          id: string
+          nome_colaborador: string
+          novo_cargo: string
+          observacoes: string
+        }
+        Insert: {
+          anexo_nome?: string | null
+          anexo_path?: string | null
+          cargo_atual: string
+          centro_custo: string
+          created_at?: string
+          criado_em?: string | null
+          criado_por?: string | null
+          data_alteracao: string
+          id?: string
+          nome_colaborador: string
+          novo_cargo: string
+          observacoes?: string
+        }
+        Update: {
+          anexo_nome?: string | null
+          anexo_path?: string | null
+          cargo_atual?: string
+          centro_custo?: string
+          created_at?: string
+          criado_em?: string | null
+          criado_por?: string | null
+          data_alteracao?: string
+          id?: string
+          nome_colaborador?: string
+          novo_cargo?: string
+          observacoes?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           acao: string
@@ -579,6 +624,45 @@ export type Database = {
           nome?: string
           super_admin?: boolean
           user_id?: string
+        }
+        Relationships: []
+      }
+      solicitacoes_ferias: {
+        Row: {
+          centro_custo: string
+          created_at: string
+          criado_em: string | null
+          criado_por: string | null
+          data_inicio: string
+          data_retorno: string
+          id: string
+          nome_colaborador: string
+          observacoes: string
+          qtd_dias: number
+        }
+        Insert: {
+          centro_custo: string
+          created_at?: string
+          criado_em?: string | null
+          criado_por?: string | null
+          data_inicio: string
+          data_retorno: string
+          id?: string
+          nome_colaborador: string
+          observacoes?: string
+          qtd_dias?: number
+        }
+        Update: {
+          centro_custo?: string
+          created_at?: string
+          criado_em?: string | null
+          criado_por?: string | null
+          data_inicio?: string
+          data_retorno?: string
+          id?: string
+          nome_colaborador?: string
+          observacoes?: string
+          qtd_dias?: number
         }
         Relationships: []
       }
