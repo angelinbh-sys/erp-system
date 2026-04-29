@@ -143,6 +143,7 @@ const AberturaDeVaga = () => {
   const selectedCCId = form.watch("centroCusto");
   const selectedCC = centrosCusto.find((c) => c.id === selectedCCId);
   const sitesForCC = selectedCC?.sites ?? [];
+  const selectedSite = form.watch("tipoContrato");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
