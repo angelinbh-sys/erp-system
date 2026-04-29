@@ -89,6 +89,12 @@ export default function CadastroContratos() {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
+    if (new Date(form.data_termino + "T00:00:00") <= new Date(form.data_inicio + "T00:00:00")) {
+      setDataError("A data de término deve ser posterior à data de início.");
+      toast.error("A data de término deve ser posterior à data de início.");
+      return;
+    }
+    setDataError("");
     try {
       const payload = {
         numero_contrato: form.numero_contrato,
@@ -113,13 +119,21 @@ export default function CadastroContratos() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja excluir este contrato? Todas as medições associadas também serão excluídas.")) return;
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
     try {
-      await deleteContrato.mutateAsync(id);
+      await deleteContrato.mutateAsync(deletingId);
       toast.success("Contrato excluído.");
     } catch {
       toast.error("Erro ao excluir contrato.");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setDeletingId(null);
     }
   };
 
