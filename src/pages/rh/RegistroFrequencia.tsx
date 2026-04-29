@@ -246,10 +246,18 @@ export default function RegistroFrequencia() {
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div className="flex flex-col md:flex-row gap-4 items-end">
-              <div className="space-y-1.5 min-w-[200px]">
-                <label className="text-sm font-medium">Contrato</label>
-                <Select value={filtroContrato} onValueChange={setFiltroContrato}>
-                  <SelectTrigger>
+              <div className="space-y-1.5 min-w-[240px]">
+                <label className={cn("text-sm font-medium", contratoErro && "text-destructive")}>
+                  Contrato {contratoErro && "*"}
+                </label>
+                <Select
+                  value={filtroContrato}
+                  onValueChange={(v) => {
+                    setFiltroContrato(v);
+                    if (v !== "todos") setContratoErro(false);
+                  }}
+                >
+                  <SelectTrigger className={cn(contratoErro && "border-destructive ring-1 ring-destructive")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -259,6 +267,11 @@ export default function RegistroFrequencia() {
                     ))}
                   </SelectContent>
                 </Select>
+                {contratoErro && (
+                  <p className="text-xs text-destructive">
+                    Selecione um contrato antes de clicar em um dia do calendário.
+                  </p>
+                )}
               </div>
             </div>
             <FrequenciaCalendar
