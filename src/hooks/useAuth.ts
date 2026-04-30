@@ -12,6 +12,7 @@ export interface Profile {
   ativo: boolean;
   super_admin: boolean;
   must_change_password: boolean;
+  permissoes: Record<string, Record<string, boolean>> | null;
 }
 
 export function useAuth() {
@@ -20,12 +21,31 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
+    const { data: profileData } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
       .single();
-    setProfile(data as Profile | null);
+
+    if (!profileData) {
+      setProfile(null);
+      return;
+    }
+
+    if ((profileData as any).super_admin) {
+      setProfile({ ...(profileData as any), permissoes: null } as Profile);
+      return;
+    }
+
+    const { data: grupoData } = await (supabase.from("grupos_permissao" as any) as any)
+      .select("permissoes")
+      .eq("nome", (profileData as any).grupo_permissao)
+      .maybeSingle();
+
+    setProfile({
+      ...(profileData as any),
+      permissoes: (grupoData?.permissoes as any) ?? null,
+    } as Profile);
   }, []);
 
   useEffect(() => {

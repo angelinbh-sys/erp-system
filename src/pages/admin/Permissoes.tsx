@@ -20,8 +20,16 @@ import {
 // ─── Structure: modules with pages ───────────────────────────────────
 const MODULOS_PAGINAS = [
   {
+    modulo: "Contratos",
+    paginas: ["Dashboard de Contratos", "Cadastro de Contratos", "Medições", "Relatórios"],
+  },
+  {
+    modulo: "Planejamento",
+    paginas: ["Organograma de Projetos"],
+  },
+  {
     modulo: "Recursos Humanos",
-    paginas: ["Gestão RH", "Solicitação de Vaga", "Aprovação de Vaga"],
+    paginas: ["Gestão RH", "Solicitação de Vaga", "Aprovação de Vaga", "Registro de Frequência", "Dashboard Frequência"],
   },
   {
     modulo: "Dep. Pessoal",
@@ -36,7 +44,7 @@ const MODULOS_PAGINAS = [
   { modulo: "Qualidade", paginas: ["Qualidade"] },
   {
     modulo: "Admin",
-    paginas: ["Usuários", "Grupos de Permissão", "Log de Auditoria"],
+    paginas: ["Usuários", "Grupos de Permissão", "Log de Auditoria", "Limpar Dados de Teste"],
   },
 ] as const;
 
