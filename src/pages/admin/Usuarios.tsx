@@ -211,7 +211,11 @@ const AdminUsuarios = () => {
       const { data, error } = await supabase.functions.invoke("admin-update-user", {
         body: { user_id: resetDialog.user.user_id, reset_password: true },
       });
-      if (error || data?.error) throw new Error(data?.error || "Erro ao resetar senha");
+      if (error || data?.error) {
+        const fnMsg = await extractFunctionErrorMessage(error, data);
+        toast.error(fnMsg || "Erro ao resetar senha.");
+        return;
+      }
       setResetDialog({ open: true, user: resetDialog.user, tempPassword: data.temp_password });
       await logAction({ modulo: "Admin", pagina: "Usuários", acao: "reset_senha", descricao: `Resetou senha do usuário: ${resetDialog.user.nome}`, registro_id: resetDialog.user.user_id, registro_ref: resetDialog.user.nome });
       toast.success("Senha resetada. O usuário deverá alterar no próximo login.");
