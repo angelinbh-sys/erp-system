@@ -36,6 +36,25 @@ import {
 import type { GrupoPermissao } from "@/pages/admin/Permissoes";
 import { formatCPF, isValidCPF } from "@/utils/cpf";
 
+// Extracts the real error message from a supabase.functions.invoke result.
+// On non-2xx responses, `data` is empty and the body lives in `error.context`.
+async function extractFunctionErrorMessage(error: any, data: any): Promise<string | null> {
+  if (data?.error) return data.error;
+  const ctx = error?.context;
+  if (ctx && typeof ctx.json === "function") {
+    try {
+      const body = await ctx.json();
+      if (body?.error) return body.error;
+    } catch {
+      try {
+        const text = await ctx.text?.();
+        if (text) return text;
+      } catch { /* ignore */ }
+    }
+  }
+  return error?.message ?? null;
+}
+
 interface Profile {
   id: string;
   user_id: string;
