@@ -12,6 +12,7 @@ export interface Profile {
   ativo: boolean;
   super_admin: boolean;
   must_change_password: boolean;
+  permissoes: Record<string, Record<string, boolean>> | null;
 }
 
 export function useAuth() {
