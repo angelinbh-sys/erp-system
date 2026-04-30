@@ -36,6 +36,25 @@ import {
 import type { GrupoPermissao } from "@/pages/admin/Permissoes";
 import { formatCPF, isValidCPF } from "@/utils/cpf";
 
+// Extracts the real error message from a supabase.functions.invoke result.
+// On non-2xx responses, `data` is empty and the body lives in `error.context`.
+async function extractFunctionErrorMessage(error: any, data: any): Promise<string | null> {
+  if (data?.error) return data.error;
+  const ctx = error?.context;
+  if (ctx && typeof ctx.json === "function") {
+    try {
+      const body = await ctx.json();
+      if (body?.error) return body.error;
+    } catch {
+      try {
+        const text = await ctx.text?.();
+        if (text) return text;
+      } catch { /* ignore */ }
+    }
+  }
+  return error?.message ?? null;
+}
+
 interface Profile {
   id: string;
   user_id: string;
@@ -130,7 +149,11 @@ const AdminUsuarios = () => {
             ...(form.senha ? { senha: form.senha } : {}),
           },
         });
-        if (error || data?.error) throw new Error(data?.error || "Erro ao atualizar");
+        if (error || data?.error) {
+          const fnMsg = await extractFunctionErrorMessage(error, data);
+          toast.error(fnMsg || "Erro ao atualizar usuário.");
+          return;
+        }
         await logAction({ modulo: "Admin", pagina: "Usuários", acao: "edicao", descricao: `Editou usuário: ${form.nome.trim()}`, registro_id: editUserId, registro_ref: form.nome.trim() });
         toast.success("Usuário atualizado.");
       } else {
@@ -143,7 +166,11 @@ const AdminUsuarios = () => {
             grupo_permissao: form.grupoPermissao,
           },
         });
-        if (error || data?.error) throw new Error(data?.error || "Erro ao criar usuário");
+        if (error || data?.error) {
+          const fnMsg = await extractFunctionErrorMessage(error, data);
+          toast.error(fnMsg || "Erro ao criar usuário.");
+          return;
+        }
         await logAction({ modulo: "Admin", pagina: "Usuários", acao: "criacao", descricao: `Criou usuário: ${form.nome.trim()} (${form.email.trim()})`, registro_id: data?.user_id, registro_ref: form.nome.trim() });
         toast.success("Usuário criado.");
       }
@@ -184,7 +211,11 @@ const AdminUsuarios = () => {
       const { data, error } = await supabase.functions.invoke("admin-update-user", {
         body: { user_id: resetDialog.user.user_id, reset_password: true },
       });
-      if (error || data?.error) throw new Error(data?.error || "Erro ao resetar senha");
+      if (error || data?.error) {
+        const fnMsg = await extractFunctionErrorMessage(error, data);
+        toast.error(fnMsg || "Erro ao resetar senha.");
+        return;
+      }
       setResetDialog({ open: true, user: resetDialog.user, tempPassword: data.temp_password });
       await logAction({ modulo: "Admin", pagina: "Usuários", acao: "reset_senha", descricao: `Resetou senha do usuário: ${resetDialog.user.nome}`, registro_id: resetDialog.user.user_id, registro_ref: resetDialog.user.nome });
       toast.success("Senha resetada. O usuário deverá alterar no próximo login.");
