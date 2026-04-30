@@ -130,7 +130,11 @@ const AdminUsuarios = () => {
             ...(form.senha ? { senha: form.senha } : {}),
           },
         });
-        if (error || data?.error) throw new Error(data?.error || "Erro ao atualizar");
+        if (error || data?.error) {
+          const fnMsg = await extractFunctionErrorMessage(error, data);
+          toast.error(fnMsg || "Erro ao atualizar usuário.");
+          return;
+        }
         await logAction({ modulo: "Admin", pagina: "Usuários", acao: "edicao", descricao: `Editou usuário: ${form.nome.trim()}`, registro_id: editUserId, registro_ref: form.nome.trim() });
         toast.success("Usuário atualizado.");
       } else {
@@ -143,7 +147,11 @@ const AdminUsuarios = () => {
             grupo_permissao: form.grupoPermissao,
           },
         });
-        if (error || data?.error) throw new Error(data?.error || "Erro ao criar usuário");
+        if (error || data?.error) {
+          const fnMsg = await extractFunctionErrorMessage(error, data);
+          toast.error(fnMsg || "Erro ao criar usuário.");
+          return;
+        }
         await logAction({ modulo: "Admin", pagina: "Usuários", acao: "criacao", descricao: `Criou usuário: ${form.nome.trim()} (${form.email.trim()})`, registro_id: data?.user_id, registro_ref: form.nome.trim() });
         toast.success("Usuário criado.");
       }
