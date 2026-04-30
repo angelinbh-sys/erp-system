@@ -237,11 +237,17 @@ export default function Organograma() {
     }
   };
 
+  const hasDescendants = (nodeId: string): boolean => {
+    const directChildren = nodes.filter((n) => n.superior_id === nodeId);
+    if (directChildren.length === 0) return false;
+    return true;
+  };
+
   const handleDelete = async (id: string) => {
     try {
-      const hasChildren = nodes.some((n) => n.superior_id === id);
-      if (hasChildren) {
-        toast.error("Remova os subordinados antes de excluir esta posição.");
+      if (hasDescendants(id)) {
+        const childCount = nodes.filter((n) => n.superior_id === id).length;
+        toast.error(`Esta posição possui ${childCount} subordinado(s) direto(s). Remova ou mova os subordinados antes de excluir.`);
         return;
       }
       await deleteNode.mutateAsync(id);
@@ -321,7 +327,7 @@ export default function Organograma() {
       {contratoId ? (
         <>
           {/* Visual organograma */}
-          <Card className="shadow-md border-border/40 min-h-[400px]">
+          <Card className="relative shadow-md border-border/40 min-h-[400px]">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-heading font-bold text-foreground">
                 {projetoNome}
@@ -330,6 +336,12 @@ export default function Organograma() {
             <CardContent>
               <OrgTree ref={treeRef} nodes={nodes} onNodeClick={handleNodeClick} />
             </CardContent>
+            {exporting && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 rounded-lg gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                <p className="text-sm font-medium text-muted-foreground">Gerando PDF...</p>
+              </div>
+            )}
           </Card>
 
           {/* Hierarchy table */}
